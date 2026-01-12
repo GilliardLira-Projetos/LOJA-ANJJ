@@ -3,169 +3,130 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Minha Loja</title>
+<title>Catálogo</title>
 
 <style>
-body{font-family:Arial,sans-serif;background:#f6f6f6;margin:0;padding:20px}
-.container{max-width:1100px;margin:auto}
+body{font-family:Arial;margin:0;padding:20px;background:#f6f6f6}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px}
-.card{background:#fff;border-radius:10px;padding:12px;box-shadow:0 6px 18px rgba(0,0,0,.08);display:flex;flex-direction:column}
+.card{background:#fff;border-radius:10px;padding:12px;box-shadow:0 6px 18px rgba(0,0,0,.1);display:flex;flex-direction:column}
 .thumb{width:100%;height:160px;object-fit:cover;border-radius:8px;background:#eee}
 .title{font-weight:bold;margin:8px 0}
 .price{font-size:18px}
 .oldprice{text-decoration:line-through;color:#888;font-size:14px}
 .actions{margin-top:auto;display:flex;flex-direction:column;gap:6px}
-select,input{padding:6px;border-radius:6px;border:1px solid #ccc}
-button{padding:10px;border:none;border-radius:8px;cursor:pointer}
-.btn-add{background:#1d4ed8;color:#fff}
-.cart-btn{background:#111;color:#fff;padding:10px 14px;border-radius:10px}
-.cart{position:fixed;bottom:20px;right:20px;background:#fff;padding:12px;border-radius:10px;width:320px;box-shadow:0 8px 24px rgba(0,0,0,.15);display:none}
-.cart-item{font-size:14px;margin-bottom:6px}
-.muted{color:#666;font-size:13px}
+select,input,button{padding:8px;border-radius:6px;border:1px solid #ccc}
+button{background:#1d4ed8;color:#fff;border:none;cursor:pointer}
 </style>
 </head>
 
 <body>
-<div class="container">
-  <h2>Catálogo</h2>
-  <button class="cart-btn" onclick="openCart()">Carrinho (<span id="cartCount">0</span>)</button>
-  <div id="products" class="grid"></div>
-</div>
-
-<div id="cart" class="cart">
-  <h3>Pedido</h3>
-  <div id="cartItems"></div>
-  <div class="muted">Total: R$ <span id="cartTotal">0,00</span></div>
-  <input id="userName" placeholder="Nome">
-  <input id="userPhone" placeholder="Telefone">
-  <button onclick="sendOrder()">Enviar WhatsApp</button>
-  <button onclick="closeCart()">Fechar</button>
-</div>
+<h2>Catálogo</h2>
+<div id="products" class="grid"></div>
 
 <script>
-const SHEET_ID="1yPfhN08a0gj4JLoyTFISRghA7WSDbOJw4BFbzFdrDTc";
-const SHEET_NAME="Sheet1";
-const WHATSAPP="5581997512217";
-const SHEET_URL=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${SHEET_NAME}`;
-const CART_KEY="cart_final_v1";
-
-function money(v){return Number(v).toFixed(2).replace('.',',')}
-function loadCart(){return JSON.parse(localStorage.getItem(CART_KEY)||"[]")}
-function saveCart(c){localStorage.setItem(CART_KEY,JSON.stringify(c))}
-function updateCartCount(){document.getElementById("cartCount").textContent=loadCart().reduce((s,i)=>s+i.qty,0)}
+const SHEET_ID = "1yPfhN08a0gj4JLoyTFISRghA7WSDbOJw4BFbzFdrDTc";
+const SHEET_NAME = "Sheet1";
+const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${SHEET_NAME}`;
 
 async function fetchSheet(){
-  const r=await fetch(SHEET_URL);
-  const t=await r.text();
-  const j=JSON.parse(t.substring(t.indexOf("{"),t.lastIndexOf("}")+1));
-  const cols=j.table.cols.map(c=>c.label.trim().toLowerCase());
-  return j.table.rows.map(r=>{
-    const o={};
+  const r = await fetch(SHEET_URL);
+  const t = await r.text();
+  const j = JSON.parse(t.substring(t.indexOf("{"), t.lastIndexOf("}") + 1));
+
+  const cols = j.table.cols.map(c => c.label.trim().toLowerCase());
+  const rows = j.table.rows || [];
+
+  return rows.map(r => {
+    const o = {};
     r.c.forEach((c,i)=>{
-      if(!c) o[cols[i]]="";
-      else o[cols[i]]=c.v ?? c.f ?? "";
+      o[cols[i]] = c ? (c.v ?? c.f ?? "") : "";
     });
     return o;
   });
 }
 
 function groupProducts(data){
-  const g={};
-  data.forEach(p=>{
-    if(!g[p.name]){
-      g[p.name]={...p,variants:[],images:[]};
+  const grouped = {};
+
+  data.forEach(p => {
+
+    // 🔴 FILTRO CORRETO
+    if (String(p.availability).toLowerCase() !== "show") return;
+
+    if (!grouped[p.name]) {
+      grouped[p.name] = {
+        name: p.name,
+        price: Number(p.price),
+        discounted: p["discounted price"],
+        variants: [],
+        images: []
+      };
     }
-    const size=String(p["variant name"]||"").trim();
-    if(size && Number(p.stock)>0){
-      g[p.name].variants.push({
-        name:size,
-        price:p["discounted price"] && p["discounted price"]<p.price ? Number(p["discounted price"]) : Number(p.price),
-        stock:Number(p.stock)
+
+    const size = String(p["variant name"]).trim();
+    if (size) {
+      grouped[p.name].variants.push({
+        name: size,
+        price: p["discounted price"] && p["discounted price"] < p.price
+          ? Number(p["discounted price"])
+          : Number(p.price),
+        stock: Number(p.stock)
       });
     }
-    [p.thumbnail,p.image1,p.image2].forEach(i=>{
-      if(i && !g[p.name].images.includes(i)) g[p.name].images.push(i);
+
+    [p.thumbnail,p.image1,p.image2].forEach(img=>{
+      if(img && !grouped[p.name].images.includes(img)){
+        grouped[p.name].images.push(img);
+      }
     });
   });
-  return Object.values(g);
+
+  return Object.values(grouped);
 }
 
 function createCard(p){
-  if(!p.variants.length) return null;
+  if (!p.variants.length) return null;
 
-  const d=document.createElement("div");
-  d.className="card";
-  const discounted=p["discounted price"] && p["discounted price"]<p.price;
+  const d = document.createElement("div");
+  d.className = "card";
 
-  d.innerHTML=`
-    <img class="thumb" src="${p.images[0]||''}">
+  d.innerHTML = `
+    <img class="thumb" src="${p.images[0] || ""}">
     <div class="title">${p.name}</div>
-    <div>
-      ${discounted?`<span class="oldprice">R$ ${money(p.price)}</span>`:""}
-      <span class="price">R$ ${money(discounted?p["discounted price"]:p.price)}</span>
-    </div>
+    <div class="price">R$ ${Number(p.variants[0].price).toFixed(2).replace('.',',')}</div>
+
     <label>Tamanho</label>
     <select class="variant">
       ${p.variants.map(v=>`<option value="${v.price}">${v.name}</option>`).join("")}
     </select>
-    <input type="number" min="1" value="1" class="qty">
-    <button class="btn-add">Adicionar</button>
+
+    <div class="actions">
+      <button>Adicionar</button>
+    </div>
   `;
 
-  const priceEl=d.querySelector(".price");
-  d.querySelector(".variant").onchange=e=>{
-    priceEl.textContent="R$ "+money(e.target.value);
-  };
-
-  d.querySelector(".btn-add").onclick=()=>{
-    const cart=loadCart();
-    cart.push({
-      name:p.name+" - "+d.querySelector(".variant").selectedOptions[0].text,
-      price:Number(d.querySelector(".variant").value),
-      qty:Number(d.querySelector(".qty").value)
-    });
-    saveCart(cart);
-    updateCartCount();
-    alert("Adicionado ao carrinho");
+  const priceEl = d.querySelector(".price");
+  d.querySelector(".variant").onchange = e => {
+    priceEl.textContent = "R$ " + Number(e.target.value).toFixed(2).replace('.',',');
   };
 
   return d;
 }
 
 async function init(){
-  const data=groupProducts(await fetchSheet());
-  const p=document.getElementById("products");
-  data.forEach(i=>{
-    const c=createCard(i);
-    if(c) p.appendChild(c);
+  const data = await fetchSheet();
+  const grouped = groupProducts(data);
+  const grid = document.getElementById("products");
+
+  grouped.forEach(p=>{
+    const c = createCard(p);
+    if (c) grid.appendChild(c);
   });
-  updateCartCount();
+
+  console.log("PRODUTOS:", grouped); // 🔍 DEBUG
 }
+
 init();
-
-function openCart(){
-  const items=document.getElementById("cartItems");
-  items.innerHTML="";
-  let total=0;
-  loadCart().forEach(i=>{
-    total+=i.price*i.qty;
-    items.innerHTML+=`<div class="cart-item">${i.name} (${i.qty}x) - R$ ${money(i.price*i.qty)}</div>`;
-  });
-  document.getElementById("cartTotal").textContent=money(total);
-  document.getElementById("cart").style.display="block";
-}
-function closeCart(){document.getElementById("cart").style.display="none"}
-
-function sendOrder(){
-  const name=userName.value;
-  const phone=userPhone.value;
-  let msg="Pedido:\n";
-  loadCart().forEach(i=>msg+=`${i.name} (${i.qty}x)\n`);
-  window.open(`https://wa.me/${WHATSAPP}?text=${encodeURIComponent(msg+"\nNome:"+name+"\nTel:"+phone)}`);
-  localStorage.removeItem(CART_KEY);
-  updateCartCount();
-  closeCart();
-}
 </script>
 </body>
 </html>
