@@ -13,7 +13,6 @@ body{font-family:Arial;margin:0;padding:20px;background:#f6f6f6}
 .title{font-weight:bold;margin:8px 0}
 .price{font-size:18px}
 .oldprice{text-decoration:line-through;color:#888;font-size:14px}
-.actions{margin-top:auto;display:flex;flex-direction:column;gap:6px}
 select,input,button{padding:8px;border-radius:6px;border:1px solid #ccc}
 button{background:#1d4ed8;color:#fff;border:none;cursor:pointer}
 </style>
@@ -24,21 +23,25 @@ button{background:#1d4ed8;color:#fff;border:none;cursor:pointer}
 <div id="products" class="grid"></div>
 
 <script>
-const SHEET_ID = "1yPfhN08a0gj4JLoyTFISRghA7WSDbOJw4BFbzFdrDTc";
-const SHEET_NAME = "Sheet1";
-const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${SHEET_NAME}`;
+const SHEET_ID="1yPfhN08a0gj4JLoyTFISRghA7WSDbOJw4BFbzFdrDTc";
+const SHEET_NAME="Sheet1";
+const SHEET_URL=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${SHEET_NAME}`;
+
+function money(v){
+  return Number(v).toFixed(2).replace('.',',');
+}
 
 async function fetchSheet(){
   const r = await fetch(SHEET_URL);
   const t = await r.text();
-  const j = JSON.parse(t.substring(t.indexOf("{"), t.lastIndexOf("}") + 1));
+  const j = JSON.parse(t.substring(t.indexOf("{"), t.lastIndexOf("}")+1));
 
-  const cols = j.table.cols.map(c => c.label.trim().toLowerCase());
+  const cols = j.table.cols.map(c=>c.label.trim().toLowerCase());
   const rows = j.table.rows || [];
 
-  return rows.map(r => {
+  return rows.map(row=>{
     const o = {};
-    r.c.forEach((c,i)=>{
+    row.c.forEach((c,i)=>{
       o[cols[i]] = c ? (c.v ?? c.f ?? "") : "";
     });
     return o;
@@ -48,35 +51,36 @@ async function fetchSheet(){
 function groupProducts(data){
   const grouped = {};
 
-  data.forEach(p => {
+  data.forEach(p=>{
+    if(String(p.availability).toLowerCase() !== "show") return;
 
-    // 🔴 FILTRO CORRETO
-    if (String(p.availability).toLowerCase() !== "show") return;
+    const name = String(p.name).trim();
+    if(!name) return;
 
-    if (!grouped[p.name]) {
-      grouped[p.name] = {
-        name: p.name,
-        price: Number(p.price),
-        discounted: p["discounted price"],
-        variants: [],
-        images: []
+    if(!grouped[name]){
+      grouped[name] = {
+        name,
+        basePrice:Number(p.price),
+        discounted:Number(p["discounted price"]||0),
+        variants:[],
+        images:[]
       };
     }
 
     const size = String(p["variant name"]).trim();
-    if (size) {
-      grouped[p.name].variants.push({
-        name: size,
+    if(size){
+      grouped[name].variants.push({
+        name:size,
         price: p["discounted price"] && p["discounted price"] < p.price
           ? Number(p["discounted price"])
           : Number(p.price),
-        stock: Number(p.stock)
+        stock:Number(p.stock||0)
       });
     }
 
     [p.thumbnail,p.image1,p.image2].forEach(img=>{
-      if(img && !grouped[p.name].images.includes(img)){
-        grouped[p.name].images.push(img);
+      if(img && !grouped[name].images.includes(img)){
+        grouped[name].images.push(img);
       }
     });
   });
@@ -85,45 +89,44 @@ function groupProducts(data){
 }
 
 function createCard(p){
-  if (!p.variants.length) return null;
+  if(!p.variants.length) return null;
 
-  const d = document.createElement("div");
-  d.className = "card";
+  const d=document.createElement("div");
+  d.className="card";
 
-  d.innerHTML = `
-    <img class="thumb" src="${p.images[0] || ""}">
+  d.innerHTML=`
+    <img class="thumb" src="${p.images[0]||""}">
     <div class="title">${p.name}</div>
-    <div class="price">R$ ${Number(p.variants[0].price).toFixed(2).replace('.',',')}</div>
+    <div class="price">R$ ${money(p.variants[0].price)}</div>
 
     <label>Tamanho</label>
     <select class="variant">
       ${p.variants.map(v=>`<option value="${v.price}">${v.name}</option>`).join("")}
     </select>
 
-    <div class="actions">
-      <button>Adicionar</button>
-    </div>
+    <button>Adicionar</button>
   `;
 
-  const priceEl = d.querySelector(".price");
-  d.querySelector(".variant").onchange = e => {
-    priceEl.textContent = "R$ " + Number(e.target.value).toFixed(2).replace('.',',');
+  const priceEl=d.querySelector(".price");
+  d.querySelector(".variant").onchange=e=>{
+    priceEl.textContent="R$ "+money(e.target.value);
   };
 
   return d;
 }
 
 async function init(){
-  const data = await fetchSheet();
-  const grouped = groupProducts(data);
-  const grid = document.getElementById("products");
+  const raw = await fetchSheet();
+  const products = groupProducts(raw);
 
-  grouped.forEach(p=>{
-    const c = createCard(p);
-    if (c) grid.appendChild(c);
+  console.log("DADOS DA PLANILHA:", raw);
+  console.log("PRODUTOS AGRUPADOS:", products);
+
+  const grid=document.getElementById("products");
+  products.forEach(p=>{
+    const c=createCard(p);
+    if(c) grid.appendChild(c);
   });
-
-  console.log("PRODUTOS:", grouped); // 🔍 DEBUG
 }
 
 init();
