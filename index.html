@@ -7,6 +7,10 @@
 
 <style>
 body{font-family:Arial;margin:0;padding:20px;background:#f6f6f6}
+header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+h2{margin:0}
+.cart-btn{background:#1d4ed8;color:#fff;border:none;padding:10px 16px;border-radius:6px;cursor:pointer;position:relative}
+.cart-count{background:red;color:#fff;border-radius:50%;padding:2px 6px;font-size:12px;position:absolute;top:-6px;right:-6px}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px}
 .card{background:#fff;border-radius:10px;padding:12px;box-shadow:0 6px 18px rgba(0,0,0,.1);display:flex;flex-direction:column}
 .thumb{width:100%;height:160px;object-fit:cover;border-radius:8px;background:#eee}
@@ -16,18 +20,43 @@ body{font-family:Arial;margin:0;padding:20px;background:#f6f6f6}
 select,input,button{padding:8px;border-radius:6px;border:1px solid #ccc}
 button{background:#1d4ed8;color:#fff;border:none;cursor:pointer;transition:.3s;margin-top:8px}
 button:hover{background:#2563eb}
+#cartModal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.4);display:none;align-items:center;justify-content:center}
+#cartModal .box{background:#fff;padding:20px;border-radius:12px;width:90%;max-width:400px;max-height:80%;overflow-y:auto}
+#cartModal h3{margin-top:0}
+.item{border-bottom:1px solid #ddd;padding:8px 0}
+.item:last-child{border:none}
+.total{font-weight:bold;margin-top:12px}
 </style>
 </head>
 
 <body>
-<h2>Catálogo</h2>
+<header>
+  <h2>Catálogo</h2>
+  <button class="cart-btn" onclick="openCart()">
+    🛒 Carrinho <span class="cart-count" id="cartCount">0</span>
+  </button>
+</header>
+
 <div id="products" class="grid"></div>
+
+<!-- Modal do carrinho -->
+<div id="cartModal">
+  <div class="box">
+    <h3>Seu carrinho</h3>
+    <div id="cartItems"></div>
+    <div class="total" id="cartTotal"></div>
+    <button onclick="sendToWhatsApp()">Enviar no WhatsApp</button>
+    <button onclick="closeCart()" style="background:#ccc;color:#000;margin-top:8px">Fechar</button>
+  </div>
+</div>
 
 <script>
 const SHEET_ID="1BqVAf9A7l7KHKcwpV9HrqBMPWTA4s-aPv1EEna7xuHg";
 const SHEET_NAME="products";
 const SHEET_URL=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${SHEET_NAME}`;
-const WHATSAPP="5581997512217"; // seu número com DDI
+const WHATSAPP="5581997512217"; // <-- coloque seu número
+
+let cart=[];
 
 function money(v){
   const n = Number(v);
@@ -38,12 +67,11 @@ async function fetchSheet(){
   const r = await fetch(SHEET_URL);
   const t = await r.text();
   const j = JSON.parse(t.substring(t.indexOf("{"), t.lastIndexOf("}")+1));
-
   const cols = j.table.cols.map(c=>c.label.trim().toLowerCase());
   const rows = j.table.rows || [];
 
   return rows.map(row=>{
-    const o = {};
+    const o={};
     row.c.forEach((c,i)=>{
       o[cols[i]] = c ? (c.v ?? c.f ?? "") : "";
     });
@@ -52,99 +80,100 @@ async function fetchSheet(){
 }
 
 function groupProducts(data){
-  const grouped = {};
-
+  const grouped={};
   data.forEach(p=>{
-    if(String(p.availability).toLowerCase() !== "show") return;
-    const name = String(p.name).trim();
-    if(!name) return;
-
+    if(String(p.availability).toLowerCase()!=="show")return;
+    const name=String(p.name).trim();
+    if(!name)return;
     if(!grouped[name]){
-      grouped[name] = {
-        name,
-        basePrice:Number(p.price),
-        discounted:Number(p["discounted price"]||0),
-        variants:[],
-        images:[]
-      };
+      grouped[name]={name,variants:[],images:[]};
     }
-
-    const variantName = String(p["variant name"]).trim();
+    const variantName=String(p["variant name"]).trim();
     if(variantName){
       grouped[name].variants.push({
-        name: variantName, // pode ser número ou letra
-        price: p["discounted price"] && p["discounted price"] < p.price
-          ? Number(p["discounted price"])
-          : Number(p.price),
-        stock:Number(p.stock||0)
+        name:variantName,
+        price:Number(p["discounted price"]||p.price)
       });
     }
-
     [p.thumbnail,p.image1,p.image2,p.image3].forEach(img=>{
-      if(img && !grouped[name].images.includes(img)){
+      if(img&&!grouped[name].images.includes(img)){
         grouped[name].images.push(img);
       }
     });
   });
-
   return Object.values(grouped);
 }
 
-function createCard(p){
-  if(!p.variants.length) return null;
+function addToCart(prod,variant){
+  cart.push({name:prod.name,variant:variant.name,price:variant.price});
+  document.getElementById("cartCount").textContent=cart.length;
+}
 
+function openCart(){
+  const modal=document.getElementById("cartModal");
+  const items=document.getElementById("cartItems");
+  const total=document.getElementById("cartTotal");
+  items.innerHTML="";
+  let sum=0;
+  cart.forEach((it,i)=>{
+    sum+=it.price;
+    items.innerHTML+=`<div class="item">${it.name} - ${it.variant} <b>R$ ${money(it.price)}</b></div>`;
+  });
+  total.textContent="Total: R$ "+money(sum);
+  modal.style.display="flex";
+}
+
+function closeCart(){
+  document.getElementById("cartModal").style.display="none";
+}
+
+function sendToWhatsApp(){
+  if(cart.length===0){alert("Seu carrinho está vazio.");return;}
+  let msg="🛍️ *Pedido:*\n\n";
+  let total=0;
+  cart.forEach(it=>{
+    msg+=`• ${it.name} - ${it.variant} - R$ ${money(it.price)}\n`;
+    total+=it.price;
+  });
+  msg+=`\n*Total:* R$ ${money(total)}`;
+  const url=`https://wa.me/${WHATSAPP}?text=${encodeURIComponent(msg)}`;
+  window.open(url,"_blank");
+}
+
+function createCard(p){
+  if(!p.variants.length)return null;
   const d=document.createElement("div");
   d.className="card";
-
   d.innerHTML=`
     <img class="thumb" src="${p.images[0]||""}" alt="${p.name}">
     <div class="title">${p.name}</div>
     <div class="price">R$ ${money(p.variants[0].price)}</div>
-
-    <label>Tamanho</label>
+    <label>Variação</label>
     <select class="variant">
       ${p.variants.map(v=>`<option value="${v.price}">${v.name}</option>`).join("")}
     </select>
-
-    <button>Comprar pelo WhatsApp</button>
+    <button>Adicionar ao carrinho</button>
   `;
-
-  const variantSel=d.querySelector(".variant");
+  const sel=d.querySelector(".variant");
   const priceEl=d.querySelector(".price");
   const btn=d.querySelector("button");
-
-  // Atualiza preço conforme variação
-  variantSel.onchange=()=>{
-    const idx=variantSel.selectedIndex;
-    priceEl.textContent="R$ "+money(p.variants[idx].price);
-  };
-
-  // Envia pro WhatsApp
+  sel.onchange=()=>{priceEl.textContent="R$ "+money(sel.value)};
   btn.onclick=()=>{
-    const idx=variantSel.selectedIndex;
-    const varName=variantSel.options[idx].text;
-    const preco=money(p.variants[idx].price);
-    const msg=`Olá! Quero comprar *${p.name}* - Variação: *${varName}* - Preço: R$ ${preco}`;
-    const url=`https://wa.me/${WHATSAPP}?text=${encodeURIComponent(msg)}`;
-    window.open(url,"_blank");
+    const idx=sel.selectedIndex;
+    addToCart(p,p.variants[idx]);
+    alert(p.name+" ("+p.variants[idx].name+") adicionado ao carrinho!");
   };
-
   return d;
 }
 
 async function init(){
-  try {
-    const raw = await fetchSheet();
-    const products = groupProducts(raw);
-    const grid=document.getElementById("products");
-    grid.innerHTML="";
-    products.forEach(p=>{
-      const c=createCard(p);
-      if(c) grid.appendChild(c);
-    });
-  } catch (err) {
-    console.error("Erro ao carregar a planilha:", err);
-  }
+  const raw=await fetchSheet();
+  const products=groupProducts(raw);
+  const grid=document.getElementById("products");
+  products.forEach(p=>{
+    const c=createCard(p);
+    if(c)grid.appendChild(c);
+  });
 }
 
 init();
