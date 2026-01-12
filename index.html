@@ -26,6 +26,7 @@ button:hover{background:#2563eb}
 .item{border-bottom:1px solid #ddd;padding:8px 0}
 .item:last-child{border:none}
 .total{font-weight:bold;margin-top:12px}
+.qty{width:60px;text-align:center;margin-left:8px}
 </style>
 </head>
 
@@ -54,27 +55,24 @@ button:hover{background:#2563eb}
 const SHEET_ID="1BqVAf9A7l7KHKcwpV9HrqBMPWTA4s-aPv1EEna7xuHg";
 const SHEET_NAME="products";
 const SHEET_URL=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${SHEET_NAME}`;
-const WHATSAPP="5581997512217"; // <-- coloque seu número
+const WHATSAPP="5581997512217"; // <-- coloque seu número com DDI
 
 let cart=[];
 
 function money(v){
-  const n = Number(v);
-  return isNaN(n) ? v : n.toFixed(2).replace('.',',');
+  const n=Number(v);
+  return isNaN(n)?v:n.toFixed(2).replace('.',',');
 }
 
 async function fetchSheet(){
-  const r = await fetch(SHEET_URL);
-  const t = await r.text();
-  const j = JSON.parse(t.substring(t.indexOf("{"), t.lastIndexOf("}")+1));
-  const cols = j.table.cols.map(c=>c.label.trim().toLowerCase());
-  const rows = j.table.rows || [];
-
+  const r=await fetch(SHEET_URL);
+  const t=await r.text();
+  const j=JSON.parse(t.substring(t.indexOf("{"),t.lastIndexOf("}")+1));
+  const cols=j.table.cols.map(c=>c.label.trim().toLowerCase());
+  const rows=j.table.rows||[];
   return rows.map(row=>{
     const o={};
-    row.c.forEach((c,i)=>{
-      o[cols[i]] = c ? (c.v ?? c.f ?? "") : "";
-    });
+    row.c.forEach((c,i)=>{o[cols[i]]=c?(c.v??c.f??""):"";});
     return o;
   });
 }
@@ -85,9 +83,7 @@ function groupProducts(data){
     if(String(p.availability).toLowerCase()!=="show")return;
     const name=String(p.name).trim();
     if(!name)return;
-    if(!grouped[name]){
-      grouped[name]={name,variants:[],images:[]};
-    }
+    if(!grouped[name])grouped[name]={name,variants:[],images:[]};
     const variantName=String(p["variant name"]).trim();
     if(variantName){
       grouped[name].variants.push({
@@ -96,17 +92,16 @@ function groupProducts(data){
       });
     }
     [p.thumbnail,p.image1,p.image2,p.image3].forEach(img=>{
-      if(img&&!grouped[name].images.includes(img)){
-        grouped[name].images.push(img);
-      }
+      if(img&&!grouped[name].images.includes(img))grouped[name].images.push(img);
     });
   });
   return Object.values(grouped);
 }
 
-function addToCart(prod,variant){
-  cart.push({name:prod.name,variant:variant.name,price:variant.price});
-  document.getElementById("cartCount").textContent=cart.length;
+function addToCart(prod,variant,qty){
+  if(qty<=0)return;
+  cart.push({name:prod.name,variant:variant.name,price:variant.price,qty});
+  document.getElementById("cartCount").textContent=cart.reduce((a,b)=>a+b.qty,0);
 }
 
 function openCart(){
@@ -116,8 +111,12 @@ function openCart(){
   items.innerHTML="";
   let sum=0;
   cart.forEach((it,i)=>{
-    sum+=it.price;
-    items.innerHTML+=`<div class="item">${it.name} - ${it.variant} <b>R$ ${money(it.price)}</b></div>`;
+    const subtotal=it.price*it.qty;
+    sum+=subtotal;
+    items.innerHTML+=`
+      <div class="item">
+        ${it.name} - ${it.variant} x${it.qty} <b>R$ ${money(subtotal)}</b>
+      </div>`;
   });
   total.textContent="Total: R$ "+money(sum);
   modal.style.display="flex";
@@ -132,8 +131,9 @@ function sendToWhatsApp(){
   let msg="🛍️ *Pedido:*\n\n";
   let total=0;
   cart.forEach(it=>{
-    msg+=`• ${it.name} - ${it.variant} - R$ ${money(it.price)}\n`;
-    total+=it.price;
+    const subtotal=it.price*it.qty;
+    msg+=`• ${it.name} - ${it.variant} x${it.qty} = R$ ${money(subtotal)}\n`;
+    total+=subtotal;
   });
   msg+=`\n*Total:* R$ ${money(total)}`;
   const url=`https://wa.me/${WHATSAPP}?text=${encodeURIComponent(msg)}`;
@@ -152,16 +152,20 @@ function createCard(p){
     <select class="variant">
       ${p.variants.map(v=>`<option value="${v.price}">${v.name}</option>`).join("")}
     </select>
+    <label>Qtd</label>
+    <input type="number" min="1" value="1" class="qty">
     <button>Adicionar ao carrinho</button>
   `;
   const sel=d.querySelector(".variant");
   const priceEl=d.querySelector(".price");
   const btn=d.querySelector("button");
+  const qtyInput=d.querySelector(".qty");
   sel.onchange=()=>{priceEl.textContent="R$ "+money(sel.value)};
   btn.onclick=()=>{
     const idx=sel.selectedIndex;
-    addToCart(p,p.variants[idx]);
-    alert(p.name+" ("+p.variants[idx].name+") adicionado ao carrinho!");
+    const qty=parseInt(qtyInput.value);
+    addToCart(p,p.variants[idx],qty);
+    alert(`${p.name} (${p.variants[idx].name}) x${qty} adicionado ao carrinho!`);
   };
   return d;
 }
