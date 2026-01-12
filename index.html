@@ -27,7 +27,7 @@ button:hover{background:#2563eb}
 const SHEET_ID="1BqVAf9A7l7KHKcwpV9HrqBMPWTA4s-aPv1EEna7xuHg";
 const SHEET_NAME="products";
 const SHEET_URL=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${SHEET_NAME}`;
-const WHATSAPP="5581997512217"; // <-- coloque aqui seu número (com DDI 55)
+const WHATSAPP="5581997512217"; // seu número com DDI
 
 function money(v){
   const n = Number(v);
@@ -69,10 +69,10 @@ function groupProducts(data){
       };
     }
 
-    const size = String(p["variant name"]).trim();
-    if(size){
+    const variantName = String(p["variant name"]).trim();
+    if(variantName){
       grouped[name].variants.push({
-        name:size,
+        name: variantName, // pode ser número ou letra
         price: p["discounted price"] && p["discounted price"] < p.price
           ? Number(p["discounted price"])
           : Number(p.price),
@@ -113,17 +113,20 @@ function createCard(p){
   const priceEl=d.querySelector(".price");
   const btn=d.querySelector("button");
 
-  // Atualiza preço ao trocar tamanho
-  variantSel.onchange=e=>{
-    priceEl.textContent="R$ "+money(e.target.value);
+  // Atualiza preço conforme variação
+  variantSel.onchange=()=>{
+    const idx=variantSel.selectedIndex;
+    priceEl.textContent="R$ "+money(p.variants[idx].price);
   };
 
   // Envia pro WhatsApp
   btn.onclick=()=>{
-    const tamanho=variantSel.value;
-    const texto=`Olá! Quero comprar *${p.name}* - Tamanho: *${variantSel.options[variantSel.selectedIndex].text}* - Preço: R$ ${money(tamanho)}`;
-    const url=`https://wa.me/${WHATSAPP}?text=${encodeURIComponent(texto)}`;
-    window.open(url, "_blank");
+    const idx=variantSel.selectedIndex;
+    const varName=variantSel.options[idx].text;
+    const preco=money(p.variants[idx].price);
+    const msg=`Olá! Quero comprar *${p.name}* - Variação: *${varName}* - Preço: R$ ${preco}`;
+    const url=`https://wa.me/${WHATSAPP}?text=${encodeURIComponent(msg)}`;
+    window.open(url,"_blank");
   };
 
   return d;
