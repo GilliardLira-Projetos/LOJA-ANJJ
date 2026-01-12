@@ -1,165 +1,135 @@
 <!doctype html>
 <html lang="pt-BR">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Minha Loja - Catálogo</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Catálogo</title>
 
 <style>
-:root{--max-w:1100px;--gap:16px}
-body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial;margin:0;padding:24px;background:#f7f7f8;color:#111}
-.container{max-width:var(--max-w);margin:0 auto}
-header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}
-h1{margin:0;font-size:1.25rem}
-select,input[type=number]{padding:6px;border-radius:6px;border:1px solid #ccc}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:var(--gap)}
-.card{background:white;border-radius:12px;padding:12px;box-shadow:0 6px 18px rgba(0,0,0,0.06);display:flex;flex-direction:column;gap:8px}
-.thumb{height:160px;border-radius:8px;object-fit:cover;width:100%;background:#eee}
-.title{font-weight:600}
-.price{font-size:1.05rem}
-.oldprice{text-decoration:line-through;color:#888;font-size:.9rem}
-.desc{font-size:.9rem;color:#444}
-.actions{margin-top:auto;display:flex;gap:8px;flex-direction:column}
-button{cursor:pointer;border:0;padding:10px 12px;border-radius:8px}
-.btn-add{background:#1d4ed8;color:white}
-.cart-btn{background:#111;color:white;padding:10px 14px;border-radius:10px}
-.cart-panel{position:fixed;right:20px;bottom:20px;background:white;padding:12px;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.12);width:320px;max-width:90%;z-index:99}
-.cart-item{display:flex;gap:8px;align-items:center;margin-bottom:8px}
-.cart-item img{width:48px;height:48px;object-fit:cover;border-radius:6px}
-.muted{color:#666;font-size:.9rem}
-.thumbnails{display:flex;gap:4px}
-.thumbnails img{width:40px;height:40px;object-fit:cover;border-radius:4px;cursor:pointer}
+body{font-family:Arial;margin:0;padding:20px;background:#f6f6f6}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px}
+.card{background:#fff;border-radius:10px;padding:12px;box-shadow:0 6px 18px rgba(0,0,0,.1);display:flex;flex-direction:column}
+.thumb{width:100%;height:160px;object-fit:cover;border-radius:8px;background:#eee}
+.title{font-weight:bold;margin:8px 0}
+.price{font-size:18px}
+.oldprice{text-decoration:line-through;color:#888;font-size:14px}
+select,input,button{padding:8px;border-radius:6px;border:1px solid #ccc}
+button{background:#1d4ed8;color:#fff;border:none;cursor:pointer}
 </style>
 </head>
 
 <body>
-<div class="container">
-<header>
-<h1>Catálogo de Produtos</h1>
-<button id="btnCart" class="cart-btn">Carrinho (<span id="cartCount">0</span>)</button>
-</header>
-
+<h2>Catálogo</h2>
 <div id="products" class="grid"></div>
-</div>
-
-<div id="cartPanel" class="cart-panel" style="display:none">
-<h3>Seu pedido</h3>
-<div id="cartItems"></div>
-<div class="muted">Total: R$ <span id="cartTotal">0,00</span></div>
-<hr>
-<input id="userName" placeholder="Nome" />
-<input id="userPhone" placeholder="Telefone" />
-<button onclick="sendOrder()">Enviar pelo WhatsApp</button>
-<button onclick="closeCart()">Fechar</button>
-</div>
 
 <script>
-const SHEET_ID = "1yPfhN08a0gj4JLoyTFISRghA7WSDbOJw4BFbzFdrDTc";
-const SHEET_NAME = "Sheet1";
-const WHATSAPP = "5581997512217";
-const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${SHEET_NAME}`;
-const cartKey = "cart_v1";
+const SHEET_ID="1yPfhN08a0gj4JLoyTFISRghA7WSDbOJw4BFbzFdrDTc";
+const SHEET_NAME="Sheet1";
+const SHEET_URL=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${SHEET_NAME}`;
 
-function loadCart(){return JSON.parse(localStorage.getItem(cartKey)||"[]")}
-function saveCart(c){localStorage.setItem(cartKey,JSON.stringify(c))}
-function toCurrency(n){return Number(n).toFixed(2).replace('.',',')}
-function updateCartCount(){document.getElementById("cartCount").textContent=loadCart().reduce((s,i)=>s+i.qty,0)}
-
-function groupVariants(data){
-  const grouped = {};
-  data.forEach(p=>{
-    if(!grouped[p.name]){
-      grouped[p.name]={...p,variants:[],images:[]};
-    }
-    const vName = String(p["variant name"]||"").trim();
-    if(vName){
-      grouped[p.name].variants.push({
-        name:vName,
-        price:p["discounted price"]&&p["discounted price"]<p.price?Number(p["discounted price"]):Number(p.price)
-      });
-    }
-    [p.thumbnail,p.image1,p.image2].forEach(img=>{
-      if(img&&!grouped[p.name].images.includes(img)) grouped[p.name].images.push(img);
-    });
-  });
-  return Object.values(grouped);
-}
-
-function createCard(p){
-  const d=document.createElement("div");d.className="card";
-  const discounted=p["discounted price"]&&p["discounted price"]<p.price;
-  d.innerHTML=`
-  <img class="thumb" src="${p.images[0]||''}">
-  <div class="thumbnails">${p.images.slice(1).map(i=>`<img src="${i}" onclick="this.closest('.card').querySelector('.thumb').src=this.src">`).join("")}</div>
-  <div class="title">${p.name}</div>
-  <div>
-    ${discounted?`<span class="oldprice">R$ ${toCurrency(p.price)}</span>`:""}
-    <span class="price">R$ ${toCurrency(discounted?p["discounted price"]:p.price)}</span>
-  </div>
-  <label>Tamanho:</label>
-  <select class="variant">
-    ${p.variants.map(v=>`<option value="${v.price}">${v.name}</option>`).join("")}
-  </select>
-  <input type="number" min="1" value="1" class="qty">
-  <button class="btn-add">Adicionar</button>
-  `;
-  const priceEl=d.querySelector(".price");
-  d.querySelector(".variant").onchange=e=>{
-    priceEl.textContent="R$ "+toCurrency(e.target.value);
-  };
-  d.querySelector(".btn-add").onclick=()=>{
-    const cart=loadCart();
-    cart.push({
-      name:p.name+" - "+d.querySelector(".variant").selectedOptions[0].text,
-      price:Number(d.querySelector(".variant").value),
-      qty:Number(d.querySelector(".qty").value),
-      img:p.images[0]
-    });
-    saveCart(cart);updateCartCount();alert("Adicionado!");
-  };
-  return d;
+function money(v){
+  return Number(v).toFixed(2).replace('.',',');
 }
 
 async function fetchSheet(){
-  const r=await fetch(SHEET_URL);
-  const t=await r.text();
-  const j=JSON.parse(t.substring(t.indexOf("{"),t.lastIndexOf("}")+1));
-  const cols=j.table.cols.map(c=>c.label.toLowerCase());
-  return j.table.rows.map(r=>{
-    const o={};
-    r.c.forEach((c,i)=>o[cols[i]]=c?.v||"");
+  const r = await fetch(SHEET_URL);
+  const t = await r.text();
+  const j = JSON.parse(t.substring(t.indexOf("{"), t.lastIndexOf("}")+1));
+
+  const cols = j.table.cols.map(c=>c.label.trim().toLowerCase());
+  const rows = j.table.rows || [];
+
+  return rows.map(row=>{
+    const o = {};
+    row.c.forEach((c,i)=>{
+      o[cols[i]] = c ? (c.v ?? c.f ?? "") : "";
+    });
     return o;
   });
 }
 
-async function init(){
-  const data=groupVariants(await fetchSheet());
-  const p=document.getElementById("products");
-  data.forEach(i=>p.appendChild(createCard(i)));
-  updateCartCount();
-}
-init();
+function groupProducts(data){
+  const grouped = {};
 
-function closeCart(){document.getElementById("cartPanel").style.display="none"}
-document.getElementById("btnCart").onclick=()=>{
-  const items=document.getElementById("cartItems");
-  items.innerHTML="";
-  let total=0;
-  loadCart().forEach(i=>{
-    total+=i.price*i.qty;
-    items.innerHTML+=`<div>${i.name} (${i.qty}) - R$ ${toCurrency(i.price*i.qty)}</div>`;
+  data.forEach(p=>{
+    if(String(p.availability).toLowerCase() !== "show") return;
+
+    const name = String(p.name).trim();
+    if(!name) return;
+
+    if(!grouped[name]){
+      grouped[name] = {
+        name,
+        basePrice:Number(p.price),
+        discounted:Number(p["discounted price"]||0),
+        variants:[],
+        images:[]
+      };
+    }
+
+    const size = String(p["variant name"]).trim();
+    if(size){
+      grouped[name].variants.push({
+        name:size,
+        price: p["discounted price"] && p["discounted price"] < p.price
+          ? Number(p["discounted price"])
+          : Number(p.price),
+        stock:Number(p.stock||0)
+      });
+    }
+
+    [p.thumbnail,p.image1,p.image2].forEach(img=>{
+      if(img && !grouped[name].images.includes(img)){
+        grouped[name].images.push(img);
+      }
+    });
   });
-  document.getElementById("cartTotal").textContent=toCurrency(total);
-  document.getElementById("cartPanel").style.display="block";
-};
 
-function sendOrder(){
-  const name=userName.value,phone=userPhone.value;
-  let msg="Pedido:\n";
-  loadCart().forEach(i=>msg+=`${i.name} (${i.qty}x)\n`);
-  window.open(`https://wa.me/${WHATSAPP}?text=${encodeURIComponent(msg+"\nNome:"+name+"\nTel:"+phone)}`);
-  localStorage.removeItem(cartKey);updateCartCount();closeCart();
+  return Object.values(grouped);
 }
+
+function createCard(p){
+  if(!p.variants.length) return null;
+
+  const d=document.createElement("div");
+  d.className="card";
+
+  d.innerHTML=`
+    <img class="thumb" src="${p.images[0]||""}">
+    <div class="title">${p.name}</div>
+    <div class="price">R$ ${money(p.variants[0].price)}</div>
+
+    <label>Tamanho</label>
+    <select class="variant">
+      ${p.variants.map(v=>`<option value="${v.price}">${v.name}</option>`).join("")}
+    </select>
+
+    <button>Adicionar</button>
+  `;
+
+  const priceEl=d.querySelector(".price");
+  d.querySelector(".variant").onchange=e=>{
+    priceEl.textContent="R$ "+money(e.target.value);
+  };
+
+  return d;
+}
+
+async function init(){
+  const raw = await fetchSheet();
+  const products = groupProducts(raw);
+
+  console.log("DADOS DA PLANILHA:", raw);
+  console.log("PRODUTOS AGRUPADOS:", products);
+
+  const grid=document.getElementById("products");
+  products.forEach(p=>{
+    const c=createCard(p);
+    if(c) grid.appendChild(c);
+  });
+}
+
+init();
 </script>
 </body>
 </html>
