@@ -6,11 +6,11 @@
 <title>Minha Loja - Catálogo</title>
 <style>
   :root{--max-w:1100px;--gap:16px}
-  body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial; margin:0; padding:24px; background:#f7f7f8; color:#111}
-  .container{max-width:var(--max-w); margin:0 auto}
+  body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial;margin:0;padding:24px;background:#f7f7f8;color:#111}
+  .container{max-width:var(--max-w);margin:0 auto}
   header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}
   h1{margin:0;font-size:1.25rem}
-  select, input[type=number]{padding:6px;border-radius:6px;border:1px solid #ccc}
+  select,input[type=number]{padding:6px;border-radius:6px;border:1px solid #ccc}
   .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:var(--gap)}
   .card{background:white;border-radius:12px;padding:12px;box-shadow:0 6px 18px rgba(0,0,0,0.06);display:flex;flex-direction:column;gap:8px}
   .thumb{height:160px;border-radius:8px;object-fit:cover;width:100%;background:#eee;cursor:pointer}
@@ -28,7 +28,7 @@
   .cart-item img{width:48px;height:48px;object-fit:cover;border-radius:6px}
   .muted{color:#666;font-size:0.9rem}
   .loader{margin:60px auto;text-align:center;color:#666}
-  input, textarea{width:100%;padding:8px;border-radius:6px;border:1px solid #ccc;margin-bottom:6px}
+  input,textarea{width:100%;padding:8px;border-radius:6px;border:1px solid #ccc;margin-bottom:6px}
   .thumbnails{display:flex;gap:4px;margin-top:4px}
   .thumbnails img{width:40px;height:40px;object-fit:cover;border-radius:4px;cursor:pointer;border:1px solid #ccc}
 </style>
@@ -38,9 +38,7 @@
   <header>
     <h1>Catálogo de Produtos</h1>
     <div style="display:flex;gap:8px;align-items:center;">
-      <select id="filterCat">
-        <option value="">Todas as categorias</option>
-      </select>
+      <select id="filterCat"><option value="">Todas as categorias</option></select>
       <button id="btnCart" class="cart-btn">Carrinho (<span id="cartCount">0</span>)</button>
     </div>
   </header>
@@ -56,7 +54,6 @@
   <h3>Seu pedido</h3>
   <div id="cartItems"></div>
   <div class="muted">Total: R$ <span id="cartTotal">0,00</span></div>
-
   <hr>
   <h4>Seus dados</h4>
   <input id="userName" placeholder="Nome completo" />
@@ -64,7 +61,6 @@
   <input id="userEmail" placeholder="E-mail" />
   <textarea id="userAddress" placeholder="Endereço completo"></textarea>
   <input id="userZip" placeholder="CEP" />
-
   <div style="margin-top:10px;display:flex;gap:8px">
     <button id="btnSendWhats" class="btn-wh">Enviar pedido</button>
     <button id="btnCloseCart">Fechar</button>
@@ -77,163 +73,142 @@ const SHEET_NAME = "Sheet1";
 const WHATSAPP_NUMBER = "5581997512217";
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxta6KftgX_qBuDgcHmarZ90ij8KDNMEmd6xTQBRzTKIo6gY19jZRY_99sqy-Tredz5/exec";
 const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(SHEET_NAME)}`;
-const cartKey = "loja_cart_v2";
+const cartKey = "loja_cart_v3";
 
-function loadCart(){ try{return JSON.parse(localStorage.getItem(cartKey))||[]}catch(e){return[]}}
-function saveCart(c){ localStorage.setItem(cartKey, JSON.stringify(c)) }
-function updateCartCount(){ const c=loadCart().reduce((s,i)=>s+i.qty,0); document.getElementById('cartCount').textContent=c }
-function toCurrency(n){ return Number(n).toFixed(2).replace('.',',') }
+function loadCart(){try{return JSON.parse(localStorage.getItem(cartKey))||[]}catch(e){return[]}}
+function saveCart(c){localStorage.setItem(cartKey,JSON.stringify(c))}
+function updateCartCount(){const c=loadCart().reduce((s,i)=>s+i.qty,0);document.getElementById('cartCount').textContent=c}
+function toCurrency(n){return Number(n).toFixed(2).replace('.',',')}
 function escapeHtml(s){return String(s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
 
-// Cria o card do produto com variações e galeria
-function createProductCard(prod){
-  const div=document.createElement('div');div.className='card';
-  const discounted = prod["discounted price"] && prod["discounted price"] < prod.price;
-
-  // Monta o seletor de variações
-  let variantOptions = '';
-  if(prod.variants && prod.variants.length>0){
-    variantOptions = `<select class="variantSelect">${prod.variants.map(v=>`<option value="${v.price}|${v.stock}">${v.name}</option>`).join('')}</select>`;
-  }
-
-  div.innerHTML=`
-    <img class="thumb" src="${prod.images[0]||''}" alt="${escapeHtml(prod.name)}" onerror="this.style.display='none'">
-    <div class="thumbnails">
-      ${prod.images.slice(1).map(img=>`<img src="${img}" onclick="this.closest('.card').querySelector('.thumb').src=this.src">`).join('')}
-    </div>
-    <div class="title">${escapeHtml(prod.name)}</div>
-    <div>
-      ${discounted?`<span class="oldprice">R$ ${toCurrency(prod.price)}</span> `:''}
-      <span class="price">R$ ${toCurrency(discounted?prod["discounted price"]:prod.price)}</span>
-    </div>
-    <div class="desc">${escapeHtml(prod.description||'')}</div>
-    <div class="actions">
-      ${variantOptions}
-      Quantidade: <input type="number" class="qtyInput" value="1" min="1" style="width:50px">
-      <button class="btn-add">Adicionar</button>
-    </div>
-  `;
-
-  // Atualiza preço ao trocar variação
-  const select = div.querySelector('.variantSelect');
-  const priceEl = div.querySelector('.price');
-  if(select){
-    select.onchange=()=>{
-      const [price, stock] = select.value.split('|');
-      priceEl.textContent = `R$ ${toCurrency(price)}`;
-    };
-  }
-
-  div.querySelector('.btn-add').onclick=()=>{
-    let qty = parseInt(div.querySelector('.qtyInput').value)||1;
-    let price = discounted?prod["discounted price"]:prod.price;
-    let name = prod.name;
-    if(select){
-      const [vPrice, vStock] = select.value.split('|');
-      price = Number(vPrice);
-      name += ` - ${select.options[select.selectedIndex].text}`;
-    }
-    addToCart({name,price,qty,img:prod.images[0]||''});
-  }
-
-  return div;
-}
-
-// Agrupa os produtos por Name
 function groupVariants(data){
-  const grouped = {};
+  const grouped={};
   data.forEach(p=>{
-    if(!grouped[p.name]) grouped[p.name]={...p, variants:[], images:[]};
-    grouped[p.name].variants.push({name:p["variant name"], price:p.price, stock:p.stock});
-    // junta as imagens
-    [p.thumbnail,p.image1,p.image2].forEach(img=>{if(img) grouped[p.name].images.push(img)});
+    if(!grouped[p.name]) grouped[p.name]={...p,variants:[],images:[]};
+    const variantName=String(p["variant name"]||"").trim();
+    if(variantName){
+      grouped[p.name].variants.push({name:variantName,price:p.price,stock:p.stock});
+    }
+    [p.thumbnail,p.image1,p.image2].forEach(img=>{
+      if(img && !grouped[p.name].images.includes(img)) grouped[p.name].images.push(img);
+    });
   });
   return Object.values(grouped);
 }
 
-// Mesma lógica de carrinho do código antigo
+function createProductCard(prod){
+  const div=document.createElement('div');div.className='card';
+  const discounted=prod["discounted price"]&&prod["discounted price"]<prod.price;
+
+  let variantOptions='';
+  if(prod.variants&&prod.variants.length>0){
+    variantOptions=`<select class="variantSelect">${prod.variants.map(v=>`<option value="${v.price}|${v.stock}">${v.name}</option>`).join('')}</select>`;
+  }
+
+  div.innerHTML=`
+    <img class="thumb" src="${prod.images[0]||''}" alt="${escapeHtml(prod.name)}" onerror="this.style.display='none'">
+    <div class="thumbnails">${prod.images.slice(1).map(img=>`<img src="${img}" onclick="this.closest('.card').querySelector('.thumb').src=this.src">`).join('')}</div>
+    <div class="title">${escapeHtml(prod.name)}</div>
+    <div>${discounted?`<span class="oldprice">R$ ${toCurrency(prod.price)}</span> `:''}<span class="price">R$ ${toCurrency(discounted?prod["discounted price"]:prod.price)}</span></div>
+    <div class="desc">${escapeHtml(prod.description||'')}</div>
+    <div class="actions">
+      ${variantOptions}
+      Quantidade: <input type="number" class="qtyInput" value="1" min="1" style="width:60px">
+      <button class="btn-add">Adicionar</button>
+    </div>
+  `;
+
+  const select=div.querySelector('.variantSelect');
+  const priceEl=div.querySelector('.price');
+  if(select){
+    select.onchange=()=>{
+      const[price]=select.value.split('|');
+      priceEl.textContent=`R$ ${toCurrency(price)}`;
+    };
+  }
+
+  div.querySelector('.btn-add').onclick=()=>{
+    let qty=parseInt(div.querySelector('.qtyInput').value)||1;
+    let price=discounted?prod["discounted price"]:prod.price;
+    let name=prod.name;
+    if(select){
+      const[vPrice]=select.value.split('|');
+      price=Number(vPrice);
+      name+=` - ${select.options[select.selectedIndex].text}`;
+    }
+    addToCart({name,price,qty,img:prod.images[0]||''});
+  };
+  return div;
+}
+
 function addToCart(prod){
   const cart=loadCart();
   const idx=cart.findIndex(i=>i.name===prod.name);
-  if(idx>-1) cart[idx].qty+=prod.qty;
+  if(idx>-1)cart[idx].qty+=prod.qty;
   else cart.push(prod);
   saveCart(cart);updateCartCount();alert('Adicionado ao carrinho');
 }
 function renderCartPanel(){
   const itemsDiv=document.getElementById('cartItems');
-  const cart=loadCart(); itemsDiv.innerHTML='';
+  const cart=loadCart();itemsDiv.innerHTML='';
   if(!cart.length){itemsDiv.innerHTML='<div class="muted">Carrinho vazio</div>';document.getElementById('cartTotal').textContent='0,00';return;}
   let total=0;
   cart.forEach((it,i)=>{
     total+=it.price*it.qty;
     const el=document.createElement('div');el.className='cart-item';
-    el.innerHTML=`
-      <img src="${it.img||''}" onerror="this.style.display='none'">
-      <div style="flex:1">
-        <div><strong>${escapeHtml(it.name)}</strong></div>
-        <div class="muted">R$ ${toCurrency(it.price)} x ${it.qty} = R$ ${toCurrency(it.price*it.qty)}</div>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:6px">
-        <button class="inc">+</button><button class="dec">-</button>
-      </div>`;
+    el.innerHTML=`<img src="${it.img||''}" onerror="this.style.display='none'">
+    <div style="flex:1"><div><strong>${escapeHtml(it.name)}</strong></div>
+    <div class="muted">R$ ${toCurrency(it.price)} x ${it.qty} = R$ ${toCurrency(it.price*it.qty)}</div></div>
+    <div style="display:flex;flex-direction:column;gap:6px">
+    <button class="inc">+</button><button class="dec">-</button></div>`;
     el.querySelector('.inc').onclick=()=>changeQty(i,1);
     el.querySelector('.dec').onclick=()=>changeQty(i,-1);
     itemsDiv.appendChild(el);
   });
   document.getElementById('cartTotal').textContent=toCurrency(total);
 }
-function changeQty(index,delta){ const cart=loadCart(); if(!cart[index])return; cart[index].qty+=delta;if(cart[index].qty<=0)cart.splice(index,1); saveCart(cart);renderCartPanel();updateCartCount(); }
+function changeQty(i,d){const cart=loadCart();if(!cart[i])return;cart[i].qty+=d;if(cart[i].qty<=0)cart.splice(i,1);saveCart(cart);renderCartPanel();updateCartCount();}
 
 async function sendOrder(){
-  const cart=loadCart();
-  if(!cart.length){alert('Carrinho vazio');return;}
+  const cart=loadCart();if(!cart.length){alert('Carrinho vazio');return;}
   const name=document.getElementById('userName').value;
   const phone=document.getElementById('userPhone').value;
   const email=document.getElementById('userEmail').value;
   const address=document.getElementById('userAddress').value;
   const zip=document.getElementById('userZip').value;
-  if(!name || !phone){alert('Preencha seu nome e telefone.');return;}
-
-  let total=0;
-  let productLines='';
-  cart.forEach(it=>{
-    productLines += `${it.name} (${it.qty}x R$${toCurrency(it.price)})\n`;
-    total += it.price*it.qty;
-  });
-
-  const order = { orderNo:Date.now(), name,email,phone,payment:"A definir",transactionId:"",shippingMethod:"Padrão",address,zipCode:zip,products:productLines,total:total.toFixed(2) };
-  try{ await fetch(SCRIPT_URL,{method:"POST",mode:"no-cors",headers:{"Content-Type":"application/json"},body:JSON.stringify(order)}); }catch(e){console.error(e)}
-
+  if(!name||!phone){alert('Preencha seu nome e telefone.');return;}
+  let total=0,productLines='';
+  cart.forEach(it=>{productLines+=`${it.name} (${it.qty}x R$${toCurrency(it.price)})\n`;total+=it.price*it.qty;});
+  const order={orderNo:Date.now(),name,email,phone,payment:"A definir",transactionId:"",shippingMethod:"Padrão",address,zipCode:zip,products:productLines,total:total.toFixed(2)};
+  try{await fetch(SCRIPT_URL,{method:"POST",mode:"no-cors",headers:{"Content-Type":"application/json"},body:JSON.stringify(order)});}catch(e){console.error(e);}
   const msg=encodeURIComponent(`Olá, quero fazer um pedido:\n${productLines}\nTotal: R$ ${toCurrency(total)}\n\nNome: ${name}\nTelefone: ${phone}\nEndereço: ${address}`);
   window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${msg}`,"_blank");
-
   localStorage.removeItem(cartKey);updateCartCount();document.getElementById('cartPanel').style.display='none';alert('Pedido enviado com sucesso!');
 }
 
 async function fetchSheet(){
-  const res=await fetch(SHEET_URL); const txt=await res.text();
+  const res=await fetch(SHEET_URL);const txt=await res.text();
   const json=JSON.parse(txt.substring(txt.indexOf('{'),txt.lastIndexOf('}')+1));
   const cols=json.table.cols.map(c=>c.label.trim().toLowerCase());
   const rows=json.table.rows||[];
-  return rows.map(r=>{ const o={}; r.c.forEach((c,i)=>{o[cols[i]]=c?c.v:''}); return o });
+  return rows.map(r=>{const o={};r.c.forEach((c,i)=>{o[cols[i]]=c?c.v:''});return o;});
 }
 
 (async()=>{
   const productsEl=document.getElementById('products');
   const loader=document.getElementById('loader');
   try{
-    const data=await fetchSheet(); loader.style.display='none';
-    if(!data.length){productsEl.innerHTML='<div class="muted">Nenhum produto encontrado.</div>'; return; }
-    const grouped = groupVariants(data);
+    const data=await fetchSheet();loader.style.display='none';
+    if(!data.length){productsEl.innerHTML='<div class="muted">Nenhum produto encontrado.</div>';return;}
+    const grouped=groupVariants(data);
     const cats=[...new Set(grouped.map(d=>d.category).filter(Boolean))];
     const filter=document.getElementById('filterCat');
-    cats.forEach(c=>{ const o=document.createElement('option'); o.value=c;o.textContent=c; filter.appendChild(o); });
-    filter.onchange=()=>{ const val=filter.value; productsEl.innerHTML=''; grouped.filter(p=>!val||p.category===val).forEach(p=>productsEl.appendChild(createProductCard(p))); };
+    cats.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;filter.appendChild(o);});
+    filter.onchange=()=>{const val=filter.value;productsEl.innerHTML='';grouped.filter(p=>!val||p.category===val).forEach(p=>productsEl.appendChild(createProductCard(p)));};
     grouped.forEach(p=>productsEl.appendChild(createProductCard(p)));
-  }catch(e){ loader.textContent='Erro ao carregar planilha. Verifique se ela está pública.' }
-
-  document.getElementById('btnCart').onclick=()=>{document.getElementById('cartPanel').style.display='block'; renderCartPanel(); };
-  document.getElementById('btnCloseCart').onclick=()=>{document.getElementById('cartPanel').style.display='none'; };
+  }catch(e){loader.textContent='Erro ao carregar planilha. Verifique se ela está pública.';}
+  document.getElementById('btnCart').onclick=()=>{document.getElementById('cartPanel').style.display='block';renderCartPanel();};
+  document.getElementById('btnCloseCart').onclick=()=>{document.getElementById('cartPanel').style.display='none';};
   document.getElementById('btnSendWhats').onclick=sendOrder;
   updateCartCount();
 })();
