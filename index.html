@@ -11,9 +11,14 @@ header{display:flex;justify-content:space-between;align-items:center;margin-bott
 h2{margin:0}
 .cart-btn{background:#1d4ed8;color:#fff;border:none;padding:10px 16px;border-radius:6px;cursor:pointer;position:relative}
 .cart-count{background:red;color:#fff;border-radius:50%;padding:2px 6px;font-size:12px;position:absolute;top:-6px;right:-6px}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
 .card{background:#fff;border-radius:10px;padding:12px;box-shadow:0 6px 18px rgba(0,0,0,.1);display:flex;flex-direction:column}
-.thumb{width:100%;height:160px;object-fit:cover;border-radius:8px;background:#eee}
+.gallery{position:relative;text-align:center}
+.main-img{width:100%;height:200px;object-fit:cover;border-radius:8px;background:#eee;transition:.3s}
+.thumbs{display:flex;justify-content:center;gap:6px;margin-top:8px;flex-wrap:wrap}
+.thumbs img{width:50px;height:50px;object-fit:cover;border-radius:6px;border:2px solid transparent;cursor:pointer;transition:.3s}
+.thumbs img:hover{border-color:#1d4ed8}
+.thumbs img.active{border-color:#1d4ed8}
 .title{font-weight:bold;margin:8px 0}
 .price{font-size:18px;margin-bottom:8px}
 select,button,input{padding:8px;border-radius:6px;border:1px solid #ccc}
@@ -145,8 +150,17 @@ function createCard(p){
   if(!p.variants.length)return null;
   const d=document.createElement("div");
   d.className="card";
+
+  // Galeria
+  const thumbsHTML = p.images.length > 1 
+    ? `<div class="thumbs">${p.images.map((img,i)=>`<img src="${img}" class="${i===0?'active':''}">`).join("")}</div>` 
+    : "";
+
   d.innerHTML=`
-    <img class="thumb" src="${p.images[0]||""}" alt="${p.name}">
+    <div class="gallery">
+      <img class="main-img" src="${p.images[0]||''}" alt="${p.name}">
+      ${thumbsHTML}
+    </div>
     <div class="title">${p.name}</div>
     <div class="price">R$ ${money(p.variants[0].price)}</div>
     <label>Tamanho</label>
@@ -169,8 +183,19 @@ function createCard(p){
   const qtyInput=d.querySelector(".qty");
   const plusBtn=d.querySelector(".plus");
   const minusBtn=d.querySelector(".minus");
+  const mainImg=d.querySelector(".main-img");
+  const thumbs=d.querySelectorAll(".thumbs img");
 
-  // Permitir apenas números no campo
+  // Trocar imagem ao clicar
+  thumbs.forEach(t=>{
+    t.addEventListener("click",()=>{
+      thumbs.forEach(img=>img.classList.remove("active"));
+      t.classList.add("active");
+      mainImg.src=t.src;
+    });
+  });
+
+  // Quantidade: só números
   qtyInput.addEventListener("input",()=>{
     qtyInput.value=qtyInput.value.replace(/[^0-9]/g,"");
     if(qtyInput.value===""||qtyInput.value==="0")qtyInput.value="1";
@@ -191,6 +216,7 @@ function createCard(p){
     addToCart(p,p.variants[idx],qty);
     alert(`${p.name} (${p.variants[idx].name}) x${qty} adicionado ao carrinho!`);
   };
+
   return d;
 }
 
