@@ -24,9 +24,8 @@ h2{margin:0}
 select,button,input{padding:8px;border-radius:6px;border:1px solid #ccc}
 button{background:#1d4ed8;color:#fff;border:none;cursor:pointer;transition:.3s;margin-top:8px}
 button:hover{background:#2563eb}
-.qty-container{display:flex;align-items:center;gap:6px;margin-top:4px}
-.qty-container button{background:#ddd;color:#000;border:1px solid #bbb;padding:4px 10px;font-size:18px;font-weight:bold;cursor:pointer}
-.qty-container input{width:60px;text-align:center;font-weight:bold;font-size:16px}
+.stock{font-size:14px;color:#444;margin-top:4px}
+.qty{width:80px;text-align:center}
 #cartModal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.4);display:none;align-items:center;justify-content:center}
 #cartModal .box{background:#fff;padding:20px;border-radius:12px;width:90%;max-width:400px;max-height:80%;overflow-y:auto}
 #cartModal h3{margin-top:0}
@@ -94,7 +93,8 @@ function groupProducts(data){
     if(variantName){
       grouped[name].variants.push({
         name:variantName,
-        price:Number(p["discounted price"]||p.price)
+        price:Number(p["discounted price"]||p.price),
+        stock:Number(p.stock||0)
       });
     }
     [p.thumbnail,p.image1,p.image2,p.image3].forEach(img=>{
@@ -165,23 +165,19 @@ function createCard(p){
     <label>Tamanho</label>
     <select class="variant">
       <option value="">Selecionar o tamanho</option>
-      ${p.variants.map(v=>`<option value="${v.price}">${v.name}</option>`).join("")}
+      ${p.variants.map(v=>`<option value="${v.price}" data-stock="${v.stock}">${v.name}</option>`).join("")}
     </select>
     <label>Quantidade</label>
-    <div class="qty-container">
-      <button type="button" class="minus">−</button>
-      <input type="number" min="1" value="1" class="qty">
-      <button type="button" class="plus">+</button>
-    </div>
+    <select class="qty"></select>
+    <div class="stock"></div>
     <button type="button" class="add-cart">Adicionar ao carrinho</button>
   `;
 
   const sel=d.querySelector(".variant");
   const priceEl=d.querySelector(".price");
+  const qtyEl=d.querySelector(".qty");
+  const stockEl=d.querySelector(".stock");
   const btn=d.querySelector(".add-cart");
-  const qtyInput=d.querySelector(".qty");
-  const plusBtn=d.querySelector(".plus");
-  const minusBtn=d.querySelector(".minus");
   const mainImg=d.querySelector(".main-img");
   const thumbs=d.querySelectorAll(".thumbs img");
 
@@ -193,37 +189,49 @@ function createCard(p){
     });
   });
 
-  qtyInput.addEventListener("input",()=>{
-    qtyInput.value=qtyInput.value.replace(/[^0-9]/g,"");
-    if(qtyInput.value===""||qtyInput.value==="0")qtyInput.value="1";
+  sel.addEventListener("change", ()=>{
+    const idx = sel.selectedIndex-1;
+    if(idx>=0){
+      const variant = p.variants[idx];
+      priceEl.textContent = "R$ "+money(variant.price);
+
+      // preencher lista de quantidade do 1 até estoque disponível
+      let options="";
+      for(let i=1;i<=variant.stock;i++){
+        options += `<option value="${i}">${i}</option>`;
+      }
+      qtyEl.innerHTML = options;
+
+      stockEl.textContent = `Estoque disponível: ${variant.stock}`;
+    } else {
+      qtyEl.innerHTML = `<option value="1">1</option>`;
+      stockEl.textContent = "";
+    }
   });
 
-  sel.onchange=()=>{
-    const idx=sel.selectedIndex-1;
-    if(idx>=0) priceEl.textContent="R$ "+money(p.variants[idx].price);
-  };
-
-  plusBtn.onclick=()=>{qtyInput.value=parseInt(qtyInput.value||1)+1};
-  minusBtn.onclick=()=>{if(parseInt(qtyInput.value)>1)qtyInput.value=parseInt(qtyInput.value)-1};
-
-  btn.onclick=()=>{
-    const idx=sel.selectedIndex-1;
+  btn.addEventListener("click", ()=>{
+    const idx = sel.selectedIndex-1;
     if(idx<0){alert("Selecione o tamanho antes de adicionar.");return;}
-    const qty=parseInt(qtyInput.value);
-    addToCart(p,p.variants[idx],qty);
-    alert(`${p.name} (${p.variants[idx].name}) x${qty} adicionado ao carrinho!`);
-  };
+    const variant = p.variants[idx];
+    const qty = parseInt(qtyEl.value);
+    if(qty>variant.stock){
+      alert("Quantidade maior que o estoque disponível!");
+      return;
+    }
+    addToCart(p,variant,qty);
+    alert(`${p.name} (${variant.name}) x${qty} adicionado ao carrinho!`);
+  });
 
   return d;
 }
 
 async function init(){
-  const raw=await fetchSheet();
-  const products=groupProducts(raw);
-  const grid=document.getElementById("products");
+  const raw = await fetchSheet();
+  const products = groupProducts(raw);
+  const grid = document.getElementById("products");
   products.forEach(p=>{
-    const c=createCard(p);
-    if(c)grid.appendChild(c);
+    const c = createCard(p);
+    if(c) grid.appendChild(c);
   });
 }
 
