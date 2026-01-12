@@ -14,7 +14,8 @@ body{font-family:Arial;margin:0;padding:20px;background:#f6f6f6}
 .price{font-size:18px}
 .oldprice{text-decoration:line-through;color:#888;font-size:14px}
 select,input,button{padding:8px;border-radius:6px;border:1px solid #ccc}
-button{background:#1d4ed8;color:#fff;border:none;cursor:pointer}
+button{background:#1d4ed8;color:#fff;border:none;cursor:pointer;transition:.3s}
+button:hover{background:#2563eb}
 </style>
 </head>
 
@@ -23,12 +24,13 @@ button{background:#1d4ed8;color:#fff;border:none;cursor:pointer}
 <div id="products" class="grid"></div>
 
 <script>
-const SHEET_ID="1yPfhN08a0gj4JLoyTFISRghA7WSDbOJw4BFbzFdrDTc";
-const SHEET_NAME="Sheet1";
+const SHEET_ID="1BqVAf9A7l7KHKcwpV9HrqBMPWTA4s-aPv1EEna7xuHg";
+const SHEET_NAME="products";
 const SHEET_URL=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${SHEET_NAME}`;
 
 function money(v){
-  return Number(v).toFixed(2).replace('.',',');
+  const n = Number(v);
+  return isNaN(n) ? v : n.toFixed(2).replace('.',',');
 }
 
 async function fetchSheet(){
@@ -78,7 +80,7 @@ function groupProducts(data){
       });
     }
 
-    [p.thumbnail,p.image1,p.image2].forEach(img=>{
+    [p.thumbnail,p.image1,p.image2,p.image3].forEach(img=>{
       if(img && !grouped[name].images.includes(img)){
         grouped[name].images.push(img);
       }
@@ -95,7 +97,7 @@ function createCard(p){
   d.className="card";
 
   d.innerHTML=`
-    <img class="thumb" src="${p.images[0]||""}">
+    <img class="thumb" src="${p.images[0]||""}" alt="${p.name}">
     <div class="title">${p.name}</div>
     <div class="price">R$ ${money(p.variants[0].price)}</div>
 
@@ -116,17 +118,23 @@ function createCard(p){
 }
 
 async function init(){
-  const raw = await fetchSheet();
-  const products = groupProducts(raw);
+  try {
+    const raw = await fetchSheet();
+    const products = groupProducts(raw);
 
-  console.log("DADOS DA PLANILHA:", raw);
-  console.log("PRODUTOS AGRUPADOS:", products);
+    console.log("DADOS DA PLANILHA:", raw);
+    console.log("PRODUTOS AGRUPADOS:", products);
 
-  const grid=document.getElementById("products");
-  products.forEach(p=>{
-    const c=createCard(p);
-    if(c) grid.appendChild(c);
-  });
+    const grid=document.getElementById("products");
+    grid.innerHTML="";
+    products.forEach(p=>{
+      const c=createCard(p);
+      if(c) grid.appendChild(c);
+    });
+
+  } catch (err) {
+    console.error("Erro ao carregar a planilha:", err);
+  }
 }
 
 init();
