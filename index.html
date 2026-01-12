@@ -1,111 +1,131 @@
 <!doctype html>
-<html lang="pt-BR">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Catálogo</title>
 
-<style>
-body{font-family:Arial;margin:0;padding:20px;background:#f6f6f6}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px}
-.card{background:#fff;border-radius:10px;padding:12px;box-shadow:0 6px 18px rgba(0,0,0,.1);display:flex;flex-direction:column}
-.thumb{width:100%;height:160px;object-fit:cover;border-radius:8px;background:#eee}
-.title{font-weight:bold;margin:8px 0}
-.price{font-size:18px}
-.oldprice{text-decoration:line-through;color:#888;font-size:14px}
-select,input,button{padding:8px;border-radius:6px;border:1px solid #ccc}
-button{background:#1d4ed8;color:#fff;border:none;cursor:pointer;transition:.3s}
-button:hover{background:#2563eb}
-</style>
-</head>
-
-<body>
-<h2>Catálogo</h2>
-<div id="products" class="grid"></div>
-
-<script>
-const SHEET_ID="1BqVAf9A7l7KHKcwpV9HrqBMPWTA4s-aPv1EEna7xuHg";
-const SHEET_NAME="products";
-const SHEET_URL=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${SHEET_NAME}`;
-
-function money(v){
-  const n = Number(v);
-  return isNaN(n) ? v : n.toFixed(2).replace('.',',');
-}
-
-async function fetchSheet(){
-  const r = await fetch(SHEET_URL);
-  const t = await r.text();
-  const j = JSON.parse(t.substring(t.indexOf("{"), t.lastIndexOf("}")+1));
-
-  const cols = j.table.cols.map(c=>c.label.trim().toLowerCase());
-  const rows = j.table.rows || [];
-
-  return rows.map(row=>{
-    const o = {};
-    row.c.forEach((c,i)=>{
-      o[cols[i]] = c ? (c.v ?? c.f ?? "") : "";
-    });
-    return o;
-  });
-}
-
-function groupProducts(data){
-  const grouped = {};
-
-  data.forEach(p=>{
-    if(String(p.availability).toLowerCase() !== "show") return;
-
-    const name = String(p.name).trim();
-    if(!name) return;
-
-    if(!grouped[name]){
-      grouped[name] = {
-        name,
-        basePrice:Number(p.price),
-        discounted:Number(p["discounted price"]||0),
-        variants:[],
-        images:[]
-      };
-    }
-
-    const size = String(p["variant name"]).trim();
-    if(size){
-      grouped[name].variants.push({
-        name:size,
-        price: p["discounted price"] && p["discounted price"] < p.price
-          ? Number(p["discounted price"])
-          : Number(p.price),
-        stock:Number(p.stock||0)
-      });
-    }
-
-    [p.thumbnail,p.image1,p.image2,p.image3].forEach(img=>{
-      if(img && !grouped[name].images.includes(img)){
-        grouped[name].images.push(img);
-      }
-    });
-  });
-
-  return Object.values(grouped);
-}
-
-function createCard(p){
-  if(!p.variants.length) return null;
-
-  const d=document.createElement("div");
-  d.className="card";
-
-  d.innerHTML=`
-    <img class="thumb" src="${p.images[0]||""}" alt="${p.name}">
-    <div class="title">${p.name}</div>
-    <div class="price">R$ ${money(p.variants[0].price)}</div>
-
-    <label>Tamanho</label>
-    <select class="variant">
-      ${p.variants.map(v=>`<option value="${v.price}">${v.name}</option>`).join("")}
-    </select>
-
+<html lang="pt-BR">  
+<head>  
+<meta charset="utf-8">  
+<meta name="viewport" content="width=device-width,initial-scale=1">  
+<title>Catálogo</title>  <style>  
+body{font-family:Arial;margin:0;padding:20px;background:#f6f6f6}  
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px}  
+.card{background:#fff;border-radius:10px;padding:12px;box-shadow:0 6px 18px rgba(0,0,0,.1);display:flex;flex-direction:column}  
+.thumb{width:100%;height:160px;object-fit:cover;border-radius:8px;background:#eee}  
+.title{font-weight:bold;margin:8px 0}  
+.price{font-size:18px}  
+.oldprice{text-decoration:line-through;color:#888;font-size:14px}  
+select,input,button{padding:8px;border-radius:6px;border:1px solid #ccc}  
+button{background:#1d4ed8;color:#fff;border:none;cursor:pointer}  
+</style>  </head>  <body>  
+<h2>Catálogo</h2>  
+<div id="products" class="grid"></div>  <script>  
+const SHEET_ID="1yPfhN08a0gj4JLoyTFISRghA7WSDbOJw4BFbzFdrDTc";  
+const SHEET_NAME="Sheet1";  
+const SHEET_URL=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${SHEET_NAME}`;  
+  
+function money(v){  
+  return Number(v).toFixed(2).replace('.',',');  
+}  
+  
+async function fetchSheet(){  
+  const r = await fetch(SHEET_URL);  
+  const t = await r.text();  
+  const j = JSON.parse(t.substring(t.indexOf("{"), t.lastIndexOf("}")+1));  
+  
+  const cols = j.table.cols.map(c=>c.label.trim().toLowerCase());  
+  const rows = j.table.rows || [];  
+  
+  return rows.map(row=>{  
+    const o = {};  
+    row.c.forEach((c,i)=>{  
+      o[cols[i]] = c ? (c.v ?? c.f ?? "") : "";  
+    });  
+    return o;  
+  });  
+}  
+  
+function groupProducts(data){  
+  const grouped = {};  
+  
+  data.forEach(p=>{  
+    if(String(p.availability).toLowerCase() !== "show") return;  
+  
+    const name = String(p.name).trim();  
+    if(!name) return;  
+  
+    if(!grouped[name]){  
+      grouped[name] = {  
+        name,  
+        basePrice:Number(p.price),  
+        discounted:Number(p["discounted price"]||0),  
+        variants:[],  
+        images:[]  
+      };  
+    }  
+  
+    const size = String(p["variant name"]).trim();  
+    if(size){  
+      grouped[name].variants.push({  
+        name:size,  
+        price: p["discounted price"] && p["discounted price"] < p.price  
+          ? Number(p["discounted price"])  
+          : Number(p.price),  
+        stock:Number(p.stock||0)  
+      });  
+    }  
+  
+    [p.thumbnail,p.image1,p.image2].forEach(img=>{  
+      if(img && !grouped[name].images.includes(img)){  
+        grouped[name].images.push(img);  
+      }  
+    });  
+  });  
+  
+  return Object.values(grouped);  
+}  
+  
+function createCard(p){  
+  if(!p.variants.length) return null;  
+  
+  const d=document.createElement("div");  
+  d.className="card";  
+  
+  d.innerHTML=`  
+    <img class="thumb" src="${p.images[0]||""}">  
+    <div class="title">${p.name}</div>  
+    <div class="price">R$ ${money(p.variants[0].price)}</div>  
+  
+    <label>Tamanho</label>  
+    <select class="variant">  
+      ${p.variants.map(v=>`<option value="${v.price}">${v.name}</option>`).join("")}  
+    </select>  
+  
+    <button>Adicionar</button>  
+  `;  
+  
+  const priceEl=d.querySelector(".price");  
+  d.querySelector(".variant").onchange=e=>{  
+    priceEl.textContent="R$ "+money(e.target.value);  
+  };  
+  
+  return d;  
+}  
+  
+async function init(){  
+  const raw = await fetchSheet();  
+  const products = groupProducts(raw);  
+  
+  console.log("DADOS DA PLANILHA:", raw);  
+  console.log("PRODUTOS AGRUPADOS:", products);  
+  
+  const grid=document.getElementById("products");  
+  products.forEach(p=>{  
+    const c=createCard(p);  
+    if(c) grid.appendChild(c);  
+  });  
+}  
+  
+init();  
+</script>  </body>  
+</html>
     <button>Adicionar</button>
   `;
 
@@ -141,3 +161,4 @@ init();
 </script>
 </body>
 </html>
+
