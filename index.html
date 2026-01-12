@@ -16,17 +16,18 @@ h2{margin:0}
 .thumb{width:100%;height:160px;object-fit:cover;border-radius:8px;background:#eee}
 .title{font-weight:bold;margin:8px 0}
 .price{font-size:18px;margin-bottom:8px}
-.oldprice{text-decoration:line-through;color:#888;font-size:14px}
-select,input,button{padding:8px;border-radius:6px;border:1px solid #ccc}
+select,button,input{padding:8px;border-radius:6px;border:1px solid #ccc}
 button{background:#1d4ed8;color:#fff;border:none;cursor:pointer;transition:.3s;margin-top:8px}
 button:hover{background:#2563eb}
+.qty-container{display:flex;align-items:center;gap:6px;margin-top:4px}
+.qty-container button{background:#ddd;color:#000;border:1px solid #bbb;padding:4px 10px;font-size:18px;font-weight:bold;cursor:pointer}
+.qty-container input{width:60px;text-align:center;font-weight:bold;font-size:16px}
 #cartModal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.4);display:none;align-items:center;justify-content:center}
 #cartModal .box{background:#fff;padding:20px;border-radius:12px;width:90%;max-width:400px;max-height:80%;overflow-y:auto}
 #cartModal h3{margin-top:0}
 .item{border-bottom:1px solid #ddd;padding:8px 0}
 .item:last-child{border:none}
 .total{font-weight:bold;margin-top:12px}
-.qty{width:60px;text-align:center;margin-left:8px}
 </style>
 </head>
 
@@ -55,7 +56,7 @@ button:hover{background:#2563eb}
 const SHEET_ID="1BqVAf9A7l7KHKcwpV9HrqBMPWTA4s-aPv1EEna7xuHg";
 const SHEET_NAME="products";
 const SHEET_URL=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${SHEET_NAME}`;
-const WHATSAPP="5581997512217"; // <-- coloque seu número com DDI
+const WHATSAPP="5581997512217";
 
 let cart=[];
 
@@ -110,7 +111,7 @@ function openCart(){
   const total=document.getElementById("cartTotal");
   items.innerHTML="";
   let sum=0;
-  cart.forEach((it,i)=>{
+  cart.forEach(it=>{
     const subtotal=it.price*it.qty;
     sum+=subtotal;
     items.innerHTML+=`
@@ -148,21 +149,44 @@ function createCard(p){
     <img class="thumb" src="${p.images[0]||""}" alt="${p.name}">
     <div class="title">${p.name}</div>
     <div class="price">R$ ${money(p.variants[0].price)}</div>
-    <label>Variação</label>
+    <label>Tamanho</label>
     <select class="variant">
+      <option value="">Selecionar o tamanho</option>
       ${p.variants.map(v=>`<option value="${v.price}">${v.name}</option>`).join("")}
     </select>
-    <label>Qtd</label>
-    <input type="number" min="1" value="1" class="qty">
+    <label>Quantidade</label>
+    <div class="qty-container">
+      <button class="minus">−</button>
+      <input type="number" min="1" value="1" class="qty">
+      <button class="plus">+</button>
+    </div>
     <button>Adicionar ao carrinho</button>
   `;
+
   const sel=d.querySelector(".variant");
   const priceEl=d.querySelector(".price");
-  const btn=d.querySelector("button");
+  const btn=d.querySelector("button:last-of-type");
   const qtyInput=d.querySelector(".qty");
-  sel.onchange=()=>{priceEl.textContent="R$ "+money(sel.value)};
+  const plusBtn=d.querySelector(".plus");
+  const minusBtn=d.querySelector(".minus");
+
+  // Permitir apenas números no campo
+  qtyInput.addEventListener("input",()=>{
+    qtyInput.value=qtyInput.value.replace(/[^0-9]/g,"");
+    if(qtyInput.value===""||qtyInput.value==="0")qtyInput.value="1";
+  });
+
+  sel.onchange=()=>{
+    const idx=sel.selectedIndex-1;
+    if(idx>=0) priceEl.textContent="R$ "+money(p.variants[idx].price);
+  };
+
+  plusBtn.onclick=()=>{qtyInput.value=parseInt(qtyInput.value||1)+1};
+  minusBtn.onclick=()=>{if(parseInt(qtyInput.value)>1)qtyInput.value=parseInt(qtyInput.value)-1};
+
   btn.onclick=()=>{
-    const idx=sel.selectedIndex;
+    const idx=sel.selectedIndex-1;
+    if(idx<0){alert("Selecione o tamanho antes de adicionar.");return;}
     const qty=parseInt(qtyInput.value);
     addToCart(p,p.variants[idx],qty);
     alert(`${p.name} (${p.variants[idx].name}) x${qty} adicionado ao carrinho!`);
