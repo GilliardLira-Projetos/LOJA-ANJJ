@@ -73,7 +73,7 @@ const SHEET_NAME = "Sheet1";
 const WHATSAPP_NUMBER = "5581997512217";
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxta6KftgX_qBuDgcHmarZ90ij8KDNMEmd6xTQBRzTKIo6gY19jZRY_99sqy-Tredz5/exec";
 const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(SHEET_NAME)}`;
-const cartKey = "loja_cart_v3";
+const cartKey = "loja_cart_v4";
 
 function loadCart(){try{return JSON.parse(localStorage.getItem(cartKey))||[]}catch(e){return[]}}
 function saveCart(c){localStorage.setItem(cartKey,JSON.stringify(c))}
@@ -99,12 +99,10 @@ function groupVariants(data){
 function createProductCard(prod){
   const div=document.createElement('div');div.className='card';
   const discounted=prod["discounted price"]&&prod["discounted price"]<prod.price;
-
   let variantOptions='';
   if(prod.variants&&prod.variants.length>0){
     variantOptions=`<select class="variantSelect">${prod.variants.map(v=>`<option value="${v.price}|${v.stock}">${v.name}</option>`).join('')}</select>`;
   }
-
   div.innerHTML=`
     <img class="thumb" src="${prod.images[0]||''}" alt="${escapeHtml(prod.name)}" onerror="this.style.display='none'">
     <div class="thumbnails">${prod.images.slice(1).map(img=>`<img src="${img}" onclick="this.closest('.card').querySelector('.thumb').src=this.src">`).join('')}</div>
@@ -117,7 +115,6 @@ function createProductCard(prod){
       <button class="btn-add">Adicionar</button>
     </div>
   `;
-
   const select=div.querySelector('.variantSelect');
   const priceEl=div.querySelector('.price');
   if(select){
@@ -126,7 +123,6 @@ function createProductCard(prod){
       priceEl.textContent=`R$ ${toCurrency(price)}`;
     };
   }
-
   div.querySelector('.btn-add').onclick=()=>{
     let qty=parseInt(div.querySelector('.qtyInput').value)||1;
     let price=discounted?prod["discounted price"]:prod.price;
@@ -144,8 +140,7 @@ function createProductCard(prod){
 function addToCart(prod){
   const cart=loadCart();
   const idx=cart.findIndex(i=>i.name===prod.name);
-  if(idx>-1)cart[idx].qty+=prod.qty;
-  else cart.push(prod);
+  if(idx>-1)cart[idx].qty+=prod.qty;else cart.push(prod);
   saveCart(cart);updateCartCount();alert('Adicionado ao carrinho');
 }
 function renderCartPanel(){
@@ -187,11 +182,21 @@ async function sendOrder(){
 }
 
 async function fetchSheet(){
-  const res=await fetch(SHEET_URL);const txt=await res.text();
+  const res=await fetch(SHEET_URL);
+  const txt=await res.text();
   const json=JSON.parse(txt.substring(txt.indexOf('{'),txt.lastIndexOf('}')+1));
   const cols=json.table.cols.map(c=>c.label.trim().toLowerCase());
   const rows=json.table.rows||[];
-  return rows.map(r=>{const o={};r.c.forEach((c,i)=>{o[cols[i]]=c?c.v:''});return o;});
+
+  // ✅ Corrigido para pegar letras e números
+  return rows.map(r=>{
+    const o={};
+    r.c.forEach((c,i)=>{
+      if(!c){o[cols[i]]='';return;}
+      o[cols[i]]=c.v??c.f??String(c);
+    });
+    return o;
+  });
 }
 
 (async()=>{
