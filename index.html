@@ -151,7 +151,6 @@ function createCard(p){
   const d=document.createElement("div");
   d.className="card";
 
-  // Galeria
   const thumbsHTML = p.images.length > 1 
     ? `<div class="thumbs">${p.images.map((img,i)=>`<img src="${img}" class="${i===0?'active':''}">`).join("")}</div>` 
     : "";
@@ -170,23 +169,22 @@ function createCard(p){
     </select>
     <label>Quantidade</label>
     <div class="qty-container">
-      <button class="minus">−</button>
+      <button type="button" class="minus">−</button>
       <input type="number" min="1" value="1" class="qty">
-      <button class="plus">+</button>
+      <button type="button" class="plus">+</button>
     </div>
-    <button>Adicionar ao carrinho</button>
+    <button type="button" class="add-cart">Adicionar ao carrinho</button>
   `;
 
   const sel=d.querySelector(".variant");
   const priceEl=d.querySelector(".price");
-  const btn=d.querySelector("button:last-of-type");
+  const btn=d.querySelector(".add-cart");
   const qtyInput=d.querySelector(".qty");
   const plusBtn=d.querySelector(".plus");
   const minusBtn=d.querySelector(".minus");
   const mainImg=d.querySelector(".main-img");
   const thumbs=d.querySelectorAll(".thumbs img");
 
-  // Trocar imagem ao clicar
   thumbs.forEach(t=>{
     t.addEventListener("click",()=>{
       thumbs.forEach(img=>img.classList.remove("active"));
@@ -195,7 +193,6 @@ function createCard(p){
     });
   });
 
-  // Quantidade: só números
   qtyInput.addEventListener("input",()=>{
     qtyInput.value=qtyInput.value.replace(/[^0-9]/g,"");
     if(qtyInput.value===""||qtyInput.value==="0")qtyInput.value="1";
