@@ -53,10 +53,10 @@ button:disabled{background:#ccc;cursor:not-allowed}
     <h3>Seu carrinho</h3>
     <div id="cartItems"></div>
     
-    <label>Nome (obrigatório)</label>
+    <label>Nome</label>
     <input type="text" id="clientName" placeholder="Seu nome">
     
-    <label>Telefone</label>
+    <label>WhatsApp</label>
     <input type="text" id="clientPhone" placeholder="(DDD) 99999-9999">
     
     <label>Email</label>
@@ -171,8 +171,8 @@ document.getElementById("sendBtn").addEventListener("click", function(){
   const phone = document.getElementById("clientPhone").value.trim();
   const email = document.getElementById("clientEmail").value.trim();
 
-  if(!name){
-    alert("Por favor, preencha seu nome antes de enviar o pedido.");
+  if(!name || !phone){
+    alert("Por favor, preencha seu nome e WhatsApp antes de enviar o pedido.");
     return;
   }
 
@@ -189,8 +189,7 @@ document.getElementById("sendBtn").addEventListener("click", function(){
     total+=subtotal;
   });
   msg+=`\n*Total:* R$ ${money(total)}`;
-  msg+=`\n\n*Cliente:*\nNome: ${name}`;
-  if(phone) msg+=`\nTelefone: ${phone}`;
+  msg+=`\n\n*Cliente:*\nNome: ${name}\nWhatsApp: ${phone}`;
   if(email) msg+=`\nEmail: ${email}`;
 
   // salvar no Web App (Orders)
