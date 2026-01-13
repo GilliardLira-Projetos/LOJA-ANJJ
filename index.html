@@ -45,21 +45,30 @@ let products = [];
 // Função auxiliar para formatar dinheiro
 function money(value){ return Number(value).toFixed(2).replace('.',','); }
 
-// Simulação de fetchSheet() (substitua pelo seu fetch real)
+// Puxa os produtos direto da planilha pública
 async function fetchSheet(){
-  return [
-    { name: "CAMISA JIU JITSU", price: 80, discounted_price: 80, "variant name": "P", availability: "show", images:["https://via.placeholder.com/250"] },
-    { name: "CAMISA JIU JITSU", price: 80, discounted_price: 80, "variant name": "M", availability: "show", images:["https://via.placeholder.com/250"] },
-    { name: "CAMISA JUDO", price: 80, discounted_price: 80, "variant name": "P", availability: "show", images:["https://via.placeholder.com/250"] },
-    { name: "CAMISA MUAI THAY", price: 80, discounted_price: 80, "variant name": "P", availability: "show", images:["https://via.placeholder.com/250"] }
-  ];
+  const url = "https://docs.google.com/spreadsheets/d/1BqVAf9A7l7KHKcwpV9HrqBMPWTA4s-aPv1EEna7xuHg/export?format=csv&gid=1940306776";
+  const res = await fetch(url);
+  const text = await res.text();
+
+  const lines = text.trim().split("\n");
+  const headers = lines[0].split(",").map(h => h.trim());
+  const data = lines.slice(1).map(line => {
+    const values = line.split(",").map(v => v.trim());
+    const obj = {};
+    headers.forEach((h,i)=> obj[h] = values[i] || "");
+    // transforma images separadas por ; em array
+    obj.images = obj.images ? obj.images.split(";") : [];
+    return obj;
+  });
+  return data;
 }
 
 // Agrupa produtos por nome
 function groupProducts(data){
   const grouped = {};
   data.forEach(p=>{
-    if(String(p.availability).toLowerCase()!=="show") return;
+    if(String(p.availability).toLowerCase() !== "show") return;
     const name = String(p.name).trim();
     if(!name) return;
     if(!grouped[name]){
@@ -76,7 +85,7 @@ function groupProducts(data){
       grouped[name].variants.push({ name: size, price: Number(p.discounted_price || p.price) });
     }
     if(p.images) p.images.forEach(img=>{
-      if(!grouped[name].images.includes(img)) grouped[name].images.push(img);
+      if(img && !grouped[name].images.includes(img)) grouped[name].images.push(img);
     });
   });
   return Object.values(grouped);
@@ -130,7 +139,7 @@ function createCard(p){
     }
     const price = Number(selected.value);
     priceEl.textContent = "R$ " + money(price);
-    const stock = 10; // Exemplo: quantidade disponível
+    const stock = 10; // quantidade disponível fixa, ou você pode pegar da planilha
     qtySel.innerHTML = [...Array(stock).keys()].map(i=>`<option value="${i+1}">${i+1}</option>`).join("");
     qtySel.disabled = false;
     addBtn.disabled = false;
@@ -155,7 +164,7 @@ function updateCart(){
   cart.forEach((item,i)=>{
     const div = document.createElement("div");
     div.className = "cart-item";
-    div.innerHTML = `${item.name} (${item.variant}) x${item.qty} - R$ ${money(item.price*item.qty)} 
+    div.innerHTML = `${item.name} (${item.variant}) x${item.qty} - R$ ${money(item.price*item.qty)}
       <button onclick="changeQty(${i},${item.qty-1})">-</button>
       <button onclick="changeQty(${i},${item.qty+1})">+</button>
       <button onclick="removeItem(${i})">X</button>
@@ -167,12 +176,8 @@ function updateCart(){
   document.getElementById("cartCount").textContent = cart.length;
 }
 
-// Manipulação do carrinho
-function changeQty(index,value){
-  if(value <= 0) return removeItem(index);
-  cart[index].qty = Number(value);
-  updateCart();
-}
+// Carrinho
+function changeQty(index,value){ if(value<=0) return removeItem(index); cart[index].qty = Number(value); updateCart(); }
 function removeItem(index){ cart.splice(index,1); updateCart(); }
 function toggleCart(){ document.getElementById("cartOverlay").classList.toggle("open"); }
 function clearCart(){
