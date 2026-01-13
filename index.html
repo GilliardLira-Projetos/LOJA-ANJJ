@@ -27,7 +27,7 @@ button:hover{background:#2563eb}
 button:disabled{background:#ccc;cursor:not-allowed}
 .stock{font-size:14px;color:#444;margin-top:4px}
 .qty{width:80px;text-align:center}
-#cartModal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.4);display:none;align-items:center;justify-content:center}
+#cartModal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.4);display:none;align-items:center;justify-content:center;z-index:9999}
 #cartModal .box{background:#fff;padding:20px;border-radius:12px;width:90%;max-width:400px;max-height:80%;overflow-y:auto}
 #cartModal h3{margin-top:0}
 .item{border-bottom:1px solid #ddd;padding:8px 0;display:flex;justify-content:space-between;align-items:center}
@@ -52,8 +52,19 @@ button:disabled{background:#ccc;cursor:not-allowed}
   <div class="box">
     <h3>Seu carrinho</h3>
     <div id="cartItems"></div>
+    
+    <label>Nome (obrigatório)</label>
+    <input type="text" id="clientName" placeholder="Seu nome">
+    
+    <label>Telefone</label>
+    <input type="text" id="clientPhone" placeholder="(DDD) 99999-9999">
+    
+    <label>Email</label>
+    <input type="email" id="clientEmail" placeholder="seu@email.com">
+    
     <div class="total" id="cartTotal"></div>
-    <button onclick="sendToWhatsApp()">Enviar no WhatsApp</button>
+    
+    <button id="sendBtn">Enviar no WhatsApp</button>
     <button onclick="closeCart()" style="background:#ccc;color:#000;margin-top:8px">Fechar</button>
   </div>
 </div>
@@ -145,18 +156,31 @@ function closeCart(){
   document.getElementById("cartModal").style.display="none";
 }
 
-async function salvarPedidoWebApp(itens,total){
+async function salvarPedidoWebApp(data){
     try{
         await fetch(WEBAPP_URL,{
             method:"POST",
             headers: {"Content-Type":"application/json"},
-            body: JSON.stringify({itens,total})
+            body: JSON.stringify(data)
         });
     }catch(err){console.error("Erro ao salvar pedido",err);}
 }
 
-function sendToWhatsApp(){
-  if(cart.length===0){alert("Seu carrinho está vazio.");return;}
+document.getElementById("sendBtn").addEventListener("click", function(){
+  const name = document.getElementById("clientName").value.trim();
+  const phone = document.getElementById("clientPhone").value.trim();
+  const email = document.getElementById("clientEmail").value.trim();
+
+  if(!name){
+    alert("Por favor, preencha seu nome antes de enviar o pedido.");
+    return;
+  }
+
+  if(cart.length === 0){
+    alert("Seu carrinho está vazio.");
+    return;
+  }
+
   let msg="🛍️ *Pedido:*\n\n";
   let total=0;
   cart.forEach(it=>{
@@ -165,14 +189,22 @@ function sendToWhatsApp(){
     total+=subtotal;
   });
   msg+=`\n*Total:* R$ ${money(total)}`;
+  msg+=`\n\n*Cliente:*\nNome: ${name}`;
+  if(phone) msg+=`\nTelefone: ${phone}`;
+  if(email) msg+=`\nEmail: ${email}`;
 
   // salvar no Web App (Orders)
-  salvarPedidoWebApp(cart,total);
+  salvarPedidoWebApp({itens: cart,total,cliente:{name,phone,email}});
 
   // abrir WhatsApp
   const url=`https://wa.me/${WHATSAPP}?text=${encodeURIComponent(msg)}`;
   window.open(url,"_blank");
-}
+
+  // limpar carrinho e modal
+  cart=[];
+  document.getElementById("cartCount").textContent=0;
+  closeCart();
+});
 
 function createCard(p){
   if(!p.variants.length)return null;
@@ -223,7 +255,6 @@ function createCard(p){
       const variant = p.variants[idx];
       priceEl.textContent = "R$ "+money(variant.price);
 
-      // preencher lista de quantidade do 1 até estoque disponível
       let options="";
       if(variant.stock>0){
         for(let i=1;i<=variant.stock;i++){
