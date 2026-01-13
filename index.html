@@ -77,7 +77,7 @@ async function fetchSheet(){
   const r = await fetch(SHEET_URL);
   const t = await r.text();
   const j = JSON.parse(t.substring(t.indexOf("{"), t.lastIndexOf("}")+1));
-  const cols = j.table.cols.map(c=>c.label.trim().toLowerCase());
+  const cols = j.table.cols.map(c=>c.label.trim());
   const rows = j.table.rows||[];
   return rows.map(row=>{
     const o = {};
@@ -89,21 +89,27 @@ async function fetchSheet(){
 function groupProducts(data){
   const grouped = {};
   data.forEach(p=>{
-    if(String(p.availability).toLowerCase()!=="show") return;
-    const name = String(p.name).trim();
+    if(String(p.Availability).toLowerCase()!=="show") return;
+    const name = String(p.Name).trim();
     if(!name) return;
     if(!grouped[name]){
-      grouped[name] = {name, basePrice:Number(p.price), discounted:Number(p["discounted price"]||0), variants:[], images:[]};
+      grouped[name] = {
+        name,
+        basePrice:Number(p.Price),
+        discounted:Number(p["Discounted Price"]||0),
+        variants:[],
+        images:[]
+      };
     }
-    const size = String(p["variant name"]).trim();
+    const size = String(p["Variant Name"]).trim();
     if(size){
       grouped[name].variants.push({
         name:size,
-        price: p["discounted price"] && p["discounted price"]<p.price? Number(p["discounted price"]): Number(p.price),
-        stock:Number(p.stock||0)
+        price: p["Discounted Price"] && p["Discounted Price"] < p.Price ? Number(p["Discounted Price"]) : Number(p.Price),
+        stock:Number(p.Stock||0)
       });
     }
-    [p.thumbnail,p.image1,p.image2,p.image3].forEach(img=>{
+    [p.Thumbnail,p.Image1,p.Image2,p.Image3].forEach(img=>{
       if(img && !grouped[name].images.includes(img)) grouped[name].images.push(img);
     });
   });
@@ -189,4 +195,3 @@ init();
 </script>
 </body>
 </html>
-
