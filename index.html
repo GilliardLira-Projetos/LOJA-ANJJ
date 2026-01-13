@@ -81,7 +81,7 @@ button.add-cart{background:#1d4ed8;color:#fff;border:none;margin-top:6px}
 </div>
 
 <script>
-const SHEET_URL = "https://docs.google.com/spreadsheets/d/1BqVAf9A7l7KHKcwpV9HrqBMPWTA4s-aPv1EEna7xuHg/gviz/tq?tqx=out:json&gid=1940306776";
+const SHEET_URL = "https://docs.google.com/spreadsheets/d/1BqVAf9A7l7KHKcwpV9HrqBMPWTA4s-aPv1EEna7xuHg/gviz/tq?tqx=out:json&sheet=Products";
 let products = [];
 let cart = [];
 
@@ -105,6 +105,119 @@ function groupProducts(data){
   const grouped = {};
   data.forEach(p=>{
     if(String(p.availability).toLowerCase()!=="show") return;
+    const name = String(p.name||"").trim();
+    if(!name) return;
+    if(!grouped[name]){
+      grouped[name]={name,basePrice:Number(p.price||0),discounted:Number(p.discounted_price||0),variants:[],images:[]};
+    }
+    const size = String(p.variant_name||"").trim();
+    if(size){
+      grouped[name].variants.push({name:size,price:p.discounted_price && p.discounted_price<p.price?Number(p.discounted_price):Number(p.price),stock:Number(p.stock||0)});
+    }
+    [p.thumbnail,p.image1,p.image2,p.image3].forEach(img=>{if(img && !grouped[name].images.includes(img)) grouped[name].images.push(img);});
+  });
+  return Object.values(grouped);
+}
+
+function createCard(p){
+  if(!p.variants.length) return null;
+  const d=document.createElement("div");
+  d.className="card";
+  d.innerHTML=`
+    <div class="thumb-container">
+      <button class="prev">&lt;</button>
+      <img class="thumb" src="${p.images[0]||''}">
+      <button class="next">&gt;</button>
+    </div>
+    <div class="title">${p.name}</div>
+    <div class="price">R$ ${money(p.variants[0].price)}</div>
+    <label>Tamanho</label>
+    <select class="variant">
+      <option value="" disabled selected>Selecione o tamanho</option>
+      ${p.variants.map(v=>`<option value="${v.price}" data-stock="${v.stock}">${v.name}</option>`).join("")}
+    </select>
+    <label>Qtd</label>
+    <select class="qty" disabled><option value="" disabled selected>Selecione a quantidade</option></select>
+    <button class="add-cart" disabled>Adicionar ao Carrinho</button>
+  `;
+  const priceEl=d.querySelector(".price");
+  const variantSel=d.querySelector(".variant");
+  const qtySel=d.querySelector(".qty");
+  const addBtn=d.querySelector(".add-cart");
+  const thumbImg=d.querySelector(".thumb");
+  const prevBtn=d.querySelector(".prev");
+  const nextBtn=d.querySelector(".next");
+  let currentImg=0;
+  prevBtn.onclick=()=>{currentImg=(currentImg-1+p.images.length)%p.images.length;thumbImg.src=p.images[currentImg];};
+  nextBtn.onclick=()=>{currentImg=(currentImg+1)%p.images.length;thumbImg.src=p.images[currentImg];};
+  variantSel.onchange=e=>{
+    const selected=e.target.selectedOptions[0];
+    if(!selected.value){priceEl.textContent="R$ 0,00";qtySel.innerHTML=`<option value="" disabled selected>Selecione a quantidade</option>`;qtySel.disabled=true;addBtn.disabled=true;return;}
+    priceEl.textContent="R$ "+money(selected.value);
+    const stock=Number(selected.dataset.stock);
+    qtySel.innerHTML=[...Array(stock).keys()].map(i=>`<option>${i+1}</option>`).join("");
+    qtySel.disabled=false;
+    addBtn.disabled=false;
+  };
+  addBtn.onclick=()=>{const variant=variantSel.value;const size=variantSel.selectedOptions[0].text;const qty=Number(qtySel.value);cart.push({name:p.name,variant:size,price:Number(variant),qty});updateCart();};
+  return d;
+}
+
+function updateCart(){
+  const container=document.getElementById("cartItems");
+  container.innerHTML="";
+  let total=0;
+  cart.forEach((item,i)=>{
+    const div=document.createElement("div");
+    div.className="cart-item";
+    div.innerHTML=`
+      ${item.name} (${item.variant})
+      <select onchange="changeQty(${i}, this.value)">
+        ${[...Array(20).keys()].map(n=>`<option value="${n+1}" ${n+1==item.qty?'selected':''}>${n+1}</option>`).join('')}
+      </select>
+      - R$ ${money(item.price*item.qty)}
+      <button onclick="removeItem(${i})">X</button>
+    `;
+    container.appendChild(div);
+    total+=item.price*item.qty;
+  });
+  document.getElementById("cartTotal").textContent=money(total);
+  document.getElementById("cartCount").textContent=cart.length;
+}
+
+function changeQty(index,value){cart[index].qty=Number(value);updateCart();}
+function removeItem(index){cart.splice(index,1);updateCart();}
+function toggleCart(){document.getElementById("cartOverlay").classList.toggle("open");}
+function clearCart(){if(confirm("Deseja realmente cancelar o pedido?")){cart=[];updateCart();document.getElementById("clientName").value='';document.getElementById("clientPhone").value='';document.getElementById("clientEmail").value='';toggleCart();}}
+function editCart(){alert("Você pode alterar a quantidade ou remover itens diretamente acima.");}
+
+async function init(){
+  const raw=await fetchSheet();
+  products=groupProducts(raw);
+  const grid=document.getElementById("catalog");
+  products.forEach(p=>{const card=createCard(p);if(card)grid.appendChild(card);});
+}
+
+async function sendOrder(){
+  const name=document.getElementById("clientName").value.trim();
+  const phone=document.getElementById("clientPhone").value.trim();
+  const email=document.getElementById("clientEmail").value.trim();
+  if(!name||!phone){alert("Nome e WhatsApp são obrigatórios!");return;}
+  if(cart.length===0){alert("Carrinho vazio!");return;}
+  const total=cart.reduce((a,b)=>a+b.price*b.qty,0);
+  const payload={cliente:{name,phone,email},itens:cart,total};
+  try{
+    await fetch("URL_DO_SEU_WEB_APP_DO_DEPLOYD",{method:"POST",body:JSON.stringify(payload)});
+    const whatsappMsg=encodeURIComponent(`Olá, sou ${name}, segue meu pedido feito pelo site:\n${cart.map(i=>`${i.name} (${i.variant}) x${i.qty}`).join("\n")}\nTotal: R$ ${money(total)}`);
+    window.open(`https://wa.me/${phone.replace(/\D/g,'')}?text=${whatsappMsg}`,"_blank");
+    clearCart();
+  }catch(err){console.error(err);alert("Erro ao enviar pedido");}
+}
+
+init();
+</script>
+</body>
+</html>    if(String(p.availability).toLowerCase()!=="show") return;
     const name = String(p.name||"").trim();
     if(!name) return;
     if(!grouped[name]){
@@ -354,4 +467,5 @@ init();
 
 </body>
 </html>
+
 
