@@ -133,25 +133,38 @@ function createCard(p){
     <div class="title">${p.name}</div>
     <div class="price">R$ ${money(p.variants[0].price)}</div>
     <label>Tamanho</label>
-    <select class="variant">${p.variants.map(v=>`<option value="${v.price}" data-stock="${v.stock}">${v.name}</option>`).join("")}</select>
+    <select class="variant">
+      <option value="" selected disabled>Selecione o tamanho</option>
+      ${p.variants.map(v=>`<option value="${v.price}" data-stock="${v.stock}">${v.name}</option>`).join("")}
+    </select>
     <label>Qtd</label>
-    <select class="qty">${[...Array(p.variants[0].stock).keys()].map(i=>`<option>${i+1}</option>`).join("")}</select>
+    <select class="qty">
+      <option value="" selected disabled>Selecione a quantidade</option>
+    </select>
     <button class="add-cart">Adicionar ao Carrinho</button>
   `;
   const priceEl = d.querySelector(".price");
   const variantSel = d.querySelector(".variant");
   const qtySel = d.querySelector(".qty");
+
   variantSel.onchange = e => {
     const selected = e.target.selectedOptions[0];
+    if(selected.value === "") return;
     priceEl.textContent = "R$ "+money(selected.value);
     const stock = Number(selected.dataset.stock);
-    qtySel.innerHTML = [...Array(stock).keys()].map(i=>`<option>${i+1}</option>`).join("");
+    qtySel.innerHTML = `<option value="" disabled selected>Selecione a quantidade</option>` +
+                        [...Array(stock).keys()].map(i=>`<option value="${i+1}">${i+1}</option>`).join("");
   };
+
   d.querySelector(".add-cart").onclick = () => {
     const variant = variantSel.value;
     const size = variantSel.selectedOptions[0].text;
-    const qty = Number(qtySel.value);
-    cart.push({name:p.name, variant:size, price:Number(variant), qty});
+    const qty = qtySel.value;
+    if(!variant || !qty){
+      alert("Selecione o tamanho e a quantidade!");
+      return;
+    }
+    cart.push({name:p.name, variant:size, price:Number(variant), qty:Number(qty)});
     updateCart();
   };
   return d;
@@ -166,7 +179,9 @@ function updateCart(){
     div.className = "cart-item";
     div.innerHTML = `
       ${item.name} (${item.variant})
-      <select onchange="changeQty(${i}, this.value)">${[...Array(20).keys()].map(n=>`<option value="${n+1}" ${n+1==item.qty?'selected':''}>${n+1}</option>`).join('')}</select>
+      <select onchange="changeQty(${i}, this.value)">
+        ${[...Array(20).keys()].map(n=>`<option value="${n+1}" ${n+1==item.qty?'selected':''}>${n+1}</option>`).join('')}
+      </select>
       - R$ ${money(item.price*item.qty)}
       <button onclick="removeItem(${i})">X</button>
     `;
