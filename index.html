@@ -185,7 +185,7 @@
 </header>
 
 <section class="banner">
-  <img src="Images/costas.jpg" alt="Banner" />
+  <img src="Image/costas.jpg" alt="Banner" />
   <div class="banner-text">
     <h1>Novas Camisas Jiu Jitsu</h1>
     <p>Confira os lançamentos!</p>
@@ -252,7 +252,7 @@ function groupProducts(data) {
       });
     }
     [p.thumbnail, p.image1, p.image2, p.image3].forEach(img => {
-      if (img && !grouped[name].images.includes(img)) grouped[name].images.push(img);
+      if (img && !grouped[name].image.includes(img)) grouped[name].images.push(img);
     });
   });
   return Object.values(grouped);
@@ -263,7 +263,7 @@ function createCard(p) {
   const d = document.createElement("div");
   d.className = "card";
 
-  const imgSrc = p.images[0] || "Images/placeholder.jpg";
+  const imgSrc = p.image[0] || "Image/placeholder.jpg";
 
   d.innerHTML = `
     <div class="thumb-container">
@@ -362,4 +362,5 @@ init();
 </script>
 
 </body>
+
 </html>
