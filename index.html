@@ -73,10 +73,6 @@
     color: #fff;
     text-shadow: 0 2px 6px rgba(0,0,0,.5);
   }
-  .banner-text h1 {
-    font-size: 36px;
-    margin: 0;
-  }
   .grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
@@ -123,9 +119,7 @@
     border-radius: 6px;
     border: 1px solid #ccc;
   }
-  button {
-    cursor: pointer;
-  }
+  button { cursor: pointer; }
   button.add-cart {
     background: #1d4ed8;
     color: #fff;
@@ -138,12 +132,13 @@
     border: none;
     margin-top: 6px;
   }
+
+  /* --- Carrinho --- */
   .cart-overlay {
     position: fixed;
-    top: 0;
-    right: 0;
+    top: 0; right: 0;
     width: 100%;
-    max-width: 400px;
+    max-width: 420px;
     height: 100%;
     background: #fff;
     box-shadow: -4px 0 20px rgba(0,0,0,.2);
@@ -153,27 +148,36 @@
     z-index: 2000;
     overflow-y: auto;
   }
-  .cart-overlay.open {
-    transform: translateX(0);
-  }
+  .cart-overlay.open { transform: translateX(0); }
   .cart-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 20px;
+    margin-bottom: 15px;
   }
   .cart-item {
     display: flex;
     justify-content: space-between;
-    margin-bottom: 12px;
+    align-items: center;
+    margin-bottom: 10px;
     border-bottom: 1px solid #eee;
     padding-bottom: 6px;
   }
-  .cart-footer {
-    margin-top: 20px;
+  .cart-item button {
+    border: none;
+    background: none;
+    color: #1d4ed8;
+    font-size: 18px;
+    cursor: pointer;
+  }
+  .cart-footer { margin-top: 20px; }
+  .cart-actions {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 10px;
   }
 
-  /* --- MODAL DE IMAGENS --- */
+  /* --- Modal de Imagens --- */
   .modal {
     display: none;
     position: fixed;
@@ -185,16 +189,10 @@
     align-items: center;
   }
   .modal.open { display: flex; }
-  .modal-content {
-    position: relative;
-    max-width: 90%;
-    max-height: 80%;
-  }
+  .modal-content { position: relative; max-width: 90%; max-height: 80%; }
   .modal-content img {
-    width: 100%;
-    max-height: 80vh;
-    object-fit: contain;
-    border-radius: 10px;
+    width: 100%; max-height: 80vh;
+    object-fit: contain; border-radius: 10px;
   }
   .close-modal, .prev, .next {
     position: absolute;
@@ -219,7 +217,7 @@
   <div class="logo">🏆 LOJA ANJJ</div>
   <nav>
     <a href="#catalog">Catálogo</a>
-    <button class="cart-btn" onclick="toggleCart()">🛒 Carrinho <span class="cart-count" id="cartCount">0</span></button>
+    <button class="cart-btn" onclick="toggleCart()">🛒 Carrinho <span id="cartCount" class="cart-count">0</span></button>
   </nav>
 </header>
 
@@ -233,19 +231,34 @@
 
 <section id="catalog" class="grid"></section>
 
+<!-- Carrinho -->
 <div class="cart-overlay" id="cartOverlay">
   <div class="cart-header">
-    <h3>Carrinho</h3>
-    <button onclick="toggleCart()">Cancelar Pedido</button>
+    <h3>🛍️ Seu Carrinho</h3>
+    <button onclick="toggleCart()">✖</button>
   </div>
   <div id="cartItems"></div>
+
   <div class="cart-footer">
-    <strong>Total: R$ <span id="cartTotal">0,00</span></strong>
-    <button onclick="sendOrder()" style="margin-top:10px;background:#f59e0b;color:#fff;padding:10px;border:none;border-radius:6px;">Enviar Pedido</button>
+    <p><strong>Total: R$ <span id="cartTotal">0,00</span></strong></p>
+    <hr />
+    <div>
+      <label>Nome:</label>
+      <input type="text" id="clientName" placeholder="Digite seu nome" style="width:100%;margin-bottom:8px;">
+      <label>WhatsApp:</label>
+      <input type="text" id="clientPhone" placeholder="Digite seu WhatsApp" style="width:100%;margin-bottom:8px;">
+      <label>Email:</label>
+      <input type="email" id="clientEmail" placeholder="Digite seu email (opcional)" style="width:100%;margin-bottom:10px;">
+    </div>
+    <div class="cart-actions">
+      <button style="background:#ef4444;color:#fff;border:none;border-radius:6px;padding:8px;" onclick="clearCart()">🗑️ Cancelar Carrinho</button>
+      <button style="background:#f59e0b;color:#fff;border:none;border-radius:6px;padding:8px;" onclick="updateCart()">✏️ Editar Carrinho</button>
+      <button style="background:#10b981;color:#fff;border:none;border-radius:6px;padding:8px;" onclick="sendOrder()">📦 Enviar Pedido</button>
+    </div>
   </div>
 </div>
 
-<!-- Modal de Imagens -->
+<!-- Modal de imagens -->
 <div id="imageModal" class="modal">
   <div class="modal-content">
     <button class="close-modal" onclick="closeModal()">✖</button>
@@ -262,174 +275,138 @@ let cart = [];
 let currentImages = [];
 let currentIndex = 0;
 
-function money(v) {
-  return Number(v).toFixed(2).replace('.', ',');
-}
+function money(v){return Number(v).toFixed(2).replace('.', ',');}
 
-async function fetchSheet() {
-  const r = await fetch(SHEET_URL);
-  const t = await r.text();
-  const j = JSON.parse(t.substring(t.indexOf("{"), t.lastIndexOf("}") + 1));
-  const cols = j.table.cols.map(c => c.label.trim().toLowerCase());
-  const rows = j.table.rows || [];
-  return rows.map(row => {
-    const o = {};
-    row.c.forEach((c, i) => o[cols[i]] = c ? (c.v ?? c.f ?? "") : "");
+async function fetchSheet(){
+  const r=await fetch(SHEET_URL);
+  const t=await r.text();
+  const j=JSON.parse(t.substring(t.indexOf("{"),t.lastIndexOf("}")+1));
+  const cols=j.table.cols.map(c=>c.label.trim().toLowerCase());
+  const rows=j.table.rows||[];
+  return rows.map(row=>{
+    const o={};
+    row.c.forEach((c,i)=>o[cols[i]]=c?(c.v??c.f??""):"");
     return o;
   });
 }
 
-function groupProducts(data) {
-  const grouped = {};
-  data.forEach(p => {
-    if (String(p.availability).toLowerCase() !== "show") return;
-    const name = String(p.name).trim();
-    if (!name) return;
-    if (!grouped[name]) {
-      grouped[name] = {
-        name,
-        basePrice: Number(p.price || 0),
-        discounted: Number(p["discounted price"] || 0),
-        variants: [],
-        images: []
-      };
+function groupProducts(data){
+  const grouped={};
+  data.forEach(p=>{
+    if(String(p.availability).toLowerCase()!=="show")return;
+    const name=String(p.name).trim();
+    if(!name)return;
+    if(!grouped[name]){
+      grouped[name]={name,basePrice:Number(p.price||0),variants:[],images:[]};
     }
-    const size = String(p["variant name"] || "").trim();
-    if (size) {
-      grouped[name].variants.push({
-        name: size || "Único",
-        price: p["discounted price"] && p["discounted price"] < p.price ? Number(p["discounted price"]) : Number(p.price || 0),
-        stock: Number(p.stock || 1)
-      });
+    const size=String(p["variant name"]||"").trim();
+    if(size){
+      grouped[name].variants.push({name:size||"Único",price:Number(p.price||0),stock:Number(p.stock||1)});
     }
-    [p.thumbnail, p.image1, p.image2, p.image3].forEach(img => {
-      if (img && !grouped[name].images.includes(img)) grouped[name].images.push(img);
+    [p.thumbnail,p.image1,p.image2,p.image3].forEach(img=>{
+      if(img&&!grouped[name].images.includes(img))grouped[name].images.push(img);
     });
   });
   return Object.values(grouped);
 }
 
-function createCard(p) {
-  if (!p.variants.length) return null;
-  const d = document.createElement("div");
-  d.className = "card";
-  const imgSrc = p.images[0] || "Images/placeholder.jpg";
-
-  d.innerHTML = `
-    <div class="thumb-container">
-      <img class="thumb" src="${imgSrc}" alt="${p.name}">
-    </div>
-    <div class="title">${p.name || "Produto"}</div>
-    <div class="price">R$ ${money(p.variants[0]?.price || 0)}</div>
+function createCard(p){
+  if(!p.variants.length)return null;
+  const d=document.createElement("div");
+  d.className="card";
+  const imgSrc=p.images[0]||"Images/placeholder.jpg";
+  d.innerHTML=`
+    <div class="thumb-container"><img class="thumb" src="${imgSrc}" alt="${p.name}"></div>
+    <div class="title">${p.name||"Produto"}</div>
+    <div class="price">R$ ${money(p.variants[0]?.price||0)}</div>
     <label>Tamanho</label>
     <select class="variant">
       <option value="" disabled selected>Selecionar tamanho</option>
-      ${p.variants.map(v => `<option value="${v.price || 0}" data-stock="${v.stock || 1}">${v.name || "Único"}</option>`).join("")}
+      ${p.variants.map(v=>`<option value="${v.price}" data-stock="${v.stock}">${v.name}</option>`).join("")}
     </select>
     <label>Qtd</label>
     <select class="qty"><option>1</option></select>
     <button class="add-cart">Adicionar ao Carrinho</button>
     <button class="view-images">Ver Imagens</button>
   `;
-
-  const priceEl = d.querySelector(".price");
-  const variantSel = d.querySelector(".variant");
-  const qtySel = d.querySelector(".qty");
-
-  variantSel.onchange = e => {
-    const selected = e.target.selectedOptions[0];
-    const price = Number(selected.value || 0);
-    priceEl.textContent = "R$ " + money(price);
-    const stock = Number(selected.dataset.stock || 1);
-    qtySel.innerHTML = [...Array(stock).keys()].map(i => `<option>${i + 1}</option>`).join("");
+  const priceEl=d.querySelector(".price");
+  const variantSel=d.querySelector(".variant");
+  const qtySel=d.querySelector(".qty");
+  variantSel.onchange=e=>{
+    const sel=e.target.selectedOptions[0];
+    const price=Number(sel.value||0);
+    priceEl.textContent="R$ "+money(price);
+    const stock=Number(sel.dataset.stock||1);
+    qtySel.innerHTML=[...Array(stock).keys()].map(i=>`<option>${i+1}</option>`).join("");
   };
-
-  d.querySelector(".add-cart").onclick = () => {
-    const variantPrice = Number(variantSel.value);
-    const variantName = variantSel.selectedOptions[0].text;
-
-    if (!variantPrice) {
-      alert("Por favor, selecione um tamanho antes de adicionar ao carrinho.");
-      return;
-    }
-
-    const qty = Number(qtySel.value || 1);
-    cart.push({ name: p.name || "Produto", variant: variantName, price: variantPrice, qty });
+  d.querySelector(".add-cart").onclick=()=>{
+    const vPrice=Number(variantSel.value);
+    const vName=variantSel.selectedOptions[0].text;
+    if(!vPrice){alert("Selecione um tamanho antes de adicionar.");return;}
+    const qty=Number(qtySel.value||1);
+    cart.push({name:p.name,variant:vName,price:vPrice,qty});
     updateCart();
   };
-
-  d.querySelector(".view-images").onclick = () => openModal(p.images);
+  d.querySelector(".view-images").onclick=()=>openModal(p.images);
   return d;
 }
 
-function openModal(images) {
-  currentImages = images;
-  currentIndex = 0;
-  document.getElementById("modalImage").src = currentImages[0];
-  document.getElementById("imageModal").classList.add("open");
-}
+function openModal(images){currentImages=images;currentIndex=0;document.getElementById("modalImage").src=currentImages[0];document.getElementById("imageModal").classList.add("open");}
+function closeModal(){document.getElementById("imageModal").classList.remove("open");}
+function changeImage(step){if(!currentImages.length)return;currentIndex=(currentIndex+step+currentImages.length)%currentImages.length;document.getElementById("modalImage").src=currentImages[currentIndex];}
 
-function closeModal() {
-  document.getElementById("imageModal").classList.remove("open");
-}
-
-function changeImage(step) {
-  if (!currentImages.length) return;
-  currentIndex = (currentIndex + step + currentImages.length) % currentImages.length;
-  document.getElementById("modalImage").src = currentImages[currentIndex];
-}
-
-function updateCart() {
-  const container = document.getElementById("cartItems");
-  container.innerHTML = "";
-  let total = 0;
-  cart.forEach(item => {
-    const div = document.createElement("div");
-    div.className = "cart-item";
-    div.textContent = `${item.name} (${item.variant}) x${item.qty} - R$ ${money(item.price * item.qty)}`;
+function updateCart(){
+  const container=document.getElementById("cartItems");
+  container.innerHTML="";
+  let total=0;
+  cart.forEach((item,i)=>{
+    const div=document.createElement("div");
+    div.className="cart-item";
+    div.innerHTML=`${item.name} (${item.variant}) x${item.qty} - R$ ${money(item.price*item.qty)}
+      <div><button onclick="changeQty(${i},-1)">➖</button>
+      <button onclick="changeQty(${i},1)">➕</button>
+      <button onclick="removeItem(${i})">❌</button></div>`;
     container.appendChild(div);
-    total += item.price * item.qty;
+    total+=item.price*item.qty;
   });
-  document.getElementById("cartTotal").textContent = money(total);
-  document.getElementById("cartCount").textContent = cart.length;
+  document.getElementById("cartTotal").textContent=money(total);
+  document.getElementById("cartCount").textContent=cart.length;
 }
 
-function toggleCart() {
-  document.getElementById("cartOverlay").classList.toggle("open");
+function changeQty(index,delta){cart[index].qty=Math.max(1,cart[index].qty+delta);updateCart();}
+function removeItem(i){cart.splice(i,1);updateCart();}
+function clearCart(){if(confirm("Tem certeza que deseja cancelar o carrinho?")){cart=[];updateCart();}}
+
+function toggleCart(){document.getElementById("cartOverlay").classList.toggle("open");}
+
+async function init(){
+  const raw=await fetchSheet();
+  products=groupProducts(raw);
+  const grid=document.getElementById("catalog");
+  grid.innerHTML="";
+  products.forEach(p=>{const c=createCard(p);if(c)grid.appendChild(c);});
 }
 
-async function init() {
-  const raw = await fetchSheet();
-  products = groupProducts(raw);
-  const grid = document.getElementById("catalog");
-  grid.innerHTML = "";
-  products.forEach(p => {
-    const card = createCard(p);
-    if (card) grid.appendChild(card);
-  });
-}
+function sendOrder(){
+  const name=document.getElementById("clientName").value.trim();
+  const phone=document.getElementById("clientPhone").value.trim();
+  const email=document.getElementById("clientEmail").value.trim();
+  if(!name||!phone){alert("Por favor, preencha nome e WhatsApp.");return;}
+  const total=cart.reduce((a,b)=>a+b.price*b.qty,0);
+  const msg=`Olá, sou ${name}.
+📱 WhatsApp: ${phone}
+✉️ Email: ${email||"Não informado"}
 
-async function sendOrder() {
-  const name = prompt("Digite seu nome (obrigatório)");
-  const phone = prompt("Digite seu WhatsApp (obrigatório)");
-  const email = prompt("Digite seu email (opcional)");
-  if (!name || !phone) {
-    alert("Nome e WhatsApp obrigatórios!");
-    return;
-  }
-  const total = cart.reduce((a, b) => a + b.price * b.qty, 0);
-  const whatsappMsg = encodeURIComponent(
-    `Olá, ${name}, segue meu pedido:\n${cart.map(i => `${i.name} (${i.variant}) x${i.qty}`).join("\n")}\nTotal: R$ ${money(total)}`
-  );
-  const phoneClean = phone.replace(/\D/g, '');
-  window.open(`https://wa.me/${phoneClean}?text=${whatsappMsg}`, "_blank");
-  cart = [];
-  updateCart();
-  toggleCart();
+🛍️ Pedido:
+${cart.map(i=>`- ${i.name} (${i.variant}) x${i.qty} = R$ ${money(i.price*i.qty)}`).join("\n")}
+Total: R$ ${money(total)}`;
+
+  const link=`https://wa.me/${phone.replace(/\D/g,"")}?text=${encodeURIComponent(msg)}`;
+  window.open(link,"_blank");
+  cart=[];updateCart();toggleCart();
 }
 
 init();
 </script>
-
 </body>
 </html>
