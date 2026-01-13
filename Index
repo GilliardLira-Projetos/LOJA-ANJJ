@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LOJA ANJJ</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+body{font-family:'Poppins',sans-serif;margin:0;padding:0;background:#f6f6f6}
+header{display:flex;justify-content:space-between;align-items:center;padding:16px 32px;background:#1d4ed8;color:#fff;position:sticky;top:0;z-index:1000;box-shadow:0 2px 8px rgba(0,0,0,.1)}
+.logo{font-weight:600;font-size:24px}
+nav a{color:#fff;text-decoration:none;margin:0 12px;font-weight:500}
+.cart-btn{background:#f59e0b;color:#fff;padding:8px 12px;border:none;border-radius:6px;cursor:pointer;position:relative}
+.cart-count{position:absolute;top:-6px;right:-6px;background:red;color:#fff;border-radius:50%;padding:2px 6px;font-size:12px}
+.banner{position:relative;text-align:center;overflow:hidden;height:300px;margin-bottom:20px}
+.banner img{width:100%;height:100%;object-fit:cover}
+.banner-text{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#fff;text-shadow:0 2px 6px rgba(0,0,0,.5)}
+.banner-text h1{font-size:36px;margin:0}
+.banner-text p{font-size:18px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:20px;padding:0 32px 32px}
+.card{background:#fff;border-radius:10px;padding:12px;box-shadow:0 6px 18px rgba(0,0,0,.1);display:flex;flex-direction:column;transition:transform .3s}
+.card:hover{transform:translateY(-4px)}
+.thumb-container{position:relative;width:100%;height:180px;overflow:hidden;border-radius:8px;background:#eee}
+.thumb-container img{width:100%;height:100%;object-fit:cover}
+.thumb-container button{position:absolute;top:50%;transform:translateY(-50%);background:rgba(0,0,0,0.4);color:#fff;border:none;padding:6px 10px;cursor:pointer;border-radius:50%}
+.thumb-container .prev{left:6px}
+.thumb-container .next{right:6px}
+.title{font-weight:bold;margin:8px 0}
+.price{font-size:18px;margin:6px 0}
+select,input,button{padding:8px;border-radius:6px;border:1px solid #ccc}
+button{cursor:pointer}
+button.add-cart{background:#1d4ed8;color:#fff;border:none;margin-top:6px}
+.cart-overlay{position:fixed;top:0;right:0;width:100%;max-width:400px;height:100%;background:#fff;box-shadow:-4px 0 20px rgba(0,0,0,.2);padding:20px;transform:translateX(100%);transition:transform .3s;z-index:2000;overflow-y:auto}
+.cart-overlay.open{transform:translateX(0)}
+.cart-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+.cart-item{display:flex;justify-content:space-between;margin-bottom:12px;border-bottom:1px solid #eee;padding-bottom:6px}
+.cart-item select{width:60px}
+.cart-footer{margin-top:20px}
+.cart-form input{width:100%;margin-bottom:10px;box-sizing:border-box;border:1px solid #ccc;padding:8px;border-radius:6px}
+.cart-actions button{margin-right:10px;padding:10px;border:none;border-radius:6px;color:#fff;cursor:pointer}
+.cart-actions .send{background:#f59e0b}
+.cart-actions .cancel{background:#888}
+.cart-actions .edit{background:#1d4ed8}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">🏆 LOJA ANJJ</div>
+  <nav>
+    <a href="#catalog">Catálogo</a>
+    <button class="cart-btn" onclick="toggleCart()">🛒 Carrinho <span class="cart-count" id="cartCount">0</span></button>
+  </nav>
+</header>
+
+<section class="banner">
+  <img src="Images/costas.jpg" alt="Banner">
+  <div class="banner-text">
+    <h1>Novas Camisas Jiu Jitsu</h1>
+    <p>Confira os lançamentos!</p>
+  </div>
+</section>
+
+<section id="catalog" class="grid"></section>
+
+<div class="cart-overlay" id="cartOverlay">
+  <div class="cart-header">
+    <h3>Carrinho</h3>
+    <button class="cancel" onclick="clearCart()">Cancelar Pedido</button>
+  </div>
+  <div id="cartItems"></div>
+  <div class="cart-form">
+    <input type="text" id="clientName" placeholder="Nome (obrigatório)">
+    <input type="text" id="clientPhone" placeholder="(DDD) 9XXXX-XXXX (obrigatório)">
+    <input type="email" id="clientEmail" placeholder="Email (opcional)">
+  </div>
+  <div class="cart-footer">
+    <strong>Total: R$ <span id="cartTotal">0,00</span></strong>
+  </div>
+  <div class="cart-actions">
+    <button class="send" onclick="sendOrder()">Enviar Pedido</button>
+    <button class="edit" onclick="editCart()">Editar Carrinho</button>
+  </div>
+</div>
+
+<script>
+const SHEET_URL = "https://docs.google.com/spreadsheets/d/1BqVAf9A7l7KHKcwpV9HrqBMPWTA4s-aPv1EEna7xuHg/gviz/tq?tqx=out:json&sheet=Products";
+let products = [];
+let cart = [];
+
+function money(v){return Number(v).toFixed(2).replace('.',',');}
+
+async function fetchSheet(){
+  const r = await fetch(SHEET_URL);
+  const t = await r.text();
+  const j = JSON.parse(t.substring(t.indexOf("{"), t.lastIndexOf("}")+1));
+  const cols = j.table.cols.map(c=>c.label.trim().toLowerCase());
+  const rows = j.table.rows||[];
+  return rows.map(row=>{
+    const o = {};
+    row.c.forEach((c,i)=>o[cols[i]] = c ? (c.v??c.f??"") : "");
+    return o;
+  });
+}
+
+function groupProducts(data){
+  const grouped = {};
+  data.forEach(p=>{
+    if(String(p.availability).toLowerCase()!=="show") return;
+    const name = String(p.name).trim();
+    if(!name) return;
+    if(!grouped[name]){
+      grouped[name] = {name, basePrice:Number(p.price), discounted:Number(p["discounted price"]||0), variants:[], images:[]};
+    }
+    const size = String(p["variant name"]).trim();
+    if(size){
+      grouped[name].variants.push({
+        name:size,
+        price: p["discounted price"] && p["discounted price"]<p.price? Number(p["discounted price"]): Number(p.price),
+        stock:Number(p.stock||0)
+      });
+    }
+    [p.thumbnail,p.image1,p.image2,p.image3].forEach(img=>{
+      if(img && !grouped[name].images.includes(img)) grouped[name].images.push(img);
+    });
+  });
+  return Object.values(grouped);
+}
+
+function createCard(p){
+  if(!p.variants.length) return null;
+  const d = document.createElement("div");
+  d.className="card";
+  d.innerHTML=`
+    <div class="thumb-container">
+      <button class="prev">&lt;</button>
+      <img class="thumb" src="${p.images[0]||''}">
+      <button class="next">&gt;</button>
+    </div>
+    <div class="title">${p.name}</div>
+    <div class="price">R$ ${money(p.variants[0].price)}</div>
+    <label>Tamanho</label>
+    <select class="variant">
+      <option value="" disabled selected>Selecione o tamanho</option>
+      ${p.variants.map(v=>`<option value="${v.price}" data-stock="${v.stock}">${v.name}</option>`).join("")}
+    </select>
+    <label>Qtd</label>
+    <select class="qty" disabled>
+      <option value="" disabled selected>Selecione a quantidade</option>
+    </select>
+    <button class="add-cart" disabled>Adicionar ao Carrinho</button>
+  `;
+  const priceEl = d.querySelector(".price");
+  const variantSel = d.querySelector(".variant");
+  const qtySel = d.querySelector(".qty");
+  const addBtn = d.querySelector(".add-cart");
+  const thumbImg = d.querySelector(".thumb");
+  const prevBtn = d.querySelector(".prev");
+  const nextBtn = d.querySelector(".next");
+
+  let currentImg = 0;
+
+  prevBtn.onclick = ()=>{ currentImg=(currentImg-1+p.images.length)%p.images.length; thumbImg.src=p.images[currentImg]; };
+  nextBtn.onclick = ()=>{ currentImg=(currentImg+1)%p.images.length; thumbImg.src=p.images[currentImg]; };
+
+  variantSel.onchange = e=>{
+    const selected = e.target.selectedOptions[0];
+    if(!selected.value){ qtySel.innerHTML='<option value="" disabled selected>Selecione a quantidade</option>'; qtySel.disabled=true; addBtn.disabled=true; return; }
+    priceEl.textContent="R$ "+money(selected.value);
+    const stock=Number(selected.dataset.stock);
+    qtySel.innerHTML=[...Array(stock).keys()].map(i=>`<option>${i+1}</option>`).join('');
+    qtySel.disabled=false; addBtn.disabled=false;
+  }
+
+  addBtn.onclick=()=>{
+    const variant=variantSel.value;
+    const size=variantSel.selectedOptions[0].text;
+    const qty=Number(qtySel.value);
+    cart.push({name:p.name,variant:size,price:Number(variant),qty});
+    updateCart();
+  }
+
+  return d;
+}
+
+function updateCart(){
+  const container=document.getElementById("cartItems");
+  container.innerHTML="";
+  let total=0;
+  cart.forEach((item,i)=>{
+    const div=document.createElement("div");
+    div.className="cart-item";
+    div.innerHTML=`${item.name} (${item.variant}) x${item.qty} - R$ ${money(item.price*item.qty)}`;
+    container.appendChild(div);
+    total+=item.price*item.qty;
+  });
+  document.getElementById("cartTotal").textContent=money(total);
+  document.getElementById("cartCount").textContent=cart.length;
+}
+
+function toggleCart(){document.getElementById("cartOverlay").classList.toggle("open");}
+
+function clearCart(){
+  if(confirm("Deseja realmente cancelar o pedido?")){ cart=[]; updateCart(); document.getElementById("clientName").value=''; document.getElementById("clientPhone").value=''; document.getElementById("clientEmail").value=''; toggleCart();}
+}
+
+function editCart(){alert("Você pode alterar a quantidade ou remover itens diretamente acima.");}
+
+async function init(){
+  const raw=await fetchSheet();
+  products=groupProducts(raw);
+  const grid=document.getElementById("catalog");
+  products.forEach(p=>{ const card=createCard(p); if(card) grid.appendChild(card); });
+}
+
+async function sendOrder(){
+  const name=document.getElementById("clientName").value.trim();
+  const phone=document.getElementById("clientPhone").value.trim();
+  const email=document.getElementById("clientEmail").value.trim();
+  if(!name||!phone){alert("Nome e WhatsApp obrigatórios!"); return;}
+  if(cart.length===0){alert("Carrinho vazio!"); return;}
+  const total=cart.reduce((a,b)=>a+b.price*b.qty,0);
+  const payload={cliente:{name,phone,email},itens:cart,total};
+  try{
+    await fetch("URL_DO_SEU_WEB_APP_DO_DEPLOYD",{method:"POST",body:JSON.stringify(payload)});
+    const whatsappMsg=encodeURIComponent(`Olá, sou ${name}, segue meu pedido:\n${cart.map(i=>`${i.name} (${i.variant}) x${i.qty}`).join("\n")}\nTotal: R$ ${money(total)}`);
+    window.open(`https://wa.me/${phone.replace(/\D/g,'')}?text=${whatsappMsg}`,"_blank");
+    cart=[]; updateCart(); toggleCart();
+  }catch(err){console.error(err);alert("Erro ao enviar pedido");}
+}
+
+init();
+</script>
+
+</body>
+</html>
