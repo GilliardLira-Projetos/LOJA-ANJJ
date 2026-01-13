@@ -24,13 +24,15 @@ h2{margin:0}
 select,button,input{padding:8px;border-radius:6px;border:1px solid #ccc}
 button{background:#1d4ed8;color:#fff;border:none;cursor:pointer;transition:.3s;margin-top:8px}
 button:hover{background:#2563eb}
+button:disabled{background:#ccc;cursor:not-allowed}
 .stock{font-size:14px;color:#444;margin-top:4px}
 .qty{width:80px;text-align:center}
 #cartModal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.4);display:none;align-items:center;justify-content:center}
 #cartModal .box{background:#fff;padding:20px;border-radius:12px;width:90%;max-width:400px;max-height:80%;overflow-y:auto}
 #cartModal h3{margin-top:0}
-.item{border-bottom:1px solid #ddd;padding:8px 0}
+.item{border-bottom:1px solid #ddd;padding:8px 0;display:flex;justify-content:space-between;align-items:center}
 .item:last-child{border:none}
+.item button{background:red;color:#fff;border:none;border-radius:4px;padding:2px 6px;margin-left:6px;cursor:pointer}
 .total{font-weight:bold;margin-top:12px}
 </style>
 </head>
@@ -61,6 +63,9 @@ const SHEET_ID="1BqVAf9A7l7KHKcwpV9HrqBMPWTA4s-aPv1EEna7xuHg";
 const SHEET_NAME="products";
 const SHEET_URL=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${SHEET_NAME}`;
 const WHATSAPP="5581997512217";
+
+// URL do seu Web App para registrar pedidos (aba Orders)
+const WEBAPP_URL = "COLE_AQUI_O_URL_DO_SEU_DEPLOY";
 
 let cart=[];
 
@@ -116,13 +121,21 @@ function openCart(){
   const total=document.getElementById("cartTotal");
   items.innerHTML="";
   let sum=0;
-  cart.forEach(it=>{
-    const subtotal=it.price*it.qty;
-    sum+=subtotal;
-    items.innerHTML+=`
-      <div class="item">
-        ${it.name} - ${it.variant} x${it.qty} <b>R$ ${money(subtotal)}</b>
-      </div>`;
+  cart.forEach((it,index)=>{
+    const subtotal = it.price*it.qty;
+    sum += subtotal;
+    const div = document.createElement("div");
+    div.className="item";
+    div.innerHTML = `${it.name} - ${it.variant} x${it.qty} <b>R$ ${money(subtotal)}</b>`;
+    const rm = document.createElement("button");
+    rm.textContent = "❌";
+    rm.addEventListener("click", ()=>{
+      cart.splice(index,1);
+      openCart();
+      document.getElementById("cartCount").textContent = cart.reduce((a,b)=>a+b.qty,0);
+    });
+    div.appendChild(rm);
+    items.appendChild(div);
   });
   total.textContent="Total: R$ "+money(sum);
   modal.style.display="flex";
@@ -130,6 +143,16 @@ function openCart(){
 
 function closeCart(){
   document.getElementById("cartModal").style.display="none";
+}
+
+async function salvarPedidoWebApp(itens,total){
+    try{
+        await fetch(WEBAPP_URL,{
+            method:"POST",
+            headers: {"Content-Type":"application/json"},
+            body: JSON.stringify({itens,total})
+        });
+    }catch(err){console.error("Erro ao salvar pedido",err);}
 }
 
 function sendToWhatsApp(){
@@ -142,6 +165,11 @@ function sendToWhatsApp(){
     total+=subtotal;
   });
   msg+=`\n*Total:* R$ ${money(total)}`;
+
+  // salvar no Web App (Orders)
+  salvarPedidoWebApp(cart,total);
+
+  // abrir WhatsApp
   const url=`https://wa.me/${WHATSAPP}?text=${encodeURIComponent(msg)}`;
   window.open(url,"_blank");
 }
@@ -197,15 +225,26 @@ function createCard(p){
 
       // preencher lista de quantidade do 1 até estoque disponível
       let options="";
-      for(let i=1;i<=variant.stock;i++){
-        options += `<option value="${i}">${i}</option>`;
+      if(variant.stock>0){
+        for(let i=1;i<=variant.stock;i++){
+          options += `<option value="${i}">${i}</option>`;
+        }
+        qtyEl.innerHTML = options;
+        stockEl.textContent = `Estoque disponível: ${variant.stock}`;
+        btn.disabled = false;
+        btn.textContent = "Adicionar ao carrinho";
+      } else {
+        qtyEl.innerHTML = `<option value="0">0</option>`;
+        stockEl.textContent = "Esgotado!";
+        btn.disabled = true;
+        btn.textContent = "Esgotado";
       }
-      qtyEl.innerHTML = options;
 
-      stockEl.textContent = `Estoque disponível: ${variant.stock}`;
     } else {
       qtyEl.innerHTML = `<option value="1">1</option>`;
       stockEl.textContent = "";
+      btn.disabled = false;
+      btn.textContent = "Adicionar ao carrinho";
     }
   });
 
