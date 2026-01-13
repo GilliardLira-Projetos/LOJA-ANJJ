@@ -1,222 +1,192 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Minha Loja - Catálogo</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LOJA ANJJ</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-  :root{--max-w:1100px;--gap:16px}
-  body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial;margin:0;padding:24px;background:#f7f7f8;color:#111}
-  .container{max-width:var(--max-w);margin:0 auto}
-  header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}
-  h1{margin:0;font-size:1.25rem}
-  select,input[type=number]{padding:6px;border-radius:6px;border:1px solid #ccc}
-  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:var(--gap)}
-  .card{background:white;border-radius:12px;padding:12px;box-shadow:0 6px 18px rgba(0,0,0,0.06);display:flex;flex-direction:column;gap:8px}
-  .thumb{height:160px;border-radius:8px;object-fit:cover;width:100%;background:#eee;cursor:pointer}
-  .title{font-weight:600}
-  .price{font-size:1.05rem}
-  .oldprice{text-decoration:line-through;color:#888;font-size:.9rem}
-  .desc{font-size:0.9rem;color:#444}
-  .actions{margin-top:auto;display:flex;gap:8px;flex-direction:column}
-  button{cursor:pointer;border:0;padding:10px 12px;border-radius:8px}
-  .btn-add{background:#1d4ed8;color:white}
-  .btn-wh{background:#25d366;color:white}
-  .cart-btn{background:#111;color:white;padding:10px 14px;border-radius:10px}
-  .cart-panel{position:fixed;right:20px;bottom:20px;background:white;padding:12px;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.12);width:320px;max-width:90%;z-index:99}
-  .cart-item{display:flex;gap:8px;align-items:center;margin-bottom:8px}
-  .cart-item img{width:48px;height:48px;object-fit:cover;border-radius:6px}
-  .muted{color:#666;font-size:0.9rem}
-  .loader{margin:60px auto;text-align:center;color:#666}
-  input,textarea{width:100%;padding:8px;border-radius:6px;border:1px solid #ccc;margin-bottom:6px}
-  .thumbnails{display:flex;gap:4px;margin-top:4px}
-  .thumbnails img{width:40px;height:40px;object-fit:cover;border-radius:4px;cursor:pointer;border:1px solid #ccc}
+body{font-family:'Poppins',sans-serif;margin:0;padding:0;background:#f6f6f6}
+header{display:flex;justify-content:space-between;align-items:center;padding:16px 32px;background:#1d4ed8;color:#fff;position:sticky;top:0;z-index:1000;box-shadow:0 2px 8px rgba(0,0,0,.1)}
+.logo{font-weight:600;font-size:24px}
+nav a{color:#fff;text-decoration:none;margin:0 12px;font-weight:500}
+.cart-btn{background:#f59e0b;color:#fff;padding:8px 12px;border:none;border-radius:6px;cursor:pointer;position:relative}
+.cart-count{position:absolute;top:-6px;right:-6px;background:red;color:#fff;border-radius:50%;padding:2px 6px;font-size:12px}
+.banner{position:relative;text-align:center;overflow:hidden;height:300px;margin-bottom:20px}
+.banner img{width:100%;height:100%;object-fit:cover}
+.banner-text{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#fff;text-shadow:0 2px 6px rgba(0,0,0,.5)}
+.banner-text h1{font-size:36px;margin:0}
+.banner-text p{font-size:18px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:20px;padding:0 32px 32px}
+.card{background:#fff;border-radius:10px;padding:12px;box-shadow:0 6px 18px rgba(0,0,0,.1);display:flex;flex-direction:column;transition:transform .3s}
+.card:hover{transform:translateY(-4px)}
+.thumb{width:100%;height:180px;object-fit:cover;border-radius:8px;background:#eee;cursor:pointer}
+.title{font-weight:bold;margin:8px 0}
+.price{font-size:18px;margin:6px 0}
+select,input,button{padding:8px;border-radius:6px;border:1px solid #ccc}
+button{cursor:pointer}
+button.add-cart{background:#1d4ed8;color:#fff;border:none;margin-top:6px}
+.cart-overlay{position:fixed;top:0;right:0;width:100%;max-width:400px;height:100%;background:#fff;box-shadow:-4px 0 20px rgba(0,0,0,.2);padding:20px;transform:translateX(100%);transition:transform .3s;z-index:2000;overflow-y:auto}
+.cart-overlay.open{transform:translateX(0)}
+.cart-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+.cart-item{display:flex;justify-content:space-between;margin-bottom:12px;border-bottom:1px solid #eee;padding-bottom:6px}
+.cart-item select{width:60px}
+.cart-footer{margin-top:20px}
 </style>
 </head>
 <body>
-<div class="container">
-  <header>
-    <h1>Catálogo de Produtos</h1>
-    <div style="display:flex;gap:8px;align-items:center;">
-      <select id="filterCat"><option value="">Todas as categorias</option></select>
-      <button id="btnCart" class="cart-btn">Carrinho (<span id="cartCount">0</span>)</button>
-    </div>
-  </header>
 
-  <main>
-    <div id="products" class="grid"></div>
-    <div id="loader" class="loader">Carregando produtos...</div>
-  </main>
-</div>
+<header>
+  <div class="logo">🏆 LOJA ANJJ</div>
+  <nav>
+    <a href="#catalog">Catálogo</a>
+    <button class="cart-btn" onclick="toggleCart()">🛒 Carrinho <span class="cart-count" id="cartCount">0</span></button>
+  </nav>
+</header>
 
-<!-- Painel do carrinho -->
-<div id="cartPanel" class="cart-panel" style="display:none">
-  <h3>Seu pedido</h3>
+<section class="banner">
+  <img src="https://gilliardlira-projetos.github.io/LOJA-ANJJ/assets/images/banner.jpg" alt="Banner">
+  <div class="banner-text">
+    <h1>Novas Camisas Jiu Jitsu</h1>
+    <p>Confira os lançamentos!</p>
+  </div>
+</section>
+
+<section id="catalog" class="grid"></section>
+
+<div class="cart-overlay" id="cartOverlay">
+  <div class="cart-header">
+    <h3>Carrinho</h3>
+    <button onclick="toggleCart()">Cancelar Pedido</button>
+  </div>
   <div id="cartItems"></div>
-  <div class="muted">Total: R$ <span id="cartTotal">0,00</span></div>
-  <hr>
-  <h4>Seus dados</h4>
-  <input id="userName" placeholder="Nome completo" />
-  <input id="userPhone" placeholder="Telefone" />
-  <input id="userEmail" placeholder="E-mail" />
-  <textarea id="userAddress" placeholder="Endereço completo"></textarea>
-  <input id="userZip" placeholder="CEP" />
-  <div style="margin-top:10px;display:flex;gap:8px">
-    <button id="btnSendWhats" class="btn-wh">Enviar pedido</button>
-    <button id="btnCloseCart">Fechar</button>
+  <div class="cart-footer">
+    <strong>Total: R$ <span id="cartTotal">0,00</span></strong>
+    <button onclick="sendOrder()" style="margin-top:10px;background:#f59e0b;color:#fff;padding:10px;border:none;border-radius:6px;">Enviar Pedido</button>
   </div>
 </div>
 
 <script>
-const SHEET_ID = "1yPfhN08a0gj4JLoyTFISRghA7WSDbOJw4BFbzFdrDTc";
-const SHEET_NAME = "Sheet1";
-const WHATSAPP_NUMBER = "5581997512217";
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxta6KftgX_qBuDgcHmarZ90ij8KDNMEmd6xTQBRzTKIo6gY19jZRY_99sqy-Tredz5/exec";
-const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(SHEET_NAME)}`;
-const cartKey = "loja_cart_v4";
+const SHEET_URL = "https://docs.google.com/spreadsheets/d/1BqVAf9A7l7KHKcwpV9HrqBMPWTA4s-aPv1EEna7xuHg/gviz/tq?tqx=out:json&gid=1940306776";
 
-function loadCart(){try{return JSON.parse(localStorage.getItem(cartKey))||[]}catch(e){return[]}}
-function saveCart(c){localStorage.setItem(cartKey,JSON.stringify(c))}
-function updateCartCount(){const c=loadCart().reduce((s,i)=>s+i.qty,0);document.getElementById('cartCount').textContent=c}
-function toCurrency(n){return Number(n).toFixed(2).replace('.',',')}
-function escapeHtml(s){return String(s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+let products = [];
+let cart = [];
 
-function groupVariants(data){
-  const grouped={};
+function money(v){return Number(v).toFixed(2).replace('.',',');}
+
+async function fetchSheet(){
+  const r = await fetch(SHEET_URL);
+  const t = await r.text();
+  const j = JSON.parse(t.substring(t.indexOf("{"), t.lastIndexOf("}")+1));
+  const cols = j.table.cols.map(c=>c.label.trim().toLowerCase());
+  const rows = j.table.rows||[];
+  return rows.map(row=>{
+    const o = {};
+    row.c.forEach((c,i)=>o[cols[i]] = c ? (c.v??c.f??"") : "");
+    return o;
+  });
+}
+
+function groupProducts(data){
+  const grouped = {};
   data.forEach(p=>{
-    if(!grouped[p.name]) grouped[p.name]={...p,variants:[],images:[]};
-    const variantName=String(p["variant name"]||"").trim();
-    if(variantName){
-      grouped[p.name].variants.push({name:variantName,price:p.price,stock:p.stock});
+    if(String(p.availability).toLowerCase()!=="show") return;
+    const name = String(p.name).trim();
+    if(!name) return;
+    if(!grouped[name]){
+      grouped[name] = {name, basePrice:Number(p.price), discounted:Number(p["discounted price"]||0), variants:[], images:[]};
     }
-    [p.thumbnail,p.image1,p.image2].forEach(img=>{
-      if(img && !grouped[p.name].images.includes(img)) grouped[p.name].images.push(img);
+    const size = String(p["variant name"]).trim();
+    if(size){
+      grouped[name].variants.push({
+        name:size,
+        price: p["discounted price"] && p["discounted price"]<p.price? Number(p["discounted price"]): Number(p.price),
+        stock:Number(p.stock||0)
+      });
+    }
+    [p.thumbnail,p.image1,p.image2,p.image3].forEach(img=>{
+      if(img && !grouped[name].images.includes(img)) grouped[name].images.push(img);
     });
   });
   return Object.values(grouped);
 }
 
-function createProductCard(prod){
-  const div=document.createElement('div');div.className='card';
-  const discounted=prod["discounted price"]&&prod["discounted price"]<prod.price;
-  let variantOptions='';
-  if(prod.variants&&prod.variants.length>0){
-    variantOptions=`<select class="variantSelect">${prod.variants.map(v=>`<option value="${v.price}|${v.stock}">${v.name}</option>`).join('')}</select>`;
-  }
-  div.innerHTML=`
-    <img class="thumb" src="${prod.images[0]||''}" alt="${escapeHtml(prod.name)}" onerror="this.style.display='none'">
-    <div class="thumbnails">${prod.images.slice(1).map(img=>`<img src="${img}" onclick="this.closest('.card').querySelector('.thumb').src=this.src">`).join('')}</div>
-    <div class="title">${escapeHtml(prod.name)}</div>
-    <div>${discounted?`<span class="oldprice">R$ ${toCurrency(prod.price)}</span> `:''}<span class="price">R$ ${toCurrency(discounted?prod["discounted price"]:prod.price)}</span></div>
-    <div class="desc">${escapeHtml(prod.description||'')}</div>
-    <div class="actions">
-      ${variantOptions}
-      Quantidade: <input type="number" class="qtyInput" value="1" min="1" style="width:60px">
-      <button class="btn-add">Adicionar</button>
-    </div>
+function createCard(p){
+  if(!p.variants.length) return null;
+  const d = document.createElement("div");
+  d.className="card";
+  d.innerHTML=`
+    <img class="thumb" src="${p.images[0]||''}">
+    <div class="title">${p.name}</div>
+    <div class="price">R$ ${money(p.variants[0].price)}</div>
+    <label>Tamanho</label>
+    <select class="variant">${p.variants.map(v=>`<option value="${v.price}" data-stock="${v.stock}">${v.name}</option>`).join("")}</select>
+    <label>Qtd</label>
+    <select class="qty">${[...Array(p.variants[0].stock).keys()].map(i=>`<option>${i+1}</option>`).join("")}</select>
+    <button class="add-cart">Adicionar ao Carrinho</button>
   `;
-  const select=div.querySelector('.variantSelect');
-  const priceEl=div.querySelector('.price');
-  if(select){
-    select.onchange=()=>{
-      const[price]=select.value.split('|');
-      priceEl.textContent=`R$ ${toCurrency(price)}`;
-    };
+  const priceEl = d.querySelector(".price");
+  const variantSel = d.querySelector(".variant");
+  const qtySel = d.querySelector(".qty");
+  variantSel.onchange = e=>{
+    const selected = e.target.selectedOptions[0];
+    priceEl.textContent = "R$ "+money(selected.value);
+    const stock = Number(selected.dataset.stock);
+    qtySel.innerHTML = [...Array(stock).keys()].map(i=>`<option>${i+1}</option>`).join("");
   }
-  div.querySelector('.btn-add').onclick=()=>{
-    let qty=parseInt(div.querySelector('.qtyInput').value)||1;
-    let price=discounted?prod["discounted price"]:prod.price;
-    let name=prod.name;
-    if(select){
-      const[vPrice]=select.value.split('|');
-      price=Number(vPrice);
-      name+=` - ${select.options[select.selectedIndex].text}`;
-    }
-    addToCart({name,price,qty,img:prod.images[0]||''});
-  };
-  return div;
+  d.querySelector(".add-cart").onclick = ()=>{
+    const variant = variantSel.value;
+    const size = variantSel.selectedOptions[0].text;
+    const qty = Number(qtySel.value);
+    cart.push({name:p.name,variant:size,price:Number(variant),qty});
+    updateCart();
+  }
+  return d;
 }
 
-function addToCart(prod){
-  const cart=loadCart();
-  const idx=cart.findIndex(i=>i.name===prod.name);
-  if(idx>-1)cart[idx].qty+=prod.qty;else cart.push(prod);
-  saveCart(cart);updateCartCount();alert('Adicionado ao carrinho');
-}
-function renderCartPanel(){
-  const itemsDiv=document.getElementById('cartItems');
-  const cart=loadCart();itemsDiv.innerHTML='';
-  if(!cart.length){itemsDiv.innerHTML='<div class="muted">Carrinho vazio</div>';document.getElementById('cartTotal').textContent='0,00';return;}
+function updateCart(){
+  const container = document.getElementById("cartItems");
+  container.innerHTML="";
   let total=0;
-  cart.forEach((it,i)=>{
-    total+=it.price*it.qty;
-    const el=document.createElement('div');el.className='cart-item';
-    el.innerHTML=`<img src="${it.img||''}" onerror="this.style.display='none'">
-    <div style="flex:1"><div><strong>${escapeHtml(it.name)}</strong></div>
-    <div class="muted">R$ ${toCurrency(it.price)} x ${it.qty} = R$ ${toCurrency(it.price*it.qty)}</div></div>
-    <div style="display:flex;flex-direction:column;gap:6px">
-    <button class="inc">+</button><button class="dec">-</button></div>`;
-    el.querySelector('.inc').onclick=()=>changeQty(i,1);
-    el.querySelector('.dec').onclick=()=>changeQty(i,-1);
-    itemsDiv.appendChild(el);
+  cart.forEach((item,i)=>{
+    const div=document.createElement("div");
+    div.className="cart-item";
+    div.innerHTML=`${item.name} (${item.variant}) x${item.qty} - R$ ${money(item.price*item.qty)}`;
+    container.appendChild(div);
+    total+=item.price*item.qty;
   });
-  document.getElementById('cartTotal').textContent=toCurrency(total);
+  document.getElementById("cartTotal").textContent = money(total);
+  document.getElementById("cartCount").textContent = cart.length;
 }
-function changeQty(i,d){const cart=loadCart();if(!cart[i])return;cart[i].qty+=d;if(cart[i].qty<=0)cart.splice(i,1);saveCart(cart);renderCartPanel();updateCartCount();}
+
+function toggleCart(){document.getElementById("cartOverlay").classList.toggle("open");}
+
+async function init(){
+  const raw = await fetchSheet();
+  products = groupProducts(raw);
+  const grid = document.getElementById("catalog");
+  products.forEach(p=>{
+    const card = createCard(p);
+    if(card) grid.appendChild(card);
+  });
+}
 
 async function sendOrder(){
-  const cart=loadCart();if(!cart.length){alert('Carrinho vazio');return;}
-  const name=document.getElementById('userName').value;
-  const phone=document.getElementById('userPhone').value;
-  const email=document.getElementById('userEmail').value;
-  const address=document.getElementById('userAddress').value;
-  const zip=document.getElementById('userZip').value;
-  if(!name||!phone){alert('Preencha seu nome e telefone.');return;}
-  let total=0,productLines='';
-  cart.forEach(it=>{productLines+=`${it.name} (${it.qty}x R$${toCurrency(it.price)})\n`;total+=it.price*it.qty;});
-  const order={orderNo:Date.now(),name,email,phone,payment:"A definir",transactionId:"",shippingMethod:"Padrão",address,zipCode:zip,products:productLines,total:total.toFixed(2)};
-  try{await fetch(SCRIPT_URL,{method:"POST",mode:"no-cors",headers:{"Content-Type":"application/json"},body:JSON.stringify(order)});}catch(e){console.error(e);}
-  const msg=encodeURIComponent(`Olá, quero fazer um pedido:\n${productLines}\nTotal: R$ ${toCurrency(total)}\n\nNome: ${name}\nTelefone: ${phone}\nEndereço: ${address}`);
-  window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${msg}`,"_blank");
-  localStorage.removeItem(cartKey);updateCartCount();document.getElementById('cartPanel').style.display='none';alert('Pedido enviado com sucesso!');
-}
-
-async function fetchSheet(){
-  const res=await fetch(SHEET_URL);
-  const txt=await res.text();
-  const json=JSON.parse(txt.substring(txt.indexOf('{'),txt.lastIndexOf('}')+1));
-  const cols=json.table.cols.map(c=>c.label.trim().toLowerCase());
-  const rows=json.table.rows||[];
-
-  // ✅ Corrigido para pegar letras e números
-  return rows.map(r=>{
-    const o={};
-    r.c.forEach((c,i)=>{
-      if(!c){o[cols[i]]='';return;}
-      o[cols[i]]=c.v??c.f??String(c);
-    });
-    return o;
-  });
-}
-
-(async()=>{
-  const productsEl=document.getElementById('products');
-  const loader=document.getElementById('loader');
+  const name = prompt("Digite seu nome (obrigatório)");
+  const phone = prompt("Digite seu WhatsApp (obrigatório)");
+  const email = prompt("Digite seu email (opcional)");
+  if(!name||!phone){alert("Nome e WhatsApp obrigatórios!");return;}
+  const total = cart.reduce((a,b)=>a+b.price*b.qty,0);
+  const payload = {cliente:{name,phone,email},itens:cart,total};
   try{
-    const data=await fetchSheet();loader.style.display='none';
-    if(!data.length){productsEl.innerHTML='<div class="muted">Nenhum produto encontrado.</div>';return;}
-    const grouped=groupVariants(data);
-    const cats=[...new Set(grouped.map(d=>d.category).filter(Boolean))];
-    const filter=document.getElementById('filterCat');
-    cats.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;filter.appendChild(o);});
-    filter.onchange=()=>{const val=filter.value;productsEl.innerHTML='';grouped.filter(p=>!val||p.category===val).forEach(p=>productsEl.appendChild(createProductCard(p)));};
-    grouped.forEach(p=>productsEl.appendChild(createProductCard(p)));
-  }catch(e){loader.textContent='Erro ao carregar planilha. Verifique se ela está pública.';}
-  document.getElementById('btnCart').onclick=()=>{document.getElementById('cartPanel').style.display='block';renderCartPanel();};
-  document.getElementById('btnCloseCart').onclick=()=>{document.getElementById('cartPanel').style.display='none';};
-  document.getElementById('btnSendWhats').onclick=sendOrder;
-  updateCartCount();
-})();
+    await fetch("https://script.google.com/macros/s/AKfycbyuVPU4P8UCniLdMHTyNv3Tq3bwK1AiQvCtzW5Li3dYeS7Ca0fMooskBcMDdIkV0_nS/exec",{method:"POST",body:JSON.stringify(payload)});
+    const whatsappMsg = encodeURIComponent(`Olá, ${name}, segue meu pedido:\n${cart.map(i=>`${i.name} (${i.variant}) x${i.qty}`).join("\n")}\nTotal: R$ ${money(total)}`);
+    window.open(`https://wa.me/${phone}?text=${whatsappMsg}`,"_blank");
+    cart=[]; updateCart(); toggleCart();
+  }catch(err){console.error(err);alert("Erro ao enviar pedido");}
+}
+
+init();
 </script>
 </body>
 </html>
