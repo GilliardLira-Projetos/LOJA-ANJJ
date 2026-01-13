@@ -1,188 +1,320 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LOJA ANJJ</title>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Catálogo</title>
+
 <style>
-body{font-family:'Poppins',sans-serif;margin:0;padding:0;background:#f6f6f6}
-header{display:flex;justify-content:space-between;align-items:center;padding:16px 32px;background:#1d4ed8;color:#fff;position:sticky;top:0;z-index:1000;box-shadow:0 2px 8px rgba(0,0,0,.1)}
-.logo{font-weight:600;font-size:24px}
-nav a{color:#fff;text-decoration:none;margin:0 12px;font-weight:500}
-.cart-btn{background:#f59e0b;color:#fff;padding:8px 12px;border:none;border-radius:6px;cursor:pointer;position:relative}
-.cart-count{position:absolute;top:-6px;right:-6px;background:red;color:#fff;border-radius:50%;padding:2px 6px;font-size:12px}
-.banner{position:relative;text-align:center;overflow:hidden;height:300px;margin-bottom:20px}
-.banner img{width:100%;height:100%;object-fit:cover}
-.banner-text{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#fff;text-shadow:0 2px 6px rgba(0,0,0,.5)}
-.banner-text h1{font-size:36px;margin:0}
-.banner-text p{font-size:18px}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:20px;padding:0 32px 32px}
-.card{background:#fff;border-radius:10px;padding:12px;box-shadow:0 6px 18px rgba(0,0,0,.1);display:flex;flex-direction:column;transition:transform .3s}
-.card:hover{transform:translateY(-4px)}
-.thumb{width:100%;height:180px;object-fit:cover;border-radius:8px;background:#eee;cursor:pointer}
+body{font-family:Arial;margin:0;padding:20px;background:#f6f6f6}
+header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+h2{margin:0}
+.cart-btn{background:#1d4ed8;color:#fff;border:none;padding:10px 16px;border-radius:6px;cursor:pointer;position:relative}
+.cart-count{background:red;color:#fff;border-radius:50%;padding:2px 6px;font-size:12px;position:absolute;top:-6px;right:-6px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
+.card{background:#fff;border-radius:10px;padding:12px;box-shadow:0 6px 18px rgba(0,0,0,.1);display:flex;flex-direction:column}
+.gallery{position:relative;text-align:center}
+.main-img{width:100%;height:200px;object-fit:cover;border-radius:8px;background:#eee;transition:.3s}
+.thumbs{display:flex;justify-content:center;gap:6px;margin-top:8px;flex-wrap:wrap}
+.thumbs img{width:50px;height:50px;object-fit:cover;border-radius:6px;border:2px solid transparent;cursor:pointer;transition:.3s}
+.thumbs img:hover{border-color:#1d4ed8}
+.thumbs img.active{border-color:#1d4ed8}
 .title{font-weight:bold;margin:8px 0}
-.price{font-size:18px;margin:6px 0}
-select,input,button{padding:8px;border-radius:6px;border:1px solid #ccc}
-button{cursor:pointer}
-button.add-cart{background:#1d4ed8;color:#fff;border:none;margin-top:6px}
-.cart-overlay{position:fixed;top:0;right:0;width:100%;max-width:400px;height:100%;background:#fff;box-shadow:-4px 0 20px rgba(0,0,0,.2);padding:20px;transform:translateX(100%);transition:transform .3s;z-index:2000;overflow-y:auto}
-.cart-overlay.open{transform:translateX(0)}
-.cart-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
-.cart-item{display:flex;justify-content:space-between;margin-bottom:12px;border-bottom:1px solid #eee;padding-bottom:6px}
-.cart-item select{width:60px}
-.cart-footer{margin-top:20px}
+.price{font-size:18px;margin-bottom:8px}
+select,button,input{padding:8px;border-radius:6px;border:1px solid #ccc}
+button{background:#1d4ed8;color:#fff;border:none;cursor:pointer;transition:.3s;margin-top:8px}
+button:hover{background:#2563eb}
+button:disabled{background:#ccc;cursor:not-allowed}
+.stock{font-size:14px;color:#444;margin-top:4px}
+.qty{width:80px;text-align:center}
+#cartModal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.4);display:none;align-items:center;justify-content:center;z-index:9999}
+#cartModal .box{background:#fff;padding:20px;border-radius:12px;width:90%;max-width:400px;max-height:80%;overflow-y:auto}
+#cartModal h3{margin-top:0}
+.item{border-bottom:1px solid #ddd;padding:8px 0;display:flex;justify-content:space-between;align-items:center}
+.item:last-child{border:none}
+.item button{background:red;color:#fff;border:none;border-radius:4px;padding:2px 6px;margin-left:6px;cursor:pointer}
+.total{font-weight:bold;margin-top:12px}
 </style>
 </head>
-<body>
 
+<body>
 <header>
-  <div class="logo">🏆 LOJA ANJJ</div>
-  <nav>
-    <a href="#catalog">Catálogo</a>
-    <button class="cart-btn" onclick="toggleCart()">🛒 Carrinho <span class="cart-count" id="cartCount">0</span></button>
-  </nav>
+  <h2>Catálogo</h2>
+  <button class="cart-btn" onclick="openCart()">
+    🛒 Carrinho <span class="cart-count" id="cartCount">0</span>
+  </button>
 </header>
 
-<section class="banner">
-  <img src="https://gilliardlira-projetos.github.io/LOJA-ANJJ/assets/images/banner.jpg" alt="Banner">
-  <div class="banner-text">
-    <h1>Novas Camisas Jiu Jitsu</h1>
-    <p>Confira os lançamentos!</p>
-  </div>
-</section>
+<div id="products" class="grid"></div>
 
-<section id="catalog" class="grid"></section>
-
-<div class="cart-overlay" id="cartOverlay">
-  <div class="cart-header">
-    <h3>Carrinho</h3>
-    <button onclick="toggleCart()">Cancelar Pedido</button>
-  </div>
-  <div id="cartItems"></div>
-  <div class="cart-footer">
-    <strong>Total: R$ <span id="cartTotal">0,00</span></strong>
-    <button onclick="sendOrder()" style="margin-top:10px;background:#f59e0b;color:#fff;padding:10px;border:none;border-radius:6px;">Enviar Pedido</button>
+<!-- Modal do carrinho -->
+<div id="cartModal">
+  <div class="box">
+    <h3>Seu carrinho</h3>
+    <div id="cartItems"></div>
+    
+    <label>Nome</label>
+    <input type="text" id="clientName" placeholder="Seu nome">
+    
+    <label>WhatsApp</label>
+    <input type="text" id="clientPhone" placeholder="(DDD) 99999-9999">
+    
+    <label>Email</label>
+    <input type="email" id="clientEmail" placeholder="seu@email.com">
+    
+    <div class="total" id="cartTotal"></div>
+    
+    <button id="sendBtn">Enviar no WhatsApp</button>
+    <button onclick="editCart()" style="background:#f59e0b;color:#fff;margin-top:8px">Editar Pedido</button>
+    <button onclick="cancelCart()" style="background:#ef4444;color:#fff;margin-top:8px">Cancelar Pedido</button>
   </div>
 </div>
 
 <script>
-const SHEET_URL = "https://docs.google.com/spreadsheets/d/1BqVAf9A7l7KHKcwpV9HrqBMPWTA4s-aPv1EEna7xuHg/gviz/tq?tqx=out:json&sheet=products";
-let products = [];
-let cart = [];
+const SHEET_ID="1BqVAf9A7l7KHKcwpV9HrqBMPWTA4s-aPv1EEna7xuHg";
+const SHEET_NAME="products";
+const SHEET_URL=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${SHEET_NAME}`;
+const WHATSAPP="5581997512217";
+const WEBAPP_URL = "COLE_AQUI_O_URL_DO_SEU_DEPLOY"; // seu Web App para Orders
 
-function money(v){return Number(v).toFixed(2).replace('.',',');}
+let cart=[];
+
+function money(v){
+  const n=Number(v);
+  return isNaN(n)?v:n.toFixed(2).replace('.',',');
+}
 
 async function fetchSheet(){
-  const r = await fetch(SHEET_URL);
-  const t = await r.text();
-  const j = JSON.parse(t.substring(t.indexOf("{"), t.lastIndexOf("}")+1));
-  const cols = j.table.cols.map(c=>c.label.trim().toLowerCase());
-  const rows = j.table.rows||[];
+  const r=await fetch(SHEET_URL);
+  const t=await r.text();
+  const j=JSON.parse(t.substring(t.indexOf("{"),t.lastIndexOf("}")+1));
+  const cols=j.table.cols.map(c=>c.label.trim().toLowerCase());
+  const rows=j.table.rows||[];
   return rows.map(row=>{
-    const o = {};
-    row.c.forEach((c,i)=>o[cols[i]] = c ? (c.v??c.f??"") : "");
+    const o={};
+    row.c.forEach((c,i)=>{o[cols[i]]=c?(c.v??c.f??""):"";});
     return o;
   });
 }
 
 function groupProducts(data){
-  const grouped = {};
+  const grouped={};
   data.forEach(p=>{
-    if(String(p.availability).toLowerCase()!=="show") return;
-    const name = String(p.name).trim();
-    if(!name) return;
-    if(!grouped[name]){
-      grouped[name] = {name, basePrice:Number(p.price), discounted:Number(p["discounted price"]||0), variants:[], images:[]};
-    }
-    const size = String(p["variant name"]).trim();
-    if(size){
+    if(String(p.availability).toLowerCase()!=="show")return;
+    const name=String(p.name).trim();
+    if(!name)return;
+    if(!grouped[name])grouped[name]={name,variants:[],images:[]};
+    const variantName=String(p["variant name"]).trim();
+    if(variantName){
       grouped[name].variants.push({
-        name:size,
-        price: p["discounted price"] && p["discounted price"]<p.price? Number(p["discounted price"]): Number(p.price),
+        name:variantName,
+        price:Number(p["discounted price"]||p.price),
         stock:Number(p.stock||0)
       });
     }
     [p.thumbnail,p.image1,p.image2,p.image3].forEach(img=>{
-      if(img && !grouped[name].images.includes(img)) grouped[name].images.push(img);
+      if(img&&!grouped[name].images.includes(img))grouped[name].images.push(img);
     });
   });
   return Object.values(grouped);
 }
 
+function addToCart(prod,variant,qty){
+  if(qty<=0)return;
+  cart.push({name:prod.name,variant:variant.name,price:variant.price,qty});
+  document.getElementById("cartCount").textContent=cart.reduce((a,b)=>a+b.qty,0);
+}
+
+function openCart(){
+  const modal=document.getElementById("cartModal");
+  const items=document.getElementById("cartItems");
+  const total=document.getElementById("cartTotal");
+  items.innerHTML="";
+  let sum=0;
+  cart.forEach((it,index)=>{
+    const subtotal = it.price*it.qty;
+    sum += subtotal;
+    const div = document.createElement("div");
+    div.className="item";
+    div.innerHTML = `${it.name} - ${it.variant} x${it.qty} <b>R$ ${money(subtotal)}</b>`;
+    const rm = document.createElement("button");
+    rm.textContent = "❌";
+    rm.addEventListener("click", ()=>{
+      cart.splice(index,1);
+      openCart();
+      document.getElementById("cartCount").textContent = cart.reduce((a,b)=>a+b.qty,0);
+    });
+    div.appendChild(rm);
+    items.appendChild(div);
+  });
+  total.textContent="Total: R$ "+money(sum);
+  modal.style.display="flex";
+}
+
+function closeCart(){
+  document.getElementById("cartModal").style.display="none";
+}
+
+function editCart(){
+  // Fecha o modal sem apagar o carrinho
+  closeCart();
+}
+
+function cancelCart(){
+  // Cancela o pedido e limpa o carrinho
+  if(confirm("Tem certeza que deseja cancelar o pedido?")){
+    cart = [];
+    document.getElementById("cartCount").textContent = 0;
+    closeCart();
+  }
+}
+
+async function salvarPedidoWebApp(data){
+    try{
+        await fetch(WEBAPP_URL,{
+            method:"POST",
+            headers: {"Content-Type":"application/json"},
+            body: JSON.stringify(data)
+        });
+    }catch(err){console.error("Erro ao salvar pedido",err);}
+}
+
+document.getElementById("sendBtn").addEventListener("click", function(){
+  const name = document.getElementById("clientName").value.trim();
+  const phone = document.getElementById("clientPhone").value.trim();
+  const email = document.getElementById("clientEmail").value.trim();
+
+  if(!name || !phone){
+    alert("Por favor, preencha seu nome e WhatsApp antes de enviar o pedido.");
+    return;
+  }
+
+  if(cart.length === 0){
+    alert("Seu carrinho está vazio.");
+    return;
+  }
+
+  let msg="🛍️ *Pedido:*\n\n";
+  let total=0;
+  cart.forEach(it=>{
+    const subtotal=it.price*it.qty;
+    msg+=`• ${it.name} - ${it.variant} x${it.qty} = R$ ${money(subtotal)}\n`;
+    total+=subtotal;
+  });
+  msg+=`\n*Total:* R$ ${money(total)}`;
+  msg+=`\n\n*Cliente:*\nNome: ${name}\nWhatsApp: ${phone}`;
+  if(email) msg+=`\nEmail: ${email}`;
+
+  // salvar no Web App (Orders)
+  salvarPedidoWebApp({itens: cart,total,cliente:{name,phone,email}});
+
+  // abrir WhatsApp
+  const url=`https://wa.me/${WHATSAPP}?text=${encodeURIComponent(msg)}`;
+  window.open(url,"_blank");
+
+  // limpar carrinho e modal
+  cart=[];
+  document.getElementById("cartCount").textContent=0;
+  closeCart();
+});
+
 function createCard(p){
-  if(!p.variants.length) return null;
-  const d = document.createElement("div");
+  if(!p.variants.length)return null;
+  const d=document.createElement("div");
   d.className="card";
+
+  const thumbsHTML = p.images.length > 1 
+    ? `<div class="thumbs">${p.images.map((img,i)=>`<img src="${img}" class="${i===0?'active':''}">`).join("")}</div>` 
+    : "";
+
   d.innerHTML=`
-    <img class="thumb" src="${p.images[0]||''}">
+    <div class="gallery">
+      <img class="main-img" src="${p.images[0]||''}" alt="${p.name}">
+      ${thumbsHTML}
+    </div>
     <div class="title">${p.name}</div>
     <div class="price">R$ ${money(p.variants[0].price)}</div>
     <label>Tamanho</label>
-    <select class="variant">${p.variants.map(v=>`<option value="${v.price}" data-stock="${v.stock}">${v.name}</option>`).join("")}</select>
-    <label>Qtd</label>
-    <select class="qty">${[...Array(p.variants[0].stock).keys()].map(i=>`<option>${i+1}</option>`).join("")}</select>
-    <button class="add-cart">Adicionar ao Carrinho</button>
+    <select class="variant">
+      <option value="">Selecionar o tamanho</option>
+      ${p.variants.map(v=>`<option value="${v.price}" data-stock="${v.stock}">${v.name}</option>`).join("")}
+    </select>
+    <label>Quantidade</label>
+    <select class="qty"></select>
+    <div class="stock"></div>
+    <button type="button" class="add-cart">Adicionar ao carrinho</button>
   `;
-  const priceEl = d.querySelector(".price");
-  const variantSel = d.querySelector(".variant");
-  const qtySel = d.querySelector(".qty");
-  variantSel.onchange = e=>{
-    const selected = e.target.selectedOptions[0];
-    priceEl.textContent = "R$ "+money(selected.value);
-    const stock = Number(selected.dataset.stock);
-    qtySel.innerHTML = [...Array(stock).keys()].map(i=>`<option>${i+1}</option>`).join("");
-  }
-  d.querySelector(".add-cart").onclick = ()=>{
-    const variant = variantSel.value;
-    const size = variantSel.selectedOptions[0].text;
-    const qty = Number(qtySel.value);
-    cart.push({name:p.name,variant:size,price:Number(variant),qty});
-    updateCart();
-  }
+
+  const sel=d.querySelector(".variant");
+  const priceEl=d.querySelector(".price");
+  const qtyEl=d.querySelector(".qty");
+  const stockEl=d.querySelector(".stock");
+  const btn=d.querySelector(".add-cart");
+  const mainImg=d.querySelector(".main-img");
+  const thumbs=d.querySelectorAll(".thumbs img");
+
+  thumbs.forEach(t=>{
+    t.addEventListener("click",()=>{
+      thumbs.forEach(img=>img.classList.remove("active"));
+      t.classList.add("active");
+      mainImg.src=t.src;
+    });
+  });
+
+  sel.addEventListener("change", ()=>{
+    const idx = sel.selectedIndex-1;
+    if(idx>=0){
+      const variant = p.variants[idx];
+      priceEl.textContent = "R$ "+money(variant.price);
+
+      let options="";
+      if(variant.stock>0){
+        for(let i=1;i<=variant.stock;i++){
+          options += `<option value="${i}">${i}</option>`;
+        }
+        qtyEl.innerHTML = options;
+        stockEl.textContent = `Estoque disponível: ${variant.stock}`;
+        btn.disabled = false;
+        btn.textContent = "Adicionar ao carrinho";
+      } else {
+        qtyEl.innerHTML = `<option value="0">0</option>`;
+        stockEl.textContent = "Esgotado!";
+        btn.disabled = true;
+        btn.textContent = "Esgotado";
+      }
+
+    } else {
+      qtyEl.innerHTML = `<option value="1">1</option>`;
+      stockEl.textContent = "";
+      btn.disabled = false;
+      btn.textContent = "Adicionar ao carrinho";
+    }
+  });
+
+  btn.addEventListener("click", ()=>{
+    const idx = sel.selectedIndex-1;
+    if(idx<0){alert("Selecione o tamanho antes de adicionar.");return;}
+    const variant = p.variants[idx];
+    const qty = parseInt(qtyEl.value);
+    if(qty>variant.stock){
+      alert("Quantidade maior que o estoque disponível!");
+      return;
+    }
+    addToCart(p,variant,qty);
+    alert(`${p.name} (${variant.name}) x${qty} adicionado ao carrinho!`);
+  });
+
   return d;
 }
 
-function updateCart(){
-  const container = document.getElementById("cartItems");
-  container.innerHTML="";
-  let total=0;
-  cart.forEach((item,i)=>{
-    const div=document.createElement("div");
-    div.className="cart-item";
-    div.innerHTML=`${item.name} (${item.variant}) x${item.qty} - R$ ${money(item.price*item.qty)}`;
-    container.appendChild(div);
-    total+=item.price*item.qty;
-  });
-  document.getElementById("cartTotal").textContent = money(total);
-  document.getElementById("cartCount").textContent = cart.length;
-}
-
-function toggleCart(){document.getElementById("cartOverlay").classList.toggle("open");}
-
 async function init(){
   const raw = await fetchSheet();
-  products = groupProducts(raw);
-  const grid = document.getElementById("catalog");
+  const products = groupProducts(raw);
+  const grid = document.getElementById("products");
   products.forEach(p=>{
-    const card = createCard(p);
-    if(card) grid.appendChild(card);
+    const c = createCard(p);
+    if(c) grid.appendChild(c);
   });
-}
-
-async function sendOrder(){
-  const name = prompt("Digite seu nome (obrigatório)");
-  const phone = prompt("Digite seu WhatsApp (obrigatório)");
-  const email = prompt("Digite seu email (opcional)");
-  if(!name||!phone){alert("Nome e WhatsApp obrigatórios!");return;}
-  const total = cart.reduce((a,b)=>a+b.price*b.qty,0);
-  const payload = {cliente:{name,phone,email},itens:cart,total};
-  try{
-    await fetch("https://script.google.com/macros/s/AKfycbyuVPU4P8UCniLdMHTyNv3Tq3bwK1AiQvCtzW5Li3dYeS7Ca0fMooskBcMDdIkV0_nS/exec",{method:"POST",body:JSON.stringify(payload)});
-    const whatsappMsg = encodeURIComponent(`Olá, ${name}, segue meu pedido:\n${cart.map(i=>`${i.name} (${i.variant}) x${i.qty}`).join("\n")}\nTotal: R$ ${money(total)}`);
-    window.open(`https://wa.me/${phone}?text=${whatsappMsg}`,"_blank");
-    cart=[]; updateCart(); toggleCart();
-  }catch(err){console.error(err);alert("Erro ao enviar pedido");}
 }
 
 init();
