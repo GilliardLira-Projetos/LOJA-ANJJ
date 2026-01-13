@@ -68,29 +68,29 @@ button.add-cart{background:#1d4ed8;color:#fff;border:none;margin-top:6px}
 
 <script>
 const SHEET_URL = "https://docs.google.com/spreadsheets/d/1BqVAf9A7l7KHKcwpV9HrqBMPWTA4s-aPv1EEna7xuHg/gviz/tq?tqx=out:json&gid=1940306776";
-
 let products = [];
 let cart = [];
 
-function money(v){return Number(v).toFixed(2).replace('.',',');}
+function money(v){ return Number(v).toFixed(2).replace('.',','); }
 
 async function fetchSheet(){
-  const r = await fetch(SHEET_URL);
-  const t = await r.text();
-  const j = JSON.parse(t.substring(t.indexOf("{"), t.lastIndexOf("}")+1));
-  const cols = j.table.cols.map(c=>c.label.trim().toLowerCase());
-  const rows = j.table.rows||[];
-  return rows.map(row=>{
-    const o = {};
-    row.c.forEach((c,i)=>o[cols[i]] = c ? (c.v??c.f??"") : "");
-    return o;
+  const res = await fetch(SHEET_URL);
+  const text = await res.text();
+  // remove o callback do Google
+  const json = JSON.parse(text.substring(text.indexOf("{"), text.lastIndexOf("}")+1));
+  const cols = json.table.cols.map(c => c.label.trim().toLowerCase());
+  const rows = json.table.rows || [];
+  return rows.map(row => {
+    const obj = {};
+    row.c.forEach((c,i) => obj[cols[i]] = c ? (c.v ?? c.f ?? "") : "");
+    return obj;
   });
 }
 
 function groupProducts(data){
   const grouped = {};
-  data.forEach(p=>{
-    if(String(p.availability).toLowerCase()!=="show") return;
+  data.forEach(p => {
+    if(String(p.availability).toLowerCase() !== "show") return;
     const name = String(p.name).trim();
     if(!name) return;
     if(!grouped[name]){
@@ -99,12 +99,12 @@ function groupProducts(data){
     const size = String(p["variant name"]).trim();
     if(size){
       grouped[name].variants.push({
-        name:size,
-        price: p["discounted price"] && p["discounted price"]<p.price? Number(p["discounted price"]): Number(p.price),
-        stock:Number(p.stock||0)
+        name: size,
+        price: p["discounted price"] && p["discounted price"]<p.price ? Number(p["discounted price"]) : Number(p.price),
+        stock: Number(p.stock||0)
       });
     }
-    [p.thumbnail,p.image1,p.image2,p.image3].forEach(img=>{
+    [p.thumbnail,p.image1,p.image2,p.image3].forEach(img => {
       if(img && !grouped[name].images.includes(img)) grouped[name].images.push(img);
     });
   });
@@ -114,8 +114,8 @@ function groupProducts(data){
 function createCard(p){
   if(!p.variants.length) return null;
   const d = document.createElement("div");
-  d.className="card";
-  d.innerHTML=`
+  d.className = "card";
+  d.innerHTML = `
     <img class="thumb" src="${p.images[0]||''}">
     <div class="title">${p.name}</div>
     <div class="price">R$ ${money(p.variants[0].price)}</div>
@@ -128,44 +128,44 @@ function createCard(p){
   const priceEl = d.querySelector(".price");
   const variantSel = d.querySelector(".variant");
   const qtySel = d.querySelector(".qty");
-  variantSel.onchange = e=>{
+  variantSel.onchange = e => {
     const selected = e.target.selectedOptions[0];
     priceEl.textContent = "R$ "+money(selected.value);
     const stock = Number(selected.dataset.stock);
     qtySel.innerHTML = [...Array(stock).keys()].map(i=>`<option>${i+1}</option>`).join("");
-  }
-  d.querySelector(".add-cart").onclick = ()=>{
+  };
+  d.querySelector(".add-cart").onclick = () => {
     const variant = variantSel.value;
     const size = variantSel.selectedOptions[0].text;
     const qty = Number(qtySel.value);
-    cart.push({name:p.name,variant:size,price:Number(variant),qty});
+    cart.push({name:p.name, variant:size, price:Number(variant), qty});
     updateCart();
-  }
+  };
   return d;
 }
 
 function updateCart(){
   const container = document.getElementById("cartItems");
-  container.innerHTML="";
-  let total=0;
-  cart.forEach((item,i)=>{
-    const div=document.createElement("div");
-    div.className="cart-item";
-    div.innerHTML=`${item.name} (${item.variant}) x${item.qty} - R$ ${money(item.price*item.qty)}`;
+  container.innerHTML = "";
+  let total = 0;
+  cart.forEach(item => {
+    const div = document.createElement("div");
+    div.className = "cart-item";
+    div.innerHTML = `${item.name} (${item.variant}) x${item.qty} - R$ ${money(item.price*item.qty)}`;
     container.appendChild(div);
-    total+=item.price*item.qty;
+    total += item.price*item.qty;
   });
   document.getElementById("cartTotal").textContent = money(total);
   document.getElementById("cartCount").textContent = cart.length;
 }
 
-function toggleCart(){document.getElementById("cartOverlay").classList.toggle("open");}
+function toggleCart(){ document.getElementById("cartOverlay").classList.toggle("open"); }
 
 async function init(){
   const raw = await fetchSheet();
   products = groupProducts(raw);
   const grid = document.getElementById("catalog");
-  products.forEach(p=>{
+  products.forEach(p => {
     const card = createCard(p);
     if(card) grid.appendChild(card);
   });
