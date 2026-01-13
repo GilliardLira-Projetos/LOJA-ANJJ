@@ -65,7 +65,8 @@ button:disabled{background:#ccc;cursor:not-allowed}
     <div class="total" id="cartTotal"></div>
     
     <button id="sendBtn">Enviar no WhatsApp</button>
-    <button onclick="closeCart()" style="background:#ccc;color:#000;margin-top:8px">Fechar</button>
+    <button onclick="editCart()" style="background:#f59e0b;color:#fff;margin-top:8px">Editar Pedido</button>
+    <button onclick="cancelCart()" style="background:#ef4444;color:#fff;margin-top:8px">Cancelar Pedido</button>
   </div>
 </div>
 
@@ -74,9 +75,7 @@ const SHEET_ID="1BqVAf9A7l7KHKcwpV9HrqBMPWTA4s-aPv1EEna7xuHg";
 const SHEET_NAME="products";
 const SHEET_URL=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${SHEET_NAME}`;
 const WHATSAPP="5581997512217";
-
-// URL do seu Web App para registrar pedidos (aba Orders)
-const WEBAPP_URL = "COLE_AQUI_O_URL_DO_SEU_DEPLOY";
+const WEBAPP_URL = "COLE_AQUI_O_URL_DO_SEU_DEPLOY"; // seu Web App para Orders
 
 let cart=[];
 
@@ -154,6 +153,20 @@ function openCart(){
 
 function closeCart(){
   document.getElementById("cartModal").style.display="none";
+}
+
+function editCart(){
+  // Fecha o modal sem apagar o carrinho
+  closeCart();
+}
+
+function cancelCart(){
+  // Cancela o pedido e limpa o carrinho
+  if(confirm("Tem certeza que deseja cancelar o pedido?")){
+    cart = [];
+    document.getElementById("cartCount").textContent = 0;
+    closeCart();
+  }
 }
 
 async function salvarPedidoWebApp(data){
