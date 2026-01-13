@@ -67,22 +67,24 @@ button.add-cart{background:#1d4ed8;color:#fff;border:none;margin-top:6px}
 </div>
 
 <script>
-const SHEET_URL = "https://docs.google.com/spreadsheets/d/1BqVAf9A7l7KHKcwpV9HrqBMPWTA4s-aPv1EEna7xuHg/edit?pli=1&gid=1940306776#gid=1940306776";
+const SHEET_URL = "https://docs.google.com/spreadsheets/d/1BqVAf9A7l7KHKcwpV9HrqBMPWTA4s-aPv1EEna7xuHg/gviz/tq?tqx=out:json&gid=1940306776";
+
 let products = [];
 let cart = [];
 
 function money(v){return Number(v).toFixed(2).replace('.',',');}
 
 async function fetchSheet(){
-  const r = await fetch(SHEET_URL);
-  const t = await r.text();
-  const j = JSON.parse(t.substring(t.indexOf("{"), t.lastIndexOf("}")+1));
-  const cols = j.table.cols.map(c=>c.label.trim().toLowerCase());
-  const rows = j.table.rows||[];
+  const res = await fetch(SHEET_URL);
+  const text = await res.text();
+  // transforma a resposta gviz em JSON
+  const json = JSON.parse(text.substring(text.indexOf("{"), text.lastIndexOf("}")+1));
+  const cols = json.table.cols.map(c=>c.label.trim().toLowerCase());
+  const rows = json.table.rows||[];
   return rows.map(row=>{
-    const o = {};
-    row.c.forEach((c,i)=>o[cols[i]] = c ? (c.v??c.f??"") : "");
-    return o;
+    const obj = {};
+    row.c.forEach((c,i)=>obj[cols[i]] = c ? (c.v??c.f??"") : "");
+    return obj;
   });
 }
 
@@ -112,9 +114,9 @@ function groupProducts(data){
 
 function createCard(p){
   if(!p.variants.length) return null;
-  const d = document.createElement("div");
-  d.className="card";
-  d.innerHTML=`
+  const card = document.createElement("div");
+  card.className="card";
+  card.innerHTML=`
     <img class="thumb" src="${p.images[0]||''}">
     <div class="title">${p.name}</div>
     <div class="price">R$ ${money(p.variants[0].price)}</div>
@@ -124,33 +126,37 @@ function createCard(p){
     <select class="qty">${[...Array(p.variants[0].stock).keys()].map(i=>`<option>${i+1}</option>`).join("")}</select>
     <button class="add-cart">Adicionar ao Carrinho</button>
   `;
-  const priceEl = d.querySelector(".price");
-  const variantSel = d.querySelector(".variant");
-  const qtySel = d.querySelector(".qty");
+
+  const priceEl = card.querySelector(".price");
+  const variantSel = card.querySelector(".variant");
+  const qtySel = card.querySelector(".qty");
+
   variantSel.onchange = e=>{
     const selected = e.target.selectedOptions[0];
     priceEl.textContent = "R$ "+money(selected.value);
     const stock = Number(selected.dataset.stock);
     qtySel.innerHTML = [...Array(stock).keys()].map(i=>`<option>${i+1}</option>`).join("");
   }
-  d.querySelector(".add-cart").onclick = ()=>{
+
+  card.querySelector(".add-cart").onclick = ()=>{
     const variant = variantSel.value;
     const size = variantSel.selectedOptions[0].text;
     const qty = Number(qtySel.value);
     cart.push({name:p.name,variant:size,price:Number(variant),qty});
     updateCart();
   }
-  return d;
+
+  return card;
 }
 
 function updateCart(){
   const container = document.getElementById("cartItems");
   container.innerHTML="";
   let total=0;
-  cart.forEach((item,i)=>{
-    const div=document.createElement("div");
+  cart.forEach(item=>{
+    const div = document.createElement("div");
     div.className="cart-item";
-    div.innerHTML=`${item.name} (${item.variant}) x${item.qty} - R$ ${money(item.price*item.qty)}`;
+    div.textContent = `${item.name} (${item.variant}) x${item.qty} - R$ ${money(item.price*item.qty)}`;
     container.appendChild(div);
     total+=item.price*item.qty;
   });
@@ -178,7 +184,8 @@ async function sendOrder(){
   const total = cart.reduce((a,b)=>a+b.price*b.qty,0);
   const payload = {cliente:{name,phone,email},itens:cart,total};
   try{
-    await fetch("https://script.google.com/macros/s/AKfycbyuVPU4P8UCniLdMHTyNv3Tq3bwK1AiQvCtzW5Li3dYeS7Ca0fMooskBcMDdIkV0_nS/exec",{method:"POST",body:JSON.stringify(payload)});
+    await fetch("https://script.google.com/macros/s/AKfycbyuVPU4P8UCniLdMHTyNv3Tq3bwK1AiQvCtzW5Li3dYeS7Ca0fMooskBcMDdIkV0_nS/exec",
+      {method:"POST",body:JSON.stringify(payload)});
     const whatsappMsg = encodeURIComponent(`Olá, ${name}, segue meu pedido:\n${cart.map(i=>`${i.name} (${i.variant}) x${i.qty}`).join("\n")}\nTotal: R$ ${money(total)}`);
     window.open(`https://wa.me/${phone}?text=${whatsappMsg}`,"_blank");
     cart=[]; updateCart(); toggleCart();
