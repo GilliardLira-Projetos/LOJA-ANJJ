@@ -77,9 +77,6 @@
     font-size: 36px;
     margin: 0;
   }
-  .banner-text p {
-    font-size: 18px;
-  }
   .grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
@@ -135,6 +132,12 @@
     border: none;
     margin-top: 6px;
   }
+  button.view-images {
+    background: #10b981;
+    color: #fff;
+    border: none;
+    margin-top: 6px;
+  }
   .cart-overlay {
     position: fixed;
     top: 0;
@@ -169,6 +172,50 @@
   .cart-footer {
     margin-top: 20px;
   }
+
+  /* --- MODAL DE IMAGENS --- */
+  .modal {
+    display: none;
+    position: fixed;
+    z-index: 3000;
+    left: 0; top: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.8);
+    justify-content: center;
+    align-items: center;
+  }
+  .modal.open {
+    display: flex;
+  }
+  .modal-content {
+    position: relative;
+    max-width: 90%;
+    max-height: 80%;
+  }
+  .modal-content img {
+    width: 100%;
+    max-height: 80vh;
+    object-fit: contain;
+    border-radius: 10px;
+  }
+  .close-modal, .prev, .next {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 28px;
+    color: #fff;
+    background: rgba(0,0,0,0.5);
+    border: none;
+    padding: 10px 16px;
+    cursor: pointer;
+    border-radius: 50%;
+  }
+  .close-modal {
+    top: 10px; right: 10px;
+    transform: none;
+  }
+  .prev { left: -50px; }
+  .next { right: -50px; }
 </style>
 </head>
 <body>
@@ -203,10 +250,22 @@
   </div>
 </div>
 
+<!-- Modal de Imagens -->
+<div id="imageModal" class="modal">
+  <div class="modal-content">
+    <button class="close-modal" onclick="closeModal()">✖</button>
+    <button class="prev" onclick="changeImage(-1)">⬅</button>
+    <img id="modalImage" src="" alt="Imagem do Produto">
+    <button class="next" onclick="changeImage(1)">➡</button>
+  </div>
+</div>
+
 <script>
 const SHEET_URL = "https://docs.google.com/spreadsheets/d/1BqVAf9A7l7KHKcwpV9HrqBMPWTA4s-aPv1EEna7xuHg/gviz/tq?tqx=out:json&sheet=Products";
 let products = [];
 let cart = [];
+let currentImages = [];
+let currentIndex = 0;
 
 function money(v) {
   return Number(v).toFixed(2).replace('.', ',');
@@ -271,6 +330,7 @@ function createCard(p) {
     <label>Qtd</label>
     <select class="qty">${[...Array(p.variants[0]?.stock || 1).keys()].map(i => `<option>${i + 1}</option>`).join("")}</select>
     <button class="add-cart">Adicionar ao Carrinho</button>
+    <button class="view-images">Ver Imagens</button>
   `;
   const priceEl = d.querySelector(".price");
   const variantSel = d.querySelector(".variant");
@@ -289,14 +349,32 @@ function createCard(p) {
     cart.push({ name: p.name || "Produto", variant: variantName, price: variantPrice, qty });
     updateCart();
   };
+  d.querySelector(".view-images").onclick = () => openModal(p.images);
   return d;
+}
+
+function openModal(images) {
+  currentImages = images;
+  currentIndex = 0;
+  document.getElementById("modalImage").src = currentImages[0];
+  document.getElementById("imageModal").classList.add("open");
+}
+
+function closeModal() {
+  document.getElementById("imageModal").classList.remove("open");
+}
+
+function changeImage(step) {
+  if (!currentImages.length) return;
+  currentIndex = (currentIndex + step + currentImages.length) % currentImages.length;
+  document.getElementById("modalImage").src = currentImages[currentIndex];
 }
 
 function updateCart() {
   const container = document.getElementById("cartItems");
   container.innerHTML = "";
   let total = 0;
-  cart.forEach((item) => {
+  cart.forEach(item => {
     const div = document.createElement("div");
     div.className = "cart-item";
     div.textContent = `${item.name} (${item.variant}) x${item.qty} - R$ ${money(item.price * item.qty)}`;
@@ -331,20 +409,14 @@ async function sendOrder() {
     return;
   }
   const total = cart.reduce((a, b) => a + b.price * b.qty, 0);
-  const payload = { cliente: { name, phone, email }, itens: cart, total };
-  try {
-    const whatsappMsg = encodeURIComponent(
-      `Olá, ${name}, segue meu pedido:\n${cart.map(i => `${i.name} (${i.variant}) x${i.qty}`).join("\n")}\nTotal: R$ ${money(total)}`
-    );
-    const phoneClean = phone.replace(/\D/g, '');
-    window.open(`https://wa.me/${phoneClean}?text=${whatsappMsg}`, "_blank");
-    cart = [];
-    updateCart();
-    toggleCart();
-  } catch (err) {
-    console.error(err);
-    alert("Erro ao enviar pedido");
-  }
+  const whatsappMsg = encodeURIComponent(
+    `Olá, ${name}, segue meu pedido:\n${cart.map(i => `${i.name} (${i.variant}) x${i.qty}`).join("\n")}\nTotal: R$ ${money(total)}`
+  );
+  const phoneClean = phone.replace(/\D/g, '');
+  window.open(`https://wa.me/${phoneClean}?text=${whatsappMsg}`, "_blank");
+  cart = [];
+  updateCart();
+  toggleCart();
 }
 
 init();
@@ -352,4 +424,3 @@ init();
 
 </body>
 </html>
-
