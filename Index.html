@@ -18,13 +18,10 @@ nav a{color:#fff;text-decoration:none;margin:0 12px;font-weight:500}
 .banner-text h1{font-size:36px;margin:0}
 .banner-text p{font-size:18px}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:20px;padding:0 32px 32px}
-.card{background:#fff;border-radius:10px;padding:12px;box-shadow:0 6px 18px rgba(0,0,0,.1);display:flex;flex-direction:column;transition:transform .3s}
-.card:hover{transform:translateY(-4px)}
-.thumb-container{position:relative;width:100%;height:180px;overflow:hidden;border-radius:8px;background:#eee}
+.card{background:#fff;border-radius:12px;padding:12px;box-shadow:0 8px 20px rgba(0,0,0,0.12);display:flex;flex-direction:column;transition:transform .3s,box-shadow .3s}
+.card:hover{transform:translateY(-6px);box-shadow:0 12px 28px rgba(0,0,0,0.2)}
+.thumb-container{position:relative;width:100%;height:220px;overflow:hidden;border-radius:10px;background:#eee;margin-bottom:8px}
 .thumb-container img{width:100%;height:100%;object-fit:cover}
-.thumb-container button{position:absolute;top:50%;transform:translateY(-50%);background:rgba(0,0,0,0.4);color:#fff;border:none;padding:6px 10px;cursor:pointer;border-radius:50%}
-.thumb-container .prev{left:6px}
-.thumb-container .next{right:6px}
 .title{font-weight:bold;margin:8px 0}
 .price{font-size:18px;margin:6px 0}
 select,input,button{padding:8px;border-radius:6px;border:1px solid #ccc}
@@ -36,11 +33,6 @@ button.add-cart{background:#1d4ed8;color:#fff;border:none;margin-top:6px}
 .cart-item{display:flex;justify-content:space-between;margin-bottom:12px;border-bottom:1px solid #eee;padding-bottom:6px}
 .cart-item select{width:60px}
 .cart-footer{margin-top:20px}
-.cart-form input{width:100%;margin-bottom:10px;box-sizing:border-box;border:1px solid #ccc;padding:8px;border-radius:6px}
-.cart-actions button{margin-right:10px;padding:10px;border:none;border-radius:6px;color:#fff;cursor:pointer}
-.cart-actions .send{background:#f59e0b}
-.cart-actions .cancel{background:#888}
-.cart-actions .edit{background:#1d4ed8}
 </style>
 </head>
 <body>
@@ -66,20 +58,12 @@ button.add-cart{background:#1d4ed8;color:#fff;border:none;margin-top:6px}
 <div class="cart-overlay" id="cartOverlay">
   <div class="cart-header">
     <h3>Carrinho</h3>
-    <button class="cancel" onclick="clearCart()">Cancelar Pedido</button>
+    <button onclick="toggleCart()">Cancelar Pedido</button>
   </div>
   <div id="cartItems"></div>
-  <div class="cart-form">
-    <input type="text" id="clientName" placeholder="Nome (obrigatório)">
-    <input type="text" id="clientPhone" placeholder="(DDD) 9XXXX-XXXX (obrigatório)">
-    <input type="email" id="clientEmail" placeholder="Email (opcional)">
-  </div>
   <div class="cart-footer">
     <strong>Total: R$ <span id="cartTotal">0,00</span></strong>
-  </div>
-  <div class="cart-actions">
-    <button class="send" onclick="sendOrder()">Enviar Pedido</button>
-    <button class="edit" onclick="editCart()">Editar Carrinho</button>
+    <button onclick="sendOrder()" style="margin-top:10px;background:#f59e0b;color:#fff;padding:10px;border:none;border-radius:6px;">Enviar Pedido</button>
   </div>
 </div>
 
@@ -110,14 +94,14 @@ function groupProducts(data){
     const name = String(p.name).trim();
     if(!name) return;
     if(!grouped[name]){
-      grouped[name] = {name, basePrice:Number(p.price), discounted:Number(p["discounted price"]||0), variants:[], images:[]};
+      grouped[name] = {name, basePrice:Number(p.price||0), discounted:Number(p["discounted price"]||0), variants:[], images:[]};
     }
-    const size = String(p["variant name"]).trim();
+    const size = String(p["variant name"]||"").trim();
     if(size){
       grouped[name].variants.push({
-        name:size,
-        price: p["discounted price"] && p["discounted price"]<p.price? Number(p["discounted price"]): Number(p.price),
-        stock:Number(p.stock||0)
+        name:size||"Único",
+        price: p["discounted price"] && p["discounted price"]<p.price? Number(p["discounted price"]): Number(p.price||0),
+        stock:Number(p.stock||1)
       });
     }
     [p.thumbnail,p.image1,p.image2,p.image3].forEach(img=>{
@@ -131,52 +115,39 @@ function createCard(p){
   if(!p.variants.length) return null;
   const d = document.createElement("div");
   d.className="card";
+
+  const imgSrc = p.images[0] || "Images/placeholder.jpg";
+
   d.innerHTML=`
     <div class="thumb-container">
-      <button class="prev">&lt;</button>
-      <img class="thumb" src="${p.images[0]||''}">
-      <button class="next">&gt;</button>
+      <img class="thumb" src="${imgSrc}" alt="${p.name}">
     </div>
-    <div class="title">${p.name}</div>
-    <div class="price">R$ ${money(p.variants[0].price)}</div>
+    <div class="title">${p.name || "Produto"}</div>
+    <div class="price">R$ ${money(p.variants[0]?.price || 0)}</div>
     <label>Tamanho</label>
-    <select class="variant">
-      <option value="" disabled selected>Selecione o tamanho</option>
-      ${p.variants.map(v=>`<option value="${v.price}" data-stock="${v.stock}">${v.name}</option>`).join("")}
-    </select>
+    <select class="variant">${p.variants.map(v=>`<option value="${v.price||0}" data-stock="${v.stock||1}">${v.name||"Único"}</option>`).join("")}</select>
     <label>Qtd</label>
-    <select class="qty" disabled>
-      <option value="" disabled selected>Selecione a quantidade</option>
-    </select>
-    <button class="add-cart" disabled>Adicionar ao Carrinho</button>
+    <select class="qty">${[...Array(p.variants[0]?.stock||1).keys()].map(i=>`<option>${i+1}</option>`).join("")}</select>
+    <button class="add-cart">Adicionar ao Carrinho</button>
   `;
+
   const priceEl = d.querySelector(".price");
   const variantSel = d.querySelector(".variant");
   const qtySel = d.querySelector(".qty");
-  const addBtn = d.querySelector(".add-cart");
-  const thumbImg = d.querySelector(".thumb");
-  const prevBtn = d.querySelector(".prev");
-  const nextBtn = d.querySelector(".next");
-
-  let currentImg = 0;
-
-  prevBtn.onclick = ()=>{ currentImg=(currentImg-1+p.images.length)%p.images.length; thumbImg.src=p.images[currentImg]; };
-  nextBtn.onclick = ()=>{ currentImg=(currentImg+1)%p.images.length; thumbImg.src=p.images[currentImg]; };
 
   variantSel.onchange = e=>{
     const selected = e.target.selectedOptions[0];
-    if(!selected.value){ qtySel.innerHTML='<option value="" disabled selected>Selecione a quantidade</option>'; qtySel.disabled=true; addBtn.disabled=true; return; }
-    priceEl.textContent="R$ "+money(selected.value);
-    const stock=Number(selected.dataset.stock);
-    qtySel.innerHTML=[...Array(stock).keys()].map(i=>`<option>${i+1}</option>`).join('');
-    qtySel.disabled=false; addBtn.disabled=false;
+    const price = Number(selected.value||0);
+    priceEl.textContent = "R$ "+money(price);
+    const stock = Number(selected.dataset.stock||1);
+    qtySel.innerHTML = [...Array(stock).keys()].map(i=>`<option>${i+1}</option>`).join("");
   }
 
-  addBtn.onclick=()=>{
-    const variant=variantSel.value;
-    const size=variantSel.selectedOptions[0].text;
-    const qty=Number(qtySel.value);
-    cart.push({name:p.name,variant:size,price:Number(variant),qty});
+  d.querySelector(".add-cart").onclick = ()=>{
+    const variantPrice = Number(variantSel.value||0);
+    const variantName = variantSel.selectedOptions[0].text||"Único";
+    const qty = Number(qtySel.value||1);
+    cart.push({name:p.name||"Produto", variant: variantName, price: variantPrice, qty});
     updateCart();
   }
 
@@ -184,7 +155,7 @@ function createCard(p){
 }
 
 function updateCart(){
-  const container=document.getElementById("cartItems");
+  const container = document.getElementById("cartItems");
   container.innerHTML="";
   let total=0;
   cart.forEach((item,i)=>{
@@ -194,36 +165,32 @@ function updateCart(){
     container.appendChild(div);
     total+=item.price*item.qty;
   });
-  document.getElementById("cartTotal").textContent=money(total);
-  document.getElementById("cartCount").textContent=cart.length;
+  document.getElementById("cartTotal").textContent = money(total);
+  document.getElementById("cartCount").textContent = cart.length;
 }
 
 function toggleCart(){document.getElementById("cartOverlay").classList.toggle("open");}
 
-function clearCart(){
-  if(confirm("Deseja realmente cancelar o pedido?")){ cart=[]; updateCart(); document.getElementById("clientName").value=''; document.getElementById("clientPhone").value=''; document.getElementById("clientEmail").value=''; toggleCart();}
-}
-
-function editCart(){alert("Você pode alterar a quantidade ou remover itens diretamente acima.");}
-
 async function init(){
-  const raw=await fetchSheet();
-  products=groupProducts(raw);
-  const grid=document.getElementById("catalog");
-  products.forEach(p=>{ const card=createCard(p); if(card) grid.appendChild(card); });
+  const raw = await fetchSheet();
+  products = groupProducts(raw);
+  const grid = document.getElementById("catalog");
+  products.forEach(p=>{
+    const card = createCard(p);
+    if(card) grid.appendChild(card);
+  });
 }
 
 async function sendOrder(){
-  const name=document.getElementById("clientName").value.trim();
-  const phone=document.getElementById("clientPhone").value.trim();
-  const email=document.getElementById("clientEmail").value.trim();
-  if(!name||!phone){alert("Nome e WhatsApp obrigatórios!"); return;}
-  if(cart.length===0){alert("Carrinho vazio!"); return;}
-  const total=cart.reduce((a,b)=>a+b.price*b.qty,0);
-  const payload={cliente:{name,phone,email},itens:cart,total};
+  const name = prompt("Digite seu nome (obrigatório)");
+  const phone = prompt("Digite seu WhatsApp (obrigatório)");
+  const email = prompt("Digite seu email (opcional)");
+  if(!name||!phone){alert("Nome e WhatsApp obrigatórios!");return;}
+  const total = cart.reduce((a,b)=>a+b.price*b.qty,0);
+  const payload = {cliente:{name,phone,email},itens:cart,total};
   try{
     await fetch("URL_DO_SEU_WEB_APP_DO_DEPLOYD",{method:"POST",body:JSON.stringify(payload)});
-    const whatsappMsg=encodeURIComponent(`Olá, sou ${name}, segue meu pedido:\n${cart.map(i=>`${i.name} (${i.variant}) x${i.qty}`).join("\n")}\nTotal: R$ ${money(total)}`);
+    const whatsappMsg = encodeURIComponent(`Olá, ${name}, segue meu pedido:\n${cart.map(i=>`${i.name} (${i.variant}) x${i.qty}`).join("\n")}\nTotal: R$ ${money(total)}`);
     window.open(`https://wa.me/${phone.replace(/\D/g,'')}?text=${whatsappMsg}`,"_blank");
     cart=[]; updateCart(); toggleCart();
   }catch(err){console.error(err);alert("Erro ao enviar pedido");}
