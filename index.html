@@ -98,14 +98,32 @@
     .card:hover {
       transform: translateY(-4px);
     }
-    .thumb {
+    .thumb-container {
+      position: relative;
       width: 100%;
       height: 180px;
-      object-fit: cover;
+      overflow: hidden;
       border-radius: 8px;
       background: #eee;
-      cursor: pointer;
     }
+    .thumb-container img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .thumb-container button {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(0, 0, 0, 0.4);
+      color: #fff;
+      border: none;
+      padding: 6px 10px;
+      cursor: pointer;
+      border-radius: 50%;
+    }
+    .thumb-container .prev { left: 6px; }
+    .thumb-container .next { right: 6px; }
     .title {
       font-weight: bold;
       margin: 8px 0;
@@ -290,7 +308,11 @@ function createCard(p) {
   const d = document.createElement("div");
   d.className = "card";
   d.innerHTML = `
-    <img class="thumb" src="${p.images[0] || ''}">
+    <div class="thumb-container">
+      <button class="prev">&lt;</button>
+      <img class="thumb" src="${p.images[0] || ''}">
+      <button class="next">&gt;</button>
+    </div>
     <div class="title">${p.name}</div>
     <div class="price">R$ ${money(p.variants[0].price)}</div>
     <label>Tamanho</label>
@@ -309,6 +331,21 @@ function createCard(p) {
   const variantSel = d.querySelector(".variant");
   const qtySel = d.querySelector(".qty");
   const addBtn = d.querySelector(".add-cart");
+  const thumbImg = d.querySelector(".thumb");
+  const prevBtn = d.querySelector(".prev");
+  const nextBtn = d.querySelector(".next");
+
+  let currentImg = 0;
+
+  prevBtn.onclick = () => {
+    currentImg = (currentImg - 1 + p.images.length) % p.images.length;
+    thumbImg.src = p.images[currentImg];
+  };
+
+  nextBtn.onclick = () => {
+    currentImg = (currentImg + 1) % p.images.length;
+    thumbImg.src = p.images[currentImg];
+  };
 
   variantSel.onchange = e => {
     const selected = e.target.selectedOptions[0];
