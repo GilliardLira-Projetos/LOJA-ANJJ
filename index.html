@@ -214,7 +214,7 @@
 </header>
 
 <section class="banner">
-  <img src="https://gilliardlira-projetos.github.io/LOJA-ANJJ/assets/images/banner.jpg" alt="Banner" />
+  <img src="https://gilliardlira-projetos.github.io/LOJA-ANJJ/costas.jpg" alt="Banner" />
   <div class="banner-text">
     <h1>Novas Camisas Jiu Jitsu</h1>
     <p>Confira os lançamentos!</p>
@@ -428,7 +428,7 @@ async function sendOrder() {
       method: "POST",
       body: JSON.stringify(payload)
     });
-    const whatsappMsg = encodeURIComponent(`Olá, ${name}, segue meu pedido:\n${cart.map(i => `${i.name} (${i.variant}) x${i.qty}`).join("\n")}\nTotal: R$ ${money(total)}`);
+    const whatsappMsg = encodeURIComponent(`Olá, sou ${name}, segue meu pedido feito pelo site:\n${cart.map(i => `${i.name} (${i.variant}) x${i.qty}`).join("\n")}\nTotal: R$ ${money(total)}`);
     window.open(`https://wa.me/${phone.replace(/\D/g,'')}?text=${whatsappMsg}`, "_blank");
     clearCart();
   } catch (err) {
@@ -441,3 +441,4 @@ init();
 </script>
 </body>
 </html>
+
