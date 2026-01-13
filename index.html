@@ -1,138 +1,148 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>LOJA ANJJ</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LOJA ANJJ</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
 
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      margin: 0;
+      background: #f6f6f6;
+    }
 
-<style>
-body {
-  font-family: 'Poppins', sans-serif;
-  margin: 0;
-  background: #f6f6f6;
-}
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 32px;
+      background: #1d4ed8;
+      color: #fff;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+    }
 
-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px 32px;
-  background: #1d4ed8;
-  color: #fff;
-  position: sticky;
-  top: 0;
-  z-index: 1000;
-}
+    .logo { font-size: 24px; font-weight: 600; }
 
-.logo { font-size: 24px; font-weight: 600; }
+    nav a {
+      color: #fff;
+      text-decoration: none;
+      margin-right: 16px;
+      font-weight: 500;
+    }
 
-nav a {
-  color: #fff;
-  text-decoration: none;
-  margin-right: 16px;
-}
+    .cart-btn {
+      background: #f59e0b;
+      border: none;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      position: relative;
+    }
 
-.cart-btn {
-  background: #f59e0b;
-  border: none;
-  color: #fff;
-  padding: 8px 12px;
-  border-radius: 6px;
-  cursor: pointer;
-  position: relative;
-}
+    .cart-count {
+      position: absolute;
+      top: -6px;
+      right: -6px;
+      background: red;
+      color: #fff;
+      border-radius: 50%;
+      font-size: 12px;
+      padding: 2px 6px;
+    }
 
-.cart-count {
-  position: absolute;
-  top: -6px;
-  right: -6px;
-  background: red;
-  color: #fff;
-  border-radius: 50%;
-  padding: 2px 6px;
-  font-size: 12px;
-}
+    .banner {
+      height: 300px;
+      position: relative;
+      overflow: hidden;
+    }
 
-.banner {
-  height: 300px;
-  position: relative;
-  overflow: hidden;
-}
+    .banner img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
 
-.banner img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
+    .banner-text {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: #fff;
+      text-align: center;
+      text-shadow: 0 2px 6px rgba(0,0,0,.6);
+    }
 
-.banner-text {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  color: #fff;
-  text-align: center;
-  text-shadow: 0 2px 6px rgba(0,0,0,.6);
-}
+    h2 {
+      padding: 0 32px;
+      margin-top: 30px;
+    }
 
-h2 {
-  padding: 0 32px;
-  margin: 30px 0 10px;
-}
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 20px;
+      padding: 0 32px 32px;
+    }
 
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 20px;
-  padding: 0 32px 32px;
-}
+    .card {
+      background: #fff;
+      border-radius: 10px;
+      padding: 12px;
+      box-shadow: 0 6px 18px rgba(0,0,0,.1);
+    }
 
-.card {
-  background: #fff;
-  border-radius: 10px;
-  padding: 12px;
-  box-shadow: 0 6px 18px rgba(0,0,0,.1);
-}
+    .thumb-container {
+      position: relative;
+      height: 180px;
+      overflow: hidden;
+      border-radius: 8px;
+      background: #eee;
+    }
 
-.thumb-container {
-  height: 180px;
-  overflow: hidden;
-  border-radius: 8px;
-  background: #eee;
-}
+    .thumb-container img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      cursor: pointer;
+    }
 
-.thumb-container img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  cursor: pointer;
-}
+    .thumb-container button {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(0,0,0,.4);
+      color: #fff;
+      border: none;
+      padding: 6px 10px;
+      cursor: pointer;
+      border-radius: 50%;
+    }
 
-.price {
-  font-size: 18px;
-  margin: 6px 0;
-}
+    .prev { left: 6px; }
+    .next { right: 6px; }
 
-/* MODAL */
-#imageModal {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.85);
-  z-index: 9999;
-  align-items: center;
-  justify-content: center;
-}
+    .price { font-size: 18px; margin: 6px 0; }
 
-#imageModal img {
-  max-width: 90%;
-  max-height: 90%;
-  border-radius: 12px;
-  box-shadow: 0 20px 40px rgba(0,0,0,.6);
-}
-</style>
+    select, button, input {
+      width: 100%;
+      margin-top: 6px;
+      padding: 8px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+
+    button.add-cart {
+      background: #1d4ed8;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+    }
+  </style>
 </head>
 
 <body>
@@ -146,7 +156,7 @@ h2 {
 </header>
 
 <section class="banner">
-  <img src="Image/costas.jpg" alt="Banner">
+  <img src="Image/costas.jpg">
   <div class="banner-text">
     <h1>Novas Camisas ANJJ</h1>
     <p>Confira os lançamentos disponíveis!</p>
@@ -154,45 +164,42 @@ h2 {
 </section>
 
 <h2 id="catalog">Catálogo ANJJ</h2>
-<section id="catalogGrid" class="grid"></section>
+<section class="grid" id="catalogGrid"></section>
 
 <!-- MODAL DE IMAGEM -->
-<div id="imageModal" onclick="closeImageModal()">
-  <img id="modalImg">
+<div id="imageModal" style="
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.8);
+  z-index:5000;
+  align-items:center;
+  justify-content:center;
+">
+  <span onclick="closeImageModal()" style="
+    position:absolute;
+    top:20px;
+    right:30px;
+    font-size:30px;
+    color:#fff;
+    cursor:pointer;
+  ">✖</span>
+  <img id="modalImg" style="max-width:90%;max-height:90%;border-radius:10px;">
 </div>
 
 <script>
-const SHEET_URL = "https://docs.google.com/spreadsheets/d/1BqVAf9A7l7KHKcwpV9HrqBMPWTA4s-aPv1EEna7xuHg/gviz/tq?tqx=out:json&gid=1940306776";
-let products = [];
+const products = [
+  {
+    name: "Camisa ANJJ Azul",
+    images: ["Image/costas.jpg"],
+    variants: [{ name: "M", price: 89, stock: 5 }]
+  }
+];
+
+let cart = [];
 
 function money(v) {
   return Number(v).toFixed(2).replace('.', ',');
-}
-
-async function fetchSheet() {
-  const res = await fetch(SHEET_URL);
-  const text = await res.text();
-  const json = JSON.parse(text.substring(text.indexOf("{"), text.lastIndexOf("}") + 1));
-  const cols = json.table.cols.map(c => c.label.toLowerCase());
-  return json.table.rows.map(r => {
-    const o = {};
-    r.c.forEach((c, i) => o[cols[i]] = c ? c.v : "");
-    return o;
-  });
-}
-
-function groupProducts(data) {
-  const grouped = {};
-  data.forEach(p => {
-    if (String(p.availability).toLowerCase() !== "show") return;
-    if (!grouped[p.name]) grouped[p.name] = { name: p.name, images: [] };
-    [p.thumbnail, p.image1, p.image2].forEach(img => {
-      if (img && !grouped[p.name].images.includes(img)) {
-        grouped[p.name].images.push(img);
-      }
-    });
-  });
-  return Object.values(grouped);
 }
 
 function openImageModal(src) {
@@ -210,22 +217,20 @@ function createCard(p) {
 
   card.innerHTML = `
     <div class="thumb-container">
-      <img src="${p.images[0]}" data-full="${p.images[0]}">
+      <img src="${p.images[0]}">
     </div>
     <strong>${p.name}</strong>
+    <div class="price">R$ ${money(p.variants[0].price)}</div>
+    <button class="add-cart">Adicionar ao carrinho</button>
   `;
 
   const img = card.querySelector("img");
-  img.addEventListener("click", () => {
-    openImageModal(img.dataset.full);
-  });
+  img.onclick = () => openImageModal(img.src);
 
   return card;
 }
 
-async function init() {
-  const raw = await fetchSheet();
-  products = groupProducts(raw);
+function init() {
   const grid = document.getElementById("catalogGrid");
   products.forEach(p => grid.appendChild(createCard(p)));
 }
