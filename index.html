@@ -1,324 +1,197 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>LOJA ANJJ</title>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
-<style>
-/* ---------- ESTILO GERAL ---------- */
-body { font-family: 'Poppins', sans-serif; margin: 0; padding: 0; background: #f6f6f6; }
-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 32px; background: #1d4ed8; color: #fff; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 8px rgba(0,0,0,.1); }
-.logo { font-weight: 600; font-size: 22px; }
-nav a { color: #fff; text-decoration: none; margin: 0 8px; font-weight: 500; }
-.cart-btn { background: #f59e0b; color: #fff; padding: 8px 12px; border: none; border-radius: 6px; cursor: pointer; position: relative; }
-.cart-count { position: absolute; top: -6px; right: -6px; background: red; color: #fff; border-radius: 50%; padding: 2px 6px; font-size: 12px; }
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>LOJA ANJJ</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet" />
+    <style>
+        :root { --green: #22c55e; --bg: #f9fafb; }
+        body { font-family: 'Poppins', sans-serif; margin: 0; background: var(--bg); color: #333; }
+        
+        /* Header Estilo App */
+        header { 
+            background: #fff; padding: 15px 20px; border-bottom: 1px solid #eee;
+            display: flex; justify-content: space-between; align-items: center;
+            position: sticky; top: 0; z-index: 100;
+        }
+        .logo { font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+        .cart-btn { background: var(--green); color: #fff; border: none; padding: 8px 15px; border-radius: 20px; cursor: pointer; font-weight: 600; }
 
-/* ---------- BANNER ---------- */
-.banner { position: relative; text-align: center; overflow: hidden; height: 300px; margin-bottom: 20px; }
-.banner img { width: 100%; height: 100%; object-fit: cover; }
-.banner-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #fff; text-shadow: 0 2px 6px rgba(0,0,0,.6); width: 90%; }
-.banner-text h1 { font-size: 2em; margin: 0; }
-.banner-text p { font-size: 1em; }
+        /* Categorias */
+        .category-title { text-align: center; text-transform: uppercase; margin: 40px 0 20px; font-weight: 700; color: #444; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; padding: 0 20px 40px; }
 
-/* ---------- CATÁLOGO ---------- */
-.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px; padding: 0 20px 32px; }
-.card { background: #fff; border-radius: 12px; padding: 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.12); display: flex; flex-direction: column; transition: transform .3s, box-shadow .3s; position: relative; overflow: hidden; }
-.card:hover { transform: translateY(-6px); box-shadow: 0 12px 28px rgba(0,0,0,0.2); }
-.thumb-container { width: 100%; height: 220px; border-radius: 10px; background: #eee; margin-bottom: 8px; overflow: hidden; position: relative; cursor: pointer; }
-.thumb-container img { width: 100%; height: 100%; object-fit: cover; border-radius: 10px; position: absolute; top: 0; left: 0; opacity: 0; transition: opacity 0.6s ease; }
-.thumb-container img.active { opacity: 1; }
-.title { font-weight: bold; margin: 8px 0; font-size: 16px; }
-.price { font-size: 18px; margin: 6px 0; color: #1d4ed8; }
-input, button, select { padding: 8px; border-radius: 6px; border: 1px solid #ccc; width: 100%; box-sizing: border-box; }
-button { cursor: pointer; transition: background .3s; }
-button.add-cart { background: #1d4ed8; color: #fff; border: none; margin-top: 6px; }
-button.add-cart:hover { background: #2563eb; }
+        /* Card Estilo Store.link */
+        .card { background: #fff; border-radius: 12px; padding: 15px; border: 1px solid #eee; display: flex; flex-direction: column; }
+        .thumb-container { width: 100%; height: 280px; border-radius: 8px; overflow: hidden; margin-bottom: 15px; }
+        .thumb-container img { width: 100%; height: 100%; object-fit: cover; }
+        
+        .title { font-weight: 600; font-size: 15px; text-transform: uppercase; margin-bottom: 5px; }
+        .price { font-size: 18px; font-weight: 700; color: #111; margin-bottom: 15px; }
 
-/* ---------- CARRINHO ---------- */
-.cart-overlay { position: fixed; top: 0; right: 0; width: 100%; max-width: 420px; height: 100%; background: #fff; box-shadow: -4px 0 20px rgba(0,0,0,.2); padding: 20px; transform: translateX(100%); transition: transform .3s; z-index: 2000; overflow-y: auto; }
-.cart-overlay.open { transform: translateX(0); }
-.cart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-.cart-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 6px; flex-wrap: wrap; }
-.cart-item div.buttons { display: flex; align-items: center; margin-top: 5px; }
-.cart-item button { border: none; background: none; color: #1d4ed8; font-size: 18px; cursor: pointer; margin: 0 3px; }
-.cart-item button.remove { margin-left: 10px; color: #ef4444; font-size: 20px; }
-.cart-footer { margin-top: 20px; }
-.cart-actions { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
-.cart-actions button { padding: 10px; border: none; border-radius: 6px; font-weight: 500; }
-.cart-actions button:first-child { background: #ef4444; color: #fff; }
-.cart-actions button:last-child { background: #10b981; color: #fff; }
+        /* Variant Chips */
+        .variant-label { font-size: 12px; color: #888; margin-bottom: 8px; }
+        .variant-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+        .variant-chip { 
+            border: 1px solid #ddd; padding: 6px 12px; border-radius: 6px; 
+            font-size: 13px; cursor: pointer; transition: 0.2s; 
+        }
+        .variant-chip.selected { border-color: var(--green); background: #f0fdf4; color: var(--green); font-weight: 600; }
 
-/* ---------- MODAL IMAGEM ---------- */
-.modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.8); justify-content: center; align-items: center; z-index:3000; }
-.modal img { max-width: 90%; max-height: 90%; border-radius: 10px; }
-.modal .close { position: absolute; top: 20px; right: 30px; font-size: 28px; color: #fff; cursor: pointer; }
+        .add-cart { 
+            background: var(--green); color: white; border: none; padding: 12px; 
+            border-radius: 8px; font-weight: 700; cursor: pointer; width: 100%;
+        }
 
-/* ---------- RESPONSIVIDADE ---------- */
-@media (max-width: 768px) {
-header { flex-direction: column; text-align: center; gap: 10px; }
-.banner { height: 200px; }
-.banner-text h1 { font-size: 1.5em; }
-.grid { padding: 0 10px; gap: 15px; }
-.cart-overlay { max-width: 100%; }
-.cart-actions button { font-size: 16px; }
-}
-</style>
+        /* Carrinho Overlay */
+        .cart-overlay { position: fixed; top: 0; right: 0; width: 100%; max-width: 400px; height: 100%; background: #fff; box-shadow: -5px 0 15px rgba(0,0,0,0.1); padding: 20px; transform: translateX(100%); transition: 0.3s; z-index: 1000; overflow-y: auto; }
+        .cart-overlay.open { transform: translateX(0); }
+    </style>
 </head>
 <body>
 
 <header>
-  <div class="logo">🏆 LOJA ANJJ</div>
-  <nav>
-    <a href="#catalog">Catálogo</a>
-    <button class="cart-btn" onclick="toggleCart()">🛒 Carrinho <span id="cartCount" class="cart-count">0</span></button>
-  </nav>
+    <div class="logo">LOJA - ANJJ</div>
+    <button class="cart-btn" onclick="toggleCart()">🛒 <span id="cartCount">0</span></button>
 </header>
 
-<section class="banner">
-  <img src="Image/jiujitsu.jpg" alt="Banner" />
-  <div class="banner-text">
-    <h1>Novas Camisas Jiu Jitsu</h1>
-    <p>Confira os lançamentos!</p>
-  </div>
-</section>
+<div id="catalog">
+    </div>
 
-<section id="catalog" class="grid"></section>
-
-<!-- Carrinho -->
 <div class="cart-overlay" id="cartOverlay">
-  <div class="cart-header">
-    <h3>🛍️ Seu Carrinho</h3>
-    <button onclick="toggleCart()">✖</button>
-  </div>
-  <div id="cartItems"></div>
-  <div class="cart-footer">
-    <p><strong>Total: R$ <span id="cartTotal">0,00</span></strong></p>
-    <hr />
-    <div>
-      <label>Nome:</label>
-      <input type="text" id="clientName" placeholder="Digite seu nome">
-      <label>WhatsApp:</label>
-      <input type="text" id="clientPhone" placeholder="DDD + número apenas" maxlength="11">
-      <label>Email:</label>
-      <input type="email" id="clientEmail" placeholder="Digite seu email (opcional)">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+        <h3>Resumo do Pedido</h3>
+        <button onclick="toggleCart()" style="border:none; background:none; font-size:20px; cursor:pointer;">✕</button>
     </div>
-    <div class="cart-actions">
-      <button onclick="clearCart()">🗑️ Cancelar Carrinho</button>
-      <button onclick="sendOrder()">📦 Enviar Pedido</button>
+    <hr>
+    <div id="cartItems"></div>
+    <div id="cartTotalArea" style="margin-top:20px; font-weight:700; font-size:18px;">
+        Total: R$ <span id="cartTotal">0,00</span>
     </div>
-  </div>
-</div>
-
-<!-- Modal Imagem -->
-<div class="modal" id="imgModal">
-  <span class="close" onclick="closeModal()">✖</span>
-  <img id="modalImg" src="" alt="Imagem Produto">
+    <button class="add-cart" style="margin-top:20px;" onclick="sendOrder()">Fazer pedido no WhatsApp</button>
 </div>
 
 <script>
 const SHEET_URL = "https://docs.google.com/spreadsheets/d/1BqVAf9A7l7KHKcwpV9HrqBMPWTA4s-aPv1EEna7xuHg/gviz/tq?tqx=out:json&sheet=Products";
-let products=[], cart=[];
+let cart = [];
 
-function money(v){ return Number(v).toFixed(2).replace('.', ','); }
+function money(v) { return Number(v).toFixed(2).replace('.', ','); }
 
-async function fetchSheet(){
-  const r = await fetch(SHEET_URL);
-  const t = await r.text();
-  const j = JSON.parse(t.substring(t.indexOf("{"), t.lastIndexOf("}")+1));
-  const cols = j.table.cols.map(c=>c.label.trim().toLowerCase());
-  const rows = j.table.rows || [];
-  return rows.map(row=>{
-    const o={};
-    row.c.forEach((c,i)=>o[cols[i]]=c?(c.v??c.f??""):"");
-    return o;
-  });
+async function init() {
+    try {
+        const r = await fetch(SHEET_URL);
+        const t = await r.text();
+        const j = JSON.parse(t.substring(t.indexOf("{"), t.lastIndexOf("}") + 1));
+        
+        // Mapeia as colunas baseado no seu cabeçalho
+        const cols = j.table.cols.map(c => c.label.trim());
+        const rows = j.table.rows.map(row => {
+            const o = {};
+            row.c.forEach((c, i) => { o[cols[i]] = c ? (c.v ?? c.f ?? "") : ""; });
+            return o;
+        });
+
+        // Agrupar produtos por nome para tratar variantes
+        const grouped = {};
+        rows.forEach(p => {
+            if (String(p.Availability).toLowerCase() !== "show") return;
+            if (!grouped[p.Name]) {
+                grouped[p.Name] = { 
+                    name: p.Name, 
+                    category: p.Category, 
+                    thumb: p.Thumbnail, 
+                    variants: [] 
+                };
+            }
+            grouped[p.Name].variants.push({ name: p["Variant Name"], price: p.Price });
+        });
+
+        renderCatalog(Object.values(grouped));
+    } catch (e) { console.error("Erro ao carregar dados:", e); }
 }
 
-function groupProducts(data){
-  const grouped={};
-  data.forEach(p=>{
-    if(String(p.availability).toLowerCase()!=="show")return;
-    const name=String(p.name).trim();
-    if(!name)return;
-    if(!grouped[name]) grouped[name]={name, variants:[], images:[]};
-    const size=String(p["variant name"]||"").trim();
-    if(size) grouped[name].variants.push({name:size||"Único", price:Number(p.price||0), stock:Number(p.stock||1)});
-    [p.thumbnail,p.image1,p.image2,p.image3].forEach(img=>{
-      if(img && !grouped[name].images.includes(img)) grouped[name].images.push(img);
+function renderCatalog(products) {
+    const catalog = document.getElementById("catalog");
+    const categories = [...new Set(products.map(p => p.category))];
+
+    categories.forEach(cat => {
+        const section = document.createElement("section");
+        section.innerHTML = `<h2 class="category-title">${cat}</h2><div class="grid" id="grid-${cat.replace(/\s/g, '')}"></div>`;
+        catalog.appendChild(section);
+
+        const grid = document.getElementById(`grid-${cat.replace(/\s/g, '')}`);
+        products.filter(p => p.category === cat).forEach(p => {
+            grid.appendChild(createCard(p));
+        });
     });
-  });
-  return Object.values(grouped);
 }
 
-/* ---------- CARDS ---------- */
-function createCard(p){
-  if(!p.variants.length) return null;
-  const d = document.createElement("div");
-  d.className = "card";
+function createCard(p) {
+    const d = document.createElement("div");
+    d.className = "card";
+    d.innerHTML = `
+        <div class="thumb-container"><img src="${p.thumb}"></div>
+        <div class="title">${p.name}</div>
+        <div class="price">R$ ${money(p.variants[0].price)}</div>
+        <div class="variant-label">Variant Name</div>
+        <div class="variant-grid">
+            ${p.variants.map((v, i) => `<div class="variant-chip ${i === 0 ? 'selected' : ''}" data-price="${v.price}">${v.name}</div>`).join("")}
+        </div>
+        <button class="add-cart" onclick="addToCart('${p.name}', this)">Adicionar ao carrinho</button>
+    `;
 
-  const imgs = p.images.length ? p.images : ["Images/placeholder.jpg"];
-  const imgElements = imgs.map((src,i)=>`<img src="${src}" class="${i===0?'active':''}">`).join("");
+    // Lógica de seleção de variante
+    const chips = d.querySelectorAll(".variant-chip");
+    chips.forEach(chip => {
+        chip.onclick = () => {
+            chips.forEach(c => c.classList.remove("selected"));
+            chip.classList.add("selected");
+            d.querySelector(".price").innerText = "R$ " + money(chip.dataset.price);
+        };
+    });
+    return d;
+}
 
-  d.innerHTML = `
-    <div class="thumb-container">${imgElements}</div>
-    <div class="title">${p.name}</div>
-    <div class="price">R$ ${money(p.variants[0].price)}</div>
-
-    <label>Selecione o tamanho</label>
-    <select class="size">
-      <option value="" disabled selected>Selecionar</option>
-      ${p.variants.map(v=>`<option value="${v.name}" data-price="${v.price}" data-stock="${v.stock}">${v.name}</option>`).join("")}
-    </select>
-
-    <label>Selecione a quantidade</label>
-    <div class="quantity-container" style="display:flex; gap:5px; align-items:center; margin-top:5px;">
-      <button type="button" class="dec">➖</button>
-      <input type="number" class="qty" value="1" min="1" style="width:50px; text-align:center;">
-      <button type="button" class="inc">➕</button>
-    </div>
-
-    <button class="add-cart">Adicionar ao Carrinho</button>
-  `;
-
-  const priceEl = d.querySelector(".price");
-  const sizeSel = d.querySelector(".size");
-  const qtyInput = d.querySelector(".qty");
-  let selectedVariant = null;
-
-  function updateVariant(){
-    if(!sizeSel.value) return;
-    selectedVariant = {
-      name: sizeSel.value,
-      price: Number(sizeSel.selectedOptions[0].dataset.price),
-      stock: Number(sizeSel.selectedOptions[0].dataset.stock)
-    };
-    priceEl.textContent = "R$ "+money(selectedVariant.price);
-    if(Number(qtyInput.value) > selectedVariant.stock) qtyInput.value = selectedVariant.stock;
-    qtyInput.setAttribute("max", selectedVariant.stock);
-  }
-
-  sizeSel.addEventListener("change", updateVariant);
-
-  d.querySelector(".inc").addEventListener("click", ()=>{
-    if(selectedVariant && Number(qtyInput.value) < selectedVariant.stock)
-      qtyInput.value = Number(qtyInput.value) + 1;
-  });
-
-  d.querySelector(".dec").addEventListener("click", ()=>{
-    qtyInput.value = Math.max(1, Number(qtyInput.value) - 1);
-  });
-
-  d.querySelector(".add-cart").onclick = ()=>{
-    if(!selectedVariant){
-      alert("Por favor, selecione um tamanho!");
-      return;
-    }
-    const qty = Number(qtyInput.value || 1);
-    cart.push({name: p.name, variant: selectedVariant.name, price: selectedVariant.price, qty});
+function addToCart(name, btn) {
+    const card = btn.parentElement;
+    const selected = card.querySelector(".variant-chip.selected");
+    cart.push({
+        name: name,
+        variant: selected.innerText,
+        price: Number(selected.dataset.price)
+    });
     updateCart();
-  };
-
-  // Carrossel de imagens
-  const imgsEl = d.querySelectorAll(".thumb-container img");
-  if(imgsEl.length > 1){
-    let idx = 0;
-    let interval = setInterval(()=>{
-      imgsEl[idx].classList.remove("active");
-      idx = (idx+1) % imgsEl.length;
-      imgsEl[idx].classList.add("active");
-    }, 3000);
-    d.querySelector(".thumb-container").addEventListener("mouseenter", ()=>clearInterval(interval));
-    d.querySelector(".thumb-container").addEventListener("mouseleave", ()=>{
-      interval = setInterval(()=>{
-        imgsEl[idx].classList.remove("active");
-        idx = (idx+1) % imgsEl.length;
-        imgsEl[idx].classList.add("active");
-      }, 3000);
-    });
-  }
-
-  // Modal imagem
-  d.querySelector(".thumb-container").addEventListener("click", ()=>{
-    const modal = document.getElementById("imgModal");
-    const modalImg = document.getElementById("modalImg");
-    modalImg.src = imgsEl[0].src;
-    modal.style.display = "flex";
-  });
-
-  return d;
+    toggleCart(true);
 }
 
-/* ---------- MODAL ---------- */
-function closeModal(){ document.getElementById("imgModal").style.display="none"; }
-document.getElementById("imgModal").addEventListener("click", e=>{ if(e.target.id==="imgModal") closeModal(); });
-
-/* ---------- CARRINHO ---------- */
-function updateCart(){
-  const c = document.getElementById("cartItems");
-  c.innerHTML = "";
-  let total = 0;
-  cart.forEach((item,i)=>{
-    const div = document.createElement("div");
-    div.className="cart-item";
-    div.innerHTML = `
-      ${item.name} (${item.variant}) x${item.qty} - R$ ${money(item.price*item.qty)}
-      <div class="buttons">
-        <button onclick="changeQty(${i},-1)">➖</button>
-        <button onclick="changeQty(${i},1)">➕</button>
-        <button class="remove" onclick="removeItem(${i})">🗑️</button>
-      </div>`;
-    c.appendChild(div);
-    total += item.price * item.qty;
-  });
-  document.getElementById("cartTotal").textContent = money(total);
-  document.getElementById("cartCount").textContent = cart.length;
+function updateCart() {
+    document.getElementById("cartCount").innerText = cart.length;
+    const itemsDiv = document.getElementById("cartItems");
+    itemsDiv.innerHTML = cart.map((item, i) => `
+        <div style="display:flex; justify-content:space-between; margin-bottom:10px; font-size:14px;">
+            <span>${item.name} (${item.variant})</span>
+            <span>R$ ${money(item.price)} <button onclick="cart.splice(${i},1); updateCart()" style="border:none; color:red; cursor:pointer;">✕</button></span>
+        </div>
+    `).join("");
+    
+    const total = cart.reduce((sum, item) => sum + item.price, 0);
+    document.getElementById("cartTotal").innerText = money(total);
 }
 
-function changeQty(i,d){ cart[i].qty = Math.max(1, cart[i].qty + d); updateCart(); }
-function removeItem(i){ cart.splice(i,1); updateCart(); }
-function clearCart(){ if(confirm("Tem certeza que deseja cancelar o carrinho?")){ cart=[]; updateCart(); } }
-function toggleCart(){ document.getElementById("cartOverlay").classList.toggle("open"); }
-
-async function init(){
-  const raw = await fetchSheet();
-  products = groupProducts(raw);
-  const grid = document.getElementById("catalog");
-  grid.innerHTML = "";
-  products.forEach(p=>{ const card = createCard(p); if(card) grid.appendChild(card); });
+function toggleCart(forceOpen = false) {
+    const overlay = document.getElementById("cartOverlay");
+    if (forceOpen) overlay.classList.add("open");
+    else overlay.classList.toggle("open");
 }
 
-function sendOrder(){
-  if(cart.length===0){ alert("Seu carrinho está vazio!"); return; }
-  const name=document.getElementById("clientName").value.trim();
-  let phone=document.getElementById("clientPhone").value.trim();
-  const email=document.getElementById("clientEmail").value.trim();
-  if(!name||!phone){ alert("Preencha nome e WhatsApp!"); return; }
-
-  // Limpa tudo que não for número
-  phone = phone.replace(/\D/g,"");
-  if(phone.length < 10 || phone.length > 11){
-    alert("Por favor, informe DDD + número corretamente!");
-    return;
-  }
-  // Adiciona +55 automaticamente
-  phone = "55"+phone;
-
-  const total=cart.reduce((a,b)=>a+b.price*b.qty,0);
-  const msg=`Olá, sou ${name} , Fiz meu pedido pelo site.'
-📱 WhatsApp: ${phone}
-✉️ Email: ${email||"Não informado"}
-
-🛍️ Pedido:
-${cart.map(i=>`- ${i.name} (${i.variant}) x${i.qty} = R$ ${money(i.price*i.qty)}`).join("\n")}
-Total: R$ ${money(total)}`;
-
-  window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`,"_blank");
-  cart=[]; updateCart(); toggleCart();
+function sendOrder() {
+    if (cart.length === 0) return alert("Carrinho vazio!");
+    const msg = `Olá! Gostaria de fazer um pedido:\n\n${cart.map(i => `- ${i.name} (${i.variant}): R$ ${money(i.price)}`).join("\n")}\n\nTotal: R$ ${document.getElementById("cartTotal").innerText}`;
+    window.open(`https://wa.me/55SEUNUMERO?text=${encodeURIComponent(msg)}`);
 }
 
 init();
 </script>
 </body>
 </html>
-
