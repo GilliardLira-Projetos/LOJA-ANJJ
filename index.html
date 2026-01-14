@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>LOJA ANJJ - Carrinho Moderno</title>
+    <title>LOJA ANJJ - Catálogo Profissional</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet" />
     <style>
         :root { --green: #22c55e; --bg: #ffffff; --red: #ef4444; }
@@ -21,7 +21,7 @@
         .category-section { padding: 20px 0; border-bottom: 8px solid #f9fafb; }
         .category-title { text-align: center; text-transform: uppercase; font-size: 16px; margin-bottom: 25px; font-weight: 700; }
         
-        /* CARDS */
+        /* GRID E CARDS */
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 25px; padding: 0 15px; }
         .card { border: 1px solid #eee; border-radius: 12px; padding: 15px; background: #fff; }
         .carousel { width: 100%; height: 280px; position: relative; overflow: hidden; border-radius: 8px; cursor: pointer; background: #f4f4f4; }
@@ -35,6 +35,7 @@
         .color-dot.selected { border-color: #000; transform: scale(1.15); box-shadow: 0 0 4px rgba(0,0,0,0.3); }
         .color-dot.disabled { opacity: 0.1; cursor: not-allowed; pointer-events: none; }
 
+        .product-name { font-size: 13px; font-weight: 600; margin: 10px 0; text-transform: uppercase; }
         .variant-grid { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
         .variant-chip { border: 1px solid #ddd; padding: 6px 12px; border-radius: 4px; font-size: 11px; cursor: pointer; min-width: 35px; text-align: center; }
         .variant-chip.selected { border-color: #000; background: #000; color: #fff; }
@@ -43,7 +44,6 @@
         .qty-selector { display: flex; align-items: center; gap: 10px; margin: 15px 0; }
         .qty-btn { border: 1px solid #ddd; background: #fff; width: 30px; height: 30px; border-radius: 4px; cursor: pointer; font-weight: bold; }
         .btn-add { background: var(--green); color: #fff; border: none; padding: 12px; border-radius: 8px; font-weight: 700; width: 100%; cursor: pointer; transition: 0.2s; }
-        .btn-add:active { transform: scale(0.98); }
 
         /* CARRINHO */
         .cart-overlay { position: fixed; top: 0; right: 0; width: 100%; max-width: 450px; height: 100%; background: #fff; z-index: 2000; transform: translateX(100%); transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); padding: 20px; box-sizing: border-box; display: flex; flex-direction: column; box-shadow: -10px 0 30px rgba(0,0,0,0.1); }
@@ -53,18 +53,18 @@
         .cart-item { display: flex; gap: 12px; padding: 15px 0; border-bottom: 1px solid #f5f5f5; align-items: center; }
         .cart-item img { width: 65px; height: 65px; object-fit: cover; border-radius: 10px; }
         .item-info { flex: 1; }
-        .item-info b { font-size: 13px; display: block; color: #111; }
-        .item-info small { color: #888; font-size: 11px; display: block; margin-bottom: 4px; }
+        .item-info b { font-size: 13px; display: block; }
+        .item-info small { color: #888; font-size: 11px; }
         
         .item-controls-row { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; }
         .cart-qty-box { display: flex; align-items: center; gap: 10px; border: 1.5px solid #eee; border-radius: 8px; padding: 3px 10px; }
-        .cart-qty-btn { background: none; border: none; cursor: pointer; font-weight: bold; font-size: 16px; color: #333; }
-        .trash-btn { cursor: pointer; font-size: 18px; background: none; border: none; padding: 5px; color: var(--red); transition: transform 0.2s; }
+        .cart-qty-btn { background: none; border: none; cursor: pointer; font-weight: bold; font-size: 16px; }
+        .trash-btn { cursor: pointer; font-size: 18px; background: none; border: none; color: var(--red); transition: 0.2s; }
         .trash-btn:hover { transform: scale(1.1); }
 
-        .cart-footer { border-top: 2px solid #f9f9f9; padding-top: 20px; margin-top: auto; }
-        .total-row { display: flex; justify-content: space-between; font-weight: 700; font-size: 18px; margin-bottom: 15px; color: #000; }
-        .cust-input { width: 100%; padding: 14px; margin-bottom: 12px; border: 1.5px solid #eee; border-radius: 10px; font-family: inherit; font-size: 14px; box-sizing: border-box; outline: none; }
+        .cart-footer { border-top: 2px solid #f9f9f9; padding-top: 15px; margin-top: auto; }
+        .total-row { display: flex; justify-content: space-between; font-weight: 700; font-size: 18px; margin-bottom: 15px; }
+        .cust-input { width: 100%; padding: 12px; margin-bottom: 8px; border: 1.5px solid #eee; border-radius: 8px; font-family: inherit; box-sizing: border-box; outline: none; }
         .cust-input:focus { border-color: var(--green); }
     </style>
 </head>
@@ -83,54 +83,55 @@
 
 <div class="cart-overlay" id="cartOverlay">
     <div style="display:flex; justify-content:space-between; align-items:center;">
-        <h3 style="margin:0; font-weight: 700;">🛍️ Seu Carrinho</h3>
-        <span onclick="toggleCart()" style="cursor:pointer; font-size:24px; color: #999;">✕</span>
+        <h3 style="margin:0">🛍️ Carrinho</h3>
+        <span onclick="toggleCart()" style="cursor:pointer; font-size:24px; color:#999;">✕</span>
     </div>
-
     <div id="cartItems"></div>
-
     <div class="cart-footer">
-        <div class="total-row">
-            <span>Total</span>
-            <span id="totalFinal">R$ 0,00</span>
-        </div>
-        <input type="text" id="custName" class="cust-input" placeholder="Seu Nome Completo">
+        <div class="total-row"><span>Total</span><span id="totalFinal">R$ 0,00</span></div>
+        <input type="text" id="custName" class="cust-input" placeholder="Nome Completo">
+        <input type="email" id="custEmail" class="cust-input" placeholder="E-mail">
+        <input type="tel" id="custPhone" class="cust-input" placeholder="WhatsApp (DDD + Número)">
         <button class="btn-add" style="height:55px; font-size:16px;" onclick="finalizeOrder()">FINALIZAR NO WHATSAPP</button>
     </div>
 </div>
 
 <script>
+// CONFIGURAÇÕES INICIAIS
 const SHEET_URL = "https://docs.google.com/spreadsheets/d/1BqVAf9A7l7KHKcwpV9HrqBMPWTA4s-aPv1EEna7xuHg/gviz/tq?tqx=out:json&sheet=Products";
+const WEB_APP_URL = "SUA_URL_DO_GOOGLE_APPS_SCRIPT_AQUI"; // Cole aqui a URL de implantação do Apps Script
+
 let productsData = [];
 let cart = [];
-
 const colorMap = { 'preto': '#000', 'branco': '#fff', 'vermelho': '#f00', 'azul': '#00f', 'verde': '#080', 'amarelo': '#ff0', 'rosa': '#ff69b4', 'cinza': '#808080', 'bege': '#f5f5dc' };
 
 async function init() {
-    const r = await fetch(SHEET_URL);
-    const t = await r.text();
-    const j = JSON.parse(t.substring(t.indexOf("{"), t.lastIndexOf("}") + 1));
-    const cols = j.table.cols.map(c => c.label.trim());
-    const rows = j.table.rows.map(row => {
-        const o = {}; row.c.forEach((c, i) => { o[cols[i]] = c ? (c.v ?? c.f ?? "") : ""; });
-        return o;
-    });
-
-    const grouped = {};
-    rows.forEach(p => {
-        if (String(p.Availability).toLowerCase() !== "show") return;
-        if (!grouped[p.Name]) {
-            grouped[p.Name] = { name: p.Name, category: p.Category, images: [p.Thumbnail, p.Image1, p.Image2, p.Image3].filter(i => i), skus: [] };
-        }
-        grouped[p.Name].skus.push({
-            color: p["Tag"].trim(),
-            size: p["Variant Name"].toString().trim(),
-            price: parseFloat(p["Discounted Price"] || p.Price),
-            stock: parseInt(p.Stock || 0)
+    try {
+        const r = await fetch(SHEET_URL);
+        const t = await r.text();
+        const j = JSON.parse(t.substring(t.indexOf("{"), t.lastIndexOf("}") + 1));
+        const cols = j.table.cols.map(c => c.label.trim());
+        const rows = j.table.rows.map(row => {
+            const o = {}; row.c.forEach((c, i) => { o[cols[i]] = c ? (c.v ?? c.f ?? "") : ""; });
+            return o;
         });
-    });
-    productsData = Object.values(grouped);
-    renderAll();
+
+        const grouped = {};
+        rows.forEach(p => {
+            if (String(p.Availability).toLowerCase() !== "show") return;
+            if (!grouped[p.Name]) {
+                grouped[p.Name] = { name: p.Name, category: p.Category, images: [p.Thumbnail, p.Image1, p.Image2, p.Image3].filter(i => i), skus: [] };
+            }
+            grouped[p.Name].skus.push({
+                color: p["Tag"].trim(),
+                size: p["Variant Name"].toString().trim(),
+                price: parseFloat(p["Discounted Price"] || p.Price),
+                stock: parseInt(p.Stock || 0)
+            });
+        });
+        productsData = Object.values(grouped);
+        renderAll();
+    } catch(e) { console.error("Erro ao carregar dados"); }
 }
 
 function renderAll() {
@@ -139,8 +140,7 @@ function renderAll() {
     const categories = [...new Set(productsData.map(p => p.category))];
 
     categories.forEach(cat => {
-        const btn = document.createElement("div");
-        btn.className = "cat-link"; btn.innerText = cat;
+        const btn = document.createElement("div"); btn.className = "cat-link"; btn.innerText = cat;
         btn.onclick = (e) => filterCat(cat, e.target);
         nav.appendChild(btn);
 
@@ -157,28 +157,25 @@ function renderAll() {
 }
 
 function createCard(p) {
-    const d = document.createElement("div");
-    const id = p.name.replace(/\s+/g, '');
+    const d = document.createElement("div"); const id = p.name.replace(/\s+/g, '');
     const colors = [...new Set(p.skus.map(s => s.color))];
     const sizes = [...new Set(p.skus.map(s => s.size))];
-    
-    d.className = "card";
-    d.id = `card-${id}`;
+    d.className = "card"; d.id = `card-${id}`;
     d.innerHTML = `
         <div class="carousel" onclick="manualNext(this)">${p.images.map((img, i) => `<img src="${img}" class="${i===0?'active':''}">`).join("")}</div>
         <div class="price-row">
             <span class="current-price">R$ ${p.skus[0].price.toFixed(2).replace('.',',')}</span>
             <div class="color-dots">${colors.map(c => `<div class="color-dot" style="background:${colorMap[c.toLowerCase()] || c}" data-color="${c}" onclick="syncVariant('${id}', 'color', '${c}')"></div>`).join("")}</div>
         </div>
-        <div class="product-name" style="font-weight:600; margin:10px 0">${p.name}</div>
+        <div class="product-name">${p.name}</div>
         <div class="variant-grid">${sizes.map(s => `<div class="variant-chip" data-size="${s}" onclick="syncVariant('${id}', 'size', '${s}')">${s}</div>`).join("")}</div>
         <div class="qty-selector">
             <button class="qty-btn" onclick="changeQty(this, -1)">-</button>
             <span class="qty-val">1</span>
             <button class="qty-btn" onclick="changeQty(this, 1)">+</button>
-            <span style="font-size:10px; color:#999; margin-left:auto">Estoque: <b class="stk-n">-</b></span>
+            <span style="font-size:10px; color:#999; margin-left:auto">Stock: <b class="stk-n">-</b></span>
         </div>
-        <button class="btn-add" onclick="addToCart('${id}')">ADICIONAR AO CARRINHO</button>`;
+        <button class="btn-add" onclick="addToCart('${id}')">ADICIONAR</button>`;
     return d;
 }
 
@@ -195,12 +192,10 @@ function syncVariant(id, type, val) {
     const sSize = card.querySelector('.variant-chip.selected')?.dataset.size;
 
     card.querySelectorAll('.variant-chip').forEach(chip => {
-        const hasOpt = product.skus.some(s => s.size === chip.dataset.size && (!sCol || s.color === sCol) && s.stock > 0);
-        chip.classList.toggle('disabled', !hasOpt);
+        chip.classList.toggle('disabled', !product.skus.some(s => s.size === chip.dataset.size && (!sCol || s.color === sCol) && s.stock > 0));
     });
     card.querySelectorAll('.color-dot').forEach(dot => {
-        const hasOpt = product.skus.some(s => s.color === dot.dataset.color && (!sSize || s.size === sSize) && s.stock > 0);
-        dot.classList.toggle('disabled', !hasOpt);
+        dot.classList.toggle('disabled', !product.skus.some(s => s.color === dot.dataset.color && (!sSize || s.size === sSize) && s.stock > 0));
     });
 
     const sku = product.skus.find(s => (!sCol || s.color === sCol) && (!sSize || s.size === sSize));
@@ -215,67 +210,45 @@ function addToCart(id) {
     const product = productsData.find(p => p.name.replace(/\s+/g, '') === id);
     const col = card.querySelector('.color-dot.selected')?.dataset.color;
     const siz = card.querySelector('.variant-chip.selected')?.dataset.size;
-    
-    if(!col || !siz) return alert("Escolha Cor e Tamanho!");
-    
+    if(!col || !siz) return alert("Selecione Cor e Tamanho!");
     const qty = parseInt(card.querySelector('.qty-val').innerText);
     const sku = product.skus.find(s => s.color === col && s.size === siz);
 
     const existing = cart.find(i => i.name === product.name && i.color === col && i.size === siz);
-    if(existing) {
-        existing.qty = Math.min(existing.qty + qty, sku.stock);
-    } else {
-        cart.push({ name: product.name, color: col, size: siz, qty, price: sku.price, img: product.images[0], max: sku.stock });
-    }
-    
-    updateCartUI();
-    toggleCart();
+    if(existing) existing.qty = Math.min(existing.qty + qty, sku.stock);
+    else cart.push({ name: product.name, color: col, size: siz, qty, price: sku.price, img: product.images[0], max: sku.stock });
+    updateCartUI(); toggleCart();
 }
 
 function updateCartUI() {
     document.getElementById('cartCount').innerText = cart.length;
     const itemsCont = document.getElementById('cartItems');
-    
-    if (cart.length === 0) {
-        itemsCont.innerHTML = `<div style="text-align:center; padding:50px 20px; color:#bbb;"><div style="font-size:40px; margin-bottom:10px;">🛒</div>Seu carrinho está vazio.</div>`;
-    } else {
-        itemsCont.innerHTML = cart.map((item, i) => `
-            <div class="cart-item">
-                <img src="${item.img}">
-                <div class="item-info">
-                    <b>${item.name}</b>
-                    <small>${item.color} / ${item.size}</small>
-                    <div style="font-weight:700; margin-top:4px;">R$ ${item.price.toFixed(2).replace('.',',')}</div>
-                    <div class="item-controls-row">
-                        <div class="cart-qty-box">
-                            <button class="cart-qty-btn" onclick="updateCartQty(${i}, -1)">-</button>
-                            <span style="font-size:14px; font-weight:600;">${item.qty}</span>
-                            <button class="cart-qty-btn" onclick="updateCartQty(${i}, 1)">+</button>
-                        </div>
-                        <button class="trash-btn" onclick="removeItem(${i})" title="Remover">🗑️</button>
+    if (cart.length === 0) itemsCont.innerHTML = `<p style="text-align:center; padding:30px; color:#999;">Carrinho vazio</p>`;
+    else itemsCont.innerHTML = cart.map((item, i) => `
+        <div class="cart-item">
+            <img src="${item.img}">
+            <div class="item-info">
+                <b>${item.name}</b><small>${item.color} / ${item.size}</small>
+                <div style="font-weight:700">R$ ${item.price.toFixed(2).replace('.',',')}</div>
+                <div class="item-controls-row">
+                    <div class="cart-qty-box">
+                        <button class="cart-qty-btn" onclick="updateCartQty(${i}, -1)">-</button>
+                        <span>${item.qty}</span>
+                        <button class="cart-qty-btn" onclick="updateCartQty(${i}, 1)">+</button>
                     </div>
+                    <button class="trash-btn" onclick="removeItem(${i})">🗑️</button>
                 </div>
-            </div>`).join("");
-    }
-
-    const total = cart.reduce((a, b) => a + (b.price * b.qty), 0);
-    document.getElementById('totalFinal').innerText = `R$ ${total.toFixed(2).replace('.',',')}`;
+            </div>
+        </div>`).join("");
+    document.getElementById('totalFinal').innerText = `R$ ${cart.reduce((a, b) => a + (b.price * b.qty), 0).toFixed(2).replace('.',',')}`;
 }
 
 function updateCartQty(idx, delta) {
     const item = cart[idx];
-    const newQty = item.qty + delta;
-    if (newQty >= 1 && newQty <= item.max) {
-        item.qty = newQty;
-        updateCartUI();
-    }
+    if (item.qty + delta >= 1 && item.qty + delta <= item.max) { item.qty += delta; updateCartUI(); }
 }
 
-function removeItem(idx) {
-    cart.splice(idx, 1);
-    updateCartUI();
-}
-
+function removeItem(idx) { cart.splice(idx, 1); updateCartUI(); }
 function toggleCart() { document.getElementById('cartOverlay').classList.toggle('open'); }
 function changeQty(btn, d) { let v = btn.parentElement.querySelector('.qty-val'); let max = parseInt(btn.parentElement.querySelector('.stk-n').innerText) || 99; let n = parseInt(v.innerText) + d; if(n > 0 && n <= max) v.innerText = n; }
 function filterCat(cat, el) {
@@ -284,11 +257,27 @@ function filterCat(cat, el) {
 }
 function manualNext(car) { let act = car.querySelector('img.active'), nxt = act.nextElementSibling || car.querySelector('img'); if(act) act.classList.remove('active'); if(nxt) nxt.classList.add('active'); }
 
-function finalizeOrder() {
+async function finalizeOrder() {
     const name = document.getElementById('custName').value;
-    if(!cart.length || !name) return alert("Preencha seu nome e escolha os produtos!");
-    const msg = `*NOVO PEDIDO - LOJA ANJJ*\n*Cliente:* ${name}\n\n*Produtos:*\n${cart.map(i => `- ${i.qty}x ${i.name} (${i.color}/${i.size}) - R$ ${(i.price*i.qty).toFixed(2).replace('.',',')}`).join('\n')}\n\n*TOTAL: ${document.getElementById('totalFinal').innerText}*`;
-    window.open(`https://wa.me/5581999998888?text=${encodeURIComponent(msg)}`);
+    const email = document.getElementById('custEmail').value;
+    const phone = document.getElementById('custPhone').value;
+    if(!cart.length || !name || !phone) return alert("Preencha Nome e Telefone!");
+
+    const total = document.getElementById('totalFinal').innerText;
+    const itemsText = cart.map(i => `${i.qty}x ${i.name} (${i.color}/${i.size})`).join(' | ');
+
+    // 1. Grava na Planilha
+    try {
+        await fetch(WEB_APP_URL, {
+            method: "POST",
+            mode: 'no-cors',
+            body: JSON.stringify({ name, email, phone, items: itemsText, total })
+        });
+    } catch (e) { console.error("Erro ao gravar pedido"); }
+
+    // 2. WhatsApp
+    const msg = `*PEDIDO LOJA ANJJ*\n*Cliente:* ${name}\n*Fone:* ${phone}\n\n*Itens:*\n${cart.map(i => `- ${i.qty}x ${i.name} (${i.color}/${i.size})`).join('\n')}\n\n*TOTAL: ${total}*`;
+    window.open(`https://wa.me/+5581997512217?text=${encodeURIComponent(msg)}`); // Substitua pelo seu número
 }
 
 init();
