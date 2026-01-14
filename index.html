@@ -54,6 +54,21 @@ select,button{padding:8px;border:none;border-radius:6px;cursor:pointer;width:100
   <h3>🛍️ Carrinho</h3>
   <div id="cartItems"></div>
   <p><strong>Total: R$ <span id="cartTotal">0,00</span></strong></p>
+  <hr />
+  <!-- Campos do cliente -->
+  <label>Nome (obrigatório):</label>
+  <input type="text" id="clientName" placeholder="Digite seu nome" required style="width:100%;margin-bottom:8px;">
+  
+  <label>WhatsApp (obrigatório):</label>
+  <input type="text" id="clientPhone" placeholder="Digite seu WhatsApp" required style="width:100%;margin-bottom:8px;">
+  
+  <label>Email (opcional):</label>
+  <input type="email" id="clientEmail" placeholder="Digite seu email (opcional)" style="width:100%;margin-bottom:10px;">
+
+  <div class="cart-actions">
+    <button onclick="clearCart()">🗑️ Cancelar Carrinho</button>
+    <button onclick="sendOrder()">📦 Enviar Pedido</button>
+  </div>
 </div>
 
 <div id="imgModal" class="image-modal" onclick="closeModal(event)">
@@ -99,11 +114,16 @@ function groupProducts(data){
 }
 
 function createCard(p){
+ const v=p.variants[0];
+ const hasDiscount=v.discount>0;
+ const percent=hasDiscount?Math.round((1 - v.discount/v.price)*100):0;
+
  const imgs=p.images.map((s,i)=>`<img src="${s}" class="${i==0?'active':''}">`).join("");
  const d=document.createElement("div");
  d.className="card";
  
  d.innerHTML=`
+ ${hasDiscount?`<div class="badge-sale">PROMO ${percent}%</div>`:""}
  <div class="thumb-container">${imgs}</div>
  <div class="title">${p.name}</div>
  <div class="price" id="priceDisplay">R$ ${money(p.variants[0].discount>0 ? p.variants[0].discount : p.variants[0].price)}</div>
@@ -157,9 +177,9 @@ function createCard(p){
  // Adicionar ao carrinho
  d.querySelector(".add-cart").onclick = ()=>{
    const selected = variantSelect.selectedOptions[0];
-   if(!selected) { alert("Selecione um tamanho"); return; }
-   const name = p.name + " - " + selected.text;
    const qty = Number(qtySelect.value);
+   if(!selected || !qty) { alert("Selecione tamanho e quantidade!"); return; }
+   const name = p.name + " - " + selected.text;
    const price = Number(selected.dataset.discount || selected.value);
    addToCart(name, price, qty);
  }
@@ -170,8 +190,11 @@ function createCard(p){
 // Carrinho
 function addToCart(name, price, qty){
  const existing = cart.find(i=>i.name===name && i.price===price);
- if(existing) existing.qty += qty;
- else cart.push({name, price, qty});
+ if(existing){
+   existing.qty += qty;
+ } else {
+   cart.push({name, price, qty});
+ }
  updateCart();
 }
 
@@ -209,7 +232,32 @@ function removeItem(i){
 }
 
 function toggleCart(){document.getElementById("cartOverlay").classList.toggle("open")}
-function closeModal(e){if(!e||e.target.id==="imgModal"||e.target.classList.contains("close")) imgModal.classList.remove("open")}
+
+function closeModal(e){
+ if(e && e.target.id!=="imgModal" && !e.target.classList.contains("close"))return;
+ imgModal.classList.remove("open");
+}
+
+function clearCart(){
+ if(confirm("Tem certeza que deseja cancelar o carrinho?")){ cart=[]; updateCart(); }
+}
+
+function sendOrder(){
+ const name = document.getElementById("clientName").value.trim();
+ const phone = document.getElementById("clientPhone").value.trim();
+ const email = document.getElementById("clientEmail").value.trim();
+ if(!name || !phone){ alert("Nome e WhatsApp são obrigatórios!"); return; }
+ const total = cart.reduce((a,b)=>a+b.price*b.qty,0);
+ const msg=`Olá, sou ${name}.
+📱 WhatsApp: ${phone}
+✉️ Email: ${email || "Não informado"}
+
+🛍️ Pedido:
+${cart.map(i=>`- ${i.name} (${i.qty}) = R$ ${money(i.price*i.qty)}`).join("\n")}
+Total: R$ ${money(total)}`;
+ window.open(`https://wa.me/${phone.replace(/\D/g,"")}?text=${encodeURIComponent(msg)}`,"_blank");
+ cart=[]; updateCart(); toggleCart();
+}
 
 async function init(){
  const raw = await fetchSheet();
@@ -219,5 +267,6 @@ async function init(){
 }
 init();
 </script>
+
 </body>
 </html>
