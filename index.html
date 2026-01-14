@@ -22,7 +22,7 @@ header{display:flex;justify-content:space-between;align-items:center;padding:16p
 .title{font-weight:600;margin:8px 0}
 .price{margin:6px 0;font-size:16px}
 
-select,button{padding:8px;border:none;border-radius:6px;cursor:pointer;width:100%}
+select,button{padding:8px;border:none;border-radius:6px;cursor:pointer;width:100%;margin-top:4px}
 .add-cart{background:#1d4ed8;color:#fff;margin-top:6px}
 
 .cart-overlay{position:fixed;top:0;right:0;width:100%;max-width:420px;height:100%;background:#fff;transform:translateX(100%);transition:.3s;z-index:2000;padding:20px;overflow:auto}
@@ -137,7 +137,6 @@ function createCard(p){
  <label>Qtd</label>
  <select class="qty">
    <option disabled selected>Selecionar quantidade</option>
-   ${[...Array(p.variants[0].stock)].map((_,i)=>`<option>${i+1}</option>`).join("")}
  </select>
 
  <button class="add-cart">Adicionar</button>
@@ -164,7 +163,7 @@ function createCard(p){
  const variantSelect = d.querySelector(".variant");
  const qtySelect = d.querySelector(".qty");
 
- // Atualizar preço ao selecionar tamanho
+ // Atualizar preço e quantidade ao selecionar tamanho
  variantSelect.onchange = ()=>{
    const selected = variantSelect.selectedOptions[0];
    const discount = Number(selected.dataset.discount || 0);
@@ -172,16 +171,22 @@ function createCard(p){
    const finalPrice = discount>0 ? discount : price;
    priceDisplay.innerHTML = discount>0 ? `<span style="text-decoration:line-through;color:#999">R$ ${money(price)}</span><br><span style="color:#dc2626;font-size:20px">R$ ${money(discount)}</span>` : `R$ ${money(price)}`;
 
-   // Atualizar quantidade disponível
+   // Preencher quantidade de acordo com estoque
    const stock = Number(selected.dataset.stock || 1);
-   qtySelect.innerHTML = [...Array(stock)].map((_,i)=>`<option>${i+1}</option>`).join("");
+   qtySelect.innerHTML = '<option disabled selected>Selecionar quantidade</option>';
+   for(let i=1;i<=stock;i++){
+     const option = document.createElement("option");
+     option.value=i;
+     option.textContent=i;
+     qtySelect.appendChild(option);
+   }
  }
 
  // Adicionar ao carrinho
  d.querySelector(".add-cart").onclick = ()=>{
    const selected = variantSelect.selectedOptions[0];
    const qty = Number(qtySelect.value);
-   if(!selected || qty === 0) { alert("Selecione tamanho e quantidade!"); return; } // Validação
+   if(!selected || qty === 0 || isNaN(qty)) { alert("Selecione tamanho e quantidade!"); return; }
    const name = p.name + " - " + selected.text;
    const price = Number(selected.dataset.discount || selected.value);
    addToCart(name, price, qty);
