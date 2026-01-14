@@ -88,38 +88,44 @@ let products=[],cart=[],currentImages=[],currentIndex=0;
 
 function money(v){return Number(v).toFixed(2).replace('.',',')}
 
+// ===== FETCH PLANILHA =====
 async function fetchSheet(){
   const r=await fetch(SHEET_URL)
   const t=await r.text()
-  const j=JSON.parse(t.substring(t.indexOf("{"),t.lastIndexOf("}")+1))
-  const cols=j.table.cols.map(c=>c.label.toLowerCase())
+  const jsonText = t.replace(/^.*setResponse\(|\);$/g, "") // remove função do Google
+  const j=JSON.parse(jsonText)
+  const cols = j.table.cols.map(c => c.label.toLowerCase())
   return j.table.rows.map(row=>{
     const o={}
-    row.c.forEach((c,i)=>o[cols[i]]=c?c.v:"")
+    row.c.forEach((c,i)=>o[cols[i]] = c ? c.v : "")
     return o
   })
 }
 
+// ===== AGRUPA VARIANTES =====
 function groupProducts(data){
   const g={}
   data.forEach(p=>{
-    if(String(p.availability).toLowerCase()!=="show")return
+    if(String(p.availability).toLowerCase()!=="show") return
     const name=p.name
     if(!g[name]) g[name]={name,variants:[],images:[]}
     g[name].variants.push({
       name:p["variant name"]||"Único",
-      price:Number(p.price),
+      price:Number(p.price)||0,
       discount:Number(p["discounted price"]||0),
       stock:Number(p.stock||1)
     })
     [p.thumbnail,p.image1,p.image2,p.image3].forEach(i=>{
       if(i && !g[name].images.includes(i)) g[name].images.push(i)
     })
+    if(!g[name].images.length) g[name].images=["https://via.placeholder.com/220"]
   })
   return Object.values(g)
 }
 
+// ===== CRIA CARTÃO =====
 function createCard(p){
+  if(!p.variants || !p.variants.length) return null
   const imgsHtml = p.images.map((s,i)=>`<img src="${s}" class="${i==0?'active':''}">`).join("")
   const d=document.createElement("div")
   d.className="card"
@@ -143,6 +149,7 @@ function createCard(p){
     <select class="qty"><option value="">Selecionar quantidade</option></select>
     <button class="add-cart">Adicionar</button>
   `
+  
   const variantSel=d.querySelector(".variant")
   const qtySel=d.querySelector(".qty")
   const priceEl=d.querySelector(".price")
@@ -171,20 +178,23 @@ function createCard(p){
   
   // Auto-slide imagens
   const imgsEl=d.querySelectorAll(".thumb-container img")
-  let idx=0
-  let interval=setInterval(()=>{
-    imgsEl[idx].classList.remove("active")
-    idx=(idx+1)%imgsEl.length
-    imgsEl[idx].classList.add("active")
-  },3000)
-  const thumbContainer=d.querySelector(".thumb-container")
-  thumbContainer.addEventListener("mouseenter",()=>clearInterval(interval))
-  thumbContainer.addEventListener("mouseleave",()=>{interval=setInterval(()=>{imgsEl[idx].classList.remove("active"); idx=(idx+1)%imgsEl.length; imgsEl[idx].classList.add("active");},3000)})
-  thumbContainer.onclick=()=>openImageModal(p.images)
+  if(imgsEl.length>1){
+    let idx=0
+    let interval=setInterval(()=>{
+      imgsEl[idx].classList.remove("active")
+      idx=(idx+1)%imgsEl.length
+      imgsEl[idx].classList.add("active")
+    },3000)
+    const thumbContainer=d.querySelector(".thumb-container")
+    thumbContainer.addEventListener("mouseenter",()=>clearInterval(interval))
+    thumbContainer.addEventListener("mouseleave",()=>{interval=setInterval(()=>{imgsEl[idx].classList.remove("active"); idx=(idx+1)%imgsEl.length; imgsEl[idx].classList.add("active");},3000)})
+  }
+  d.querySelector(".thumb-container").onclick=()=>openImageModal(p.images)
   
   return d
 }
 
+// ===== ATUALIZA CARRINHO =====
 function updateCart(){
   const c=document.getElementById("cartItems")
   c.innerHTML=""
@@ -204,18 +214,12 @@ function updateCart(){
   document.getElementById("cartTotal").textContent=money(total)
   document.getElementById("cartCount").textContent=cart.length
 }
-
-function changeQty(i,d){
-  cart[i].qty=Math.max(1,cart[i].qty+d)
-  updateCart()
-}
-function removeItem(i){cart.splice(i,1);updateCart()}
+function changeQty(i,d){cart[i].qty=Math.max(1,cart[i].qty+d); updateCart()}
+function removeItem(i){cart.splice(i,1); updateCart()}
 function toggleCart(){document.getElementById("cartOverlay").classList.toggle("open")}
+function clearCart(){ if(confirm("Deseja cancelar o carrinho?")){ cart=[]; updateCart() }}
 
-function clearCart(){
- if(confirm("Deseja cancelar o carrinho?")){ cart=[]; updateCart() }
-}
-
+// ===== ENVIA PEDIDO =====
 function sendOrder(){
  const name=document.getElementById("clientName").value.trim()
  const phone=document.getElementById("clientPhone").value.trim()
@@ -230,20 +234,20 @@ function sendOrder(){
  updateCart()
 }
 
-function openImageModal(imgs){
-  currentImages=imgs
-  currentIndex=0
-  document.getElementById("modalImg").src=currentImages[0]
-  document.getElementById("imgModal").classList.add("open")
-}
+// ===== MODAL DE IMAGEM =====
+function openImageModal(imgs){currentImages=imgs; currentIndex=0; document.getElementById("modalImg").src=currentImages[0]; document.getElementById("imgModal").classList.add("open")}
 function closeImageModal(e){if(!e||e.target.id==="imgModal")document.getElementById("imgModal").classList.remove("open")}
 
+// ===== INICIALIZA =====
 async function init(){
   const raw=await fetchSheet()
   products=groupProducts(raw)
   const catalog=document.getElementById("catalog")
   catalog.innerHTML=""
-  products.forEach(p=>catalog.appendChild(createCard(p)))
+  products.forEach(p=>{
+    const card=createCard(p)
+    if(card) catalog.appendChild(card)
+  })
 }
 init()
 </script>
