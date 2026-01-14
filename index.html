@@ -50,13 +50,13 @@ button.add-cart:hover { background: #2563eb; }
 .cart-actions button:last-child { background: #10b981; color: #fff; }
 
 /* ---------- MODAL DE IMAGEM ---------- */
-.image-modal { display: none; position: fixed; z-index: 3000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); justify-content: center; align-items: center; }
+.image-modal { display: none; position: fixed; z-index: 3000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); justify-content: center; align-items: center; flex-direction: column; }
 .image-modal.open { display: flex; }
-.image-modal img { max-width: 90%; max-height: 80%; border-radius: 10px; box-shadow: 0 0 20px rgba(255,255,255,0.3); }
+.image-modal img { max-width: 90%; max-height: 80%; border-radius: 10px; box-shadow: 0 0 20px rgba(255,255,255,0.3); margin-bottom: 20px; }
 .image-modal .close { position: absolute; top: 20px; right: 20px; background: rgba(0,0,0,0.6); color: #fff; border: none; font-size: 24px; border-radius: 50%; width: 40px; height: 40px; cursor: pointer; }
-.image-modal .nav-btn { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.5); border: none; color: #fff; font-size: 28px; padding: 10px 16px; border-radius: 50%; cursor: pointer; }
-.image-modal .prev { left: 30px; }
-.image-modal .next { right: 30px; }
+.image-modal .nav-container { display: flex; justify-content: center; gap: 20px; }
+.image-modal .nav-btn { background: rgba(255,255,255,0.2); border: none; color: #fff; font-size: 24px; padding: 8px 16px; border-radius: 8px; cursor: pointer; transition: background .3s; }
+.image-modal .nav-btn:hover { background: rgba(255,255,255,0.4); }
 
 /* ---------- RESPONSIVIDADE ---------- */
 @media (max-width: 768px) {
@@ -116,9 +116,11 @@ button.add-cart:hover { background: #2563eb; }
 <!-- Modal de imagem -->
 <div id="imgModal" class="image-modal" onclick="closeImageModal(event)">
   <button class="close" onclick="closeImageModal()">✖</button>
-  <button class="nav-btn prev" onclick="changeImage(-1)">⬅</button>
   <img id="modalImg" src="">
-  <button class="nav-btn next" onclick="changeImage(1)">➡</button>
+  <div class="nav-container">
+    <button class="nav-btn" onclick="changeImage(-1)">⬅ Anterior</button>
+    <button class="nav-btn" onclick="changeImage(1)">Próxima ➡</button>
+  </div>
 </div>
 
 <script>
@@ -156,7 +158,6 @@ function groupProducts(data){
   return Object.values(grouped);
 }
 
-/* ---------- CRIA CARD COM CARROSSEL E MODAL ---------- */
 function createCard(p){
   if(!p.variants.length)return null;
   const d=document.createElement("div");
@@ -193,7 +194,6 @@ function createCard(p){
     updateCart();
   };
 
-  // Carrossel automático
   const imgsEl = d.querySelectorAll(".thumb-container img");
   const thumbContainer = d.querySelector(".thumb-container");
   if (imgsEl.length > 1) {
@@ -212,14 +212,10 @@ function createCard(p){
       },3000);
     });
   }
-
-  // Clique para abrir modal com todas as imagens
   thumbContainer.onclick = ()=>openImageModal(imgs);
-
   return d;
 }
 
-/* ---------- MODAL ---------- */
 function openImageModal(imgs){
   currentImages = imgs;
   currentIndex = 0;
@@ -227,16 +223,15 @@ function openImageModal(imgs){
   document.getElementById("imgModal").classList.add("open");
 }
 function changeImage(step){
-  if(!currentImages.length) return;
-  currentIndex = (currentIndex + step + currentImages.length) % currentImages.length;
-  document.getElementById("modalImg").src = currentImages[currentIndex];
+  if(!currentImages.length)return;
+  currentIndex=(currentIndex+step+currentImages.length)%currentImages.length;
+  document.getElementById("modalImg").src=currentImages[currentIndex];
 }
 function closeImageModal(e){
-  if(e && e.target.id!=="imgModal" && !e.target.classList.contains("close")) return;
+  if(e && e.target.id!=="imgModal" && !e.target.classList.contains("close"))return;
   document.getElementById("imgModal").classList.remove("open");
 }
 
-/* ---------- CARRINHO ---------- */
 function updateCart(){
   const c=document.getElementById("cartItems");
   c.innerHTML="";
@@ -268,7 +263,6 @@ async function init(){
   products.forEach(p=>{const card=createCard(p);if(card)grid.appendChild(card);});
 }
 
-/* ---------- ENVIO WHATSAPP ---------- */
 function sendOrder(){
   if(cart.length===0){ alert("Seu carrinho está vazio!"); return; }
   const name=document.getElementById("clientName").value.trim();
