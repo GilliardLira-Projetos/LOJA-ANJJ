@@ -305,7 +305,7 @@ function sendOrder(){
   phone = "55"+phone;
 
   const total=cart.reduce((a,b)=>a+b.price*b.qty,0);
-  const msg=`Olá, sou ${name}.
+  const msg=`Olá, sou ${name} , Fiz meu pedido pelo site.'
 📱 WhatsApp: ${phone}
 ✉️ Email: ${email||"Não informado"}
 
@@ -321,3 +321,4 @@ init();
 </script>
 </body>
 </html>
+
