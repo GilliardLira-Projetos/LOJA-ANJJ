@@ -13,14 +13,12 @@
         .logo { font-weight: 700; font-size: 14px; text-transform: uppercase; }
         .cart-icon { cursor: pointer; font-weight: 600; background: var(--green); color: white; padding: 5px 12px; border-radius: 20px; font-size: 12px; }
 
-        /* FILTRO DE GRUPOS (CATEGORIAS) */
         .category-nav { display: flex; gap: 10px; padding: 15px; overflow-x: auto; border-bottom: 1px solid #eee; background: #fff; scrollbar-width: none; position: sticky; top: 55px; z-index: 999; }
-        .category-nav::-webkit-scrollbar { display: none; }
-        .cat-link { border: 1px solid #eee; padding: 8px 18px; border-radius: 25px; font-size: 12px; cursor: pointer; color: #666; white-space: nowrap; transition: 0.3s; background: #f8f9fa; }
-        .cat-link.active { background: var(--green); color: #fff; border-color: var(--green); font-weight: 600; }
+        .cat-link { border: 1px solid #eee; padding: 8px 18px; border-radius: 25px; font-size: 12px; cursor: pointer; color: #666; white-space: nowrap; background: #f8f9fa; }
+        .cat-link.active { background: var(--green); color: #fff; border-color: var(--green); }
 
         .category-section { padding: 20px 0; border-bottom: 8px solid #f9fafb; }
-        .category-title { text-align: center; text-transform: uppercase; font-size: 16px; margin-bottom: 25px; font-weight: 700; color: #111; letter-spacing: 1px; }
+        .category-title { text-align: center; text-transform: uppercase; font-size: 16px; margin-bottom: 25px; font-weight: 700; }
         
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 25px; padding: 0 15px; }
         .card { border: 1px solid #eee; border-radius: 12px; padding: 15px; background: #fff; position: relative; }
@@ -29,29 +27,23 @@
         .carousel img { width: 100%; height: 100%; object-fit: cover; position: absolute; opacity: 0; transition: opacity 0.5s ease; }
         .carousel img.active { opacity: 1; }
 
-        /* PREÇO + CORES */
         .price-row { display: flex; justify-content: space-between; align-items: center; margin-top: 15px; }
         .current-price { font-size: 18px; font-weight: 700; color: #000; }
         .color-dots { display: flex; gap: 6px; }
         .color-dot { width: 22px; height: 22px; border-radius: 50%; border: 2px solid #eee; cursor: pointer; transition: 0.2s; }
-        .color-dot.selected { border-color: #000; transform: scale(1.1); box-shadow: 0 0 4px rgba(0,0,0,0.2); }
-        .color-dot.disabled { opacity: 0.15; cursor: not-allowed; pointer-events: none; }
+        .color-dot.selected { border-color: #000; transform: scale(1.15); box-shadow: 0 0 4px rgba(0,0,0,0.3); }
+        .color-dot.disabled { opacity: 0.1; cursor: not-allowed; pointer-events: none; }
 
         .product-name { font-size: 13px; font-weight: 600; margin: 10px 0 5px; text-transform: uppercase; }
-
-        /* TAMANHOS */
-        .size-label { font-size: 10px; font-weight: 700; color: #999; text-transform: uppercase; margin-top: 10px; display: block; }
         .variant-grid { display: flex; flex-wrap: wrap; gap: 8px; margin: 6px 0 15px; }
-        .variant-chip { border: 1px solid #ddd; padding: 6px 12px; border-radius: 4px; font-size: 11px; cursor: pointer; min-width: 35px; text-align: center; }
+        .variant-chip { border: 1px solid #ddd; padding: 6px 12px; border-radius: 4px; font-size: 11px; cursor: pointer; min-width: 35px; text-align: center; transition: 0.2s; }
         .variant-chip.selected { border-color: #000; background: #000; color: #fff; }
-        .variant-chip.disabled { opacity: 0.15; cursor: not-allowed; pointer-events: none; text-decoration: line-through; }
+        .variant-chip.disabled { opacity: 0.1; cursor: not-allowed; pointer-events: none; text-decoration: line-through; }
 
-        /* QTD E BOTÃO */
         .qty-selector { display: flex; align-items: center; gap: 12px; margin: 15px 0; }
         .qty-btn { border: 1px solid #ddd; background: #fff; width: 32px; height: 32px; border-radius: 4px; cursor: pointer; font-weight: 700; }
         .btn-add { background: var(--green); color: #fff; border: none; padding: 12px; border-radius: 8px; font-weight: 700; width: 100%; cursor: pointer; font-size: 14px; }
 
-        /* CARRINHO */
         .cart-overlay { position: fixed; top: 0; right: 0; width: 100%; max-width: 450px; height: 100%; background: #fff; z-index: 2000; transform: translateX(100%); transition: 0.3s; padding: 25px; box-sizing: border-box; overflow-y: auto; box-shadow: -10px 0 30px rgba(0,0,0,0.1); }
         .cart-overlay.open { transform: translateX(0); }
         .cart-item { display: flex; align-items: center; gap: 15px; padding: 15px 0; border-bottom: 1px solid #f0f0f0; }
@@ -73,13 +65,13 @@
 
 <div class="cart-overlay" id="cartOverlay">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-        <h3 style="margin:0">🛒 Meu Pedido</h3>
+        <h3>🛍️ Meu Carrinho</h3>
         <span onclick="toggleCart()" style="cursor:pointer; font-size:24px;">✕</span>
     </div>
     <div id="cartItems"></div>
-    <div style="margin: 20px 0; font-weight: 700; font-size: 18px; border-top: 1px solid #eee; padding-top: 15px;" id="totalFinal">Total: R$ 0,00</div>
-    <input type="text" id="custName" placeholder="Seu Nome Completo" style="width:100%; padding:12px; margin-bottom:10px; border:1px solid #ddd; border-radius:8px; font-family:inherit;">
-    <button class="btn-add" style="height:50px" onclick="finalizeOrder()">FINALIZAR NO WHATSAPP</button>
+    <div style="margin: 20px 0; font-weight: 700; font-size: 18px; border-top: 2px solid #eee; padding-top: 15px;" id="totalFinal">Total: R$ 0,00</div>
+    <input type="text" id="custName" placeholder="Seu Nome Completo" style="width:100%; padding:12px; margin-bottom:10px; border:1px solid #ddd; border-radius:8px;">
+    <button class="btn-add" style="height:50px" onclick="finalizeOrder()">FINALIZAR PEDIDO</button>
 </div>
 
 <script>
@@ -90,32 +82,30 @@ let cart = [];
 const colorMap = { 'preto': '#000', 'branco': '#fff', 'vermelho': '#f00', 'azul': '#00f', 'verde': '#080', 'amarelo': '#ff0', 'rosa': '#ff69b4', 'cinza': '#808080', 'bege': '#f5f5dc' };
 
 async function init() {
-    try {
-        const r = await fetch(SHEET_URL);
-        const t = await r.text();
-        const j = JSON.parse(t.substring(t.indexOf("{"), t.lastIndexOf("}") + 1));
-        const cols = j.table.cols.map(c => c.label.trim());
-        const rows = j.table.rows.map(row => {
-            const o = {}; row.c.forEach((c, i) => { o[cols[i]] = c ? (c.v ?? c.f ?? "") : ""; });
-            return o;
-        });
+    const r = await fetch(SHEET_URL);
+    const t = await r.text();
+    const j = JSON.parse(t.substring(t.indexOf("{"), t.lastIndexOf("}") + 1));
+    const cols = j.table.cols.map(c => c.label.trim());
+    const rows = j.table.rows.map(row => {
+        const o = {}; row.c.forEach((c, i) => { o[cols[i]] = c ? (c.v ?? c.f ?? "") : ""; });
+        return o;
+    });
 
-        const grouped = {};
-        rows.forEach(p => {
-            if (String(p.Availability).toLowerCase() !== "show") return;
-            if (!grouped[p.Name]) {
-                grouped[p.Name] = { name: p.Name, category: p.Category, images: [p.Thumbnail, p.Image1, p.Image2, p.Image3].filter(i => i), skus: [] };
-            }
-            grouped[p.Name].skus.push({
-                color: p["Tag"].trim(),
-                size: p["Variant Name"].toString().trim(),
-                price: parseFloat(p["Discounted Price"] || p.Price),
-                stock: parseInt(p.Stock || 0)
-            });
+    const grouped = {};
+    rows.forEach(p => {
+        if (String(p.Availability).toLowerCase() !== "show") return;
+        if (!grouped[p.Name]) {
+            grouped[p.Name] = { name: p.Name, category: p.Category, images: [p.Thumbnail, p.Image1, p.Image2, p.Image3].filter(i => i), skus: [] };
+        }
+        grouped[p.Name].skus.push({
+            color: p["Tag"].trim(),
+            size: p["Variant Name"].toString().trim(),
+            price: parseFloat(p["Discounted Price"] || p.Price),
+            stock: parseInt(p.Stock || 0)
         });
-        productsData = Object.values(grouped);
-        renderAll();
-    } catch(e) { console.error("Erro ao carregar dados"); }
+    });
+    productsData = Object.values(grouped);
+    renderAll();
 }
 
 function renderAll() {
@@ -124,26 +114,20 @@ function renderAll() {
     const categories = [...new Set(productsData.map(p => p.category))];
 
     categories.forEach(cat => {
-        // Criar Botão do Filtro
         const btn = document.createElement("div");
-        btn.className = "cat-link";
-        btn.innerText = cat;
+        btn.className = "cat-link"; btn.innerText = cat;
         btn.onclick = (e) => filterCat(cat, e.target);
         nav.appendChild(btn);
 
-        // Criar Seção no Catálogo
         const section = document.createElement("section");
-        section.className = "category-section";
-        section.id = `sec-${cat.replace(/\s+/g,'')}`;
+        section.className = "category-section"; section.id = `sec-${cat.replace(/\s+/g,'')}`;
         section.innerHTML = `<h2 class="category-title">${cat}</h2><div class="grid" id="grid-${cat.replace(/\s+/g,'')}"></div>`;
         catalog.appendChild(section);
         
-        // Adicionar Cards na Grade
         productsData.filter(p => p.category === cat).forEach(p => {
             document.getElementById(`grid-${cat.replace(/\s+/g,'')}`).appendChild(createCard(p));
         });
     });
-    setInterval(() => { document.querySelectorAll('.carousel').forEach(c => manualNext(c)); }, 4000);
 }
 
 function createCard(p) {
@@ -161,7 +145,6 @@ function createCard(p) {
             <div class="color-dots">${colors.map(c => `<div class="color-dot" style="background:${colorMap[c.toLowerCase()] || c}" data-color="${c}" onclick="syncVariant('${id}', 'color', '${c}')"></div>`).join("")}</div>
         </div>
         <div class="product-name">${p.name}</div>
-        <span class="size-label">Tamanho</span>
         <div class="variant-grid">${sizes.map(s => `<div class="variant-chip" data-size="${s}" onclick="syncVariant('${id}', 'size', '${s}')">${s}</div>`).join("")}</div>
         <div class="qty-selector">
             <button class="qty-btn" onclick="changeQty(this, -1)">-</button>
@@ -173,42 +156,40 @@ function createCard(p) {
     return d;
 }
 
-function filterCat(cat, el) {
-    document.querySelectorAll('.cat-link').forEach(l => l.classList.remove('active'));
-    el.classList.add('active');
-    document.querySelectorAll('.category-section').forEach(sec => {
-        sec.style.display = (cat === 'all' || sec.id === `sec-${cat.replace(/\s+/g,'')}`) ? 'block' : 'none';
-    });
-}
-
 function syncVariant(id, type, val) {
     const card = document.getElementById(`card-${id}`);
     const product = productsData.find(p => p.name.replace(/\s+/g, '') === id);
+    const clickedEl = card.querySelector(`[data-${type}="${val}"]`);
     
-    card.querySelectorAll(type === 'color' ? '.color-dot' : '.variant-chip').forEach(el => {
-        el.classList.remove('selected');
-        if(el.dataset[type] === val) el.classList.add('selected');
-    });
+    // Se clicar no que já está selecionado, ele DESMARCA (volta ao normal)
+    const isAlreadySelected = clickedEl.classList.contains('selected');
+    
+    card.querySelectorAll(type === 'color' ? '.color-dot' : '.variant-chip').forEach(el => el.classList.remove('selected'));
+    
+    if (!isAlreadySelected) {
+        clickedEl.classList.add('selected');
+    }
 
     const sCol = card.querySelector('.color-dot.selected')?.dataset.color;
     const sSize = card.querySelector('.variant-chip.selected')?.dataset.size;
 
+    // Atualiza visual dos Tamanhos
     card.querySelectorAll('.variant-chip').forEach(chip => {
-        const sku = product.skus.find(s => s.size === chip.dataset.size && (sCol ? s.color === sCol : true));
-        chip.classList.toggle('disabled', !sku || sku.stock <= 0);
+        const hasOpt = product.skus.some(s => s.size === chip.dataset.size && (!sCol || s.color === sCol) && s.stock > 0);
+        chip.classList.toggle('disabled', !hasOpt);
     });
 
+    // Atualiza visual das Cores
     card.querySelectorAll('.color-dot').forEach(dot => {
-        const sku = product.skus.find(s => s.color === dot.dataset.color && (sSize ? s.size === sSize : true));
-        dot.classList.toggle('disabled', !sku || sku.stock <= 0);
+        const hasOpt = product.skus.some(s => s.color === dot.dataset.color && (!sSize || s.size === sSize) && s.stock > 0);
+        dot.classList.toggle('disabled', !hasOpt);
     });
 
-    if(sCol && sSize) {
-        const sku = product.skus.find(s => s.color === sCol && s.size === sSize);
-        if(sku) {
-            card.querySelector('.current-price').innerText = `R$ ${sku.price.toFixed(2).replace('.',',')}`;
-            card.querySelector('.stk-n').innerText = sku.stock;
-        }
+    // Atualiza Preço e Estoque
+    const sku = product.skus.find(s => (!sCol || s.color === sCol) && (!sSize || s.size === sSize));
+    if (sku) {
+        card.querySelector('.current-price').innerText = `R$ ${sku.price.toFixed(2).replace('.',',')}`;
+        card.querySelector('.stk-n').innerText = (sCol && sSize) ? sku.stock : "-";
     }
 }
 
@@ -246,13 +227,17 @@ function updateCartUI() {
 }
 
 function toggleCart() { document.getElementById('cartOverlay').classList.toggle('open'); }
-function manualNext(car) { let act = car.querySelector('img.active'), nxt = act.nextElementSibling || car.querySelector('img'); if(act) act.classList.remove('active'); if(nxt) nxt.classList.add('active'); }
+function filterCat(cat, el) {
+    document.querySelectorAll('.cat-link').forEach(l => l.classList.remove('active')); el.classList.add('active');
+    document.querySelectorAll('.category-section').forEach(sec => sec.style.display = (cat === 'all' || sec.id === `sec-${cat.replace(/\s+/g,'')}`) ? 'block' : 'none');
+}
+function manualNext(car) { let act = car.querySelector('img.active'), nxt = act.nextElementSibling || car.querySelector('img'); act.classList.remove('active'); nxt.classList.add('active'); }
 
 function finalizeOrder() {
     const name = document.getElementById('custName').value;
     if(!cart.length || !name) return alert("Preencha seu nome e adicione itens!");
     const msg = `*PEDIDO LOJA ANJJ*\n*Cliente:* ${name}\n\n*Produtos:*\n${cart.map(i => `- ${i.qty}x ${i.name} (${i.color}/${i.size})`).join('\n')}\n\n*TOTAL: ${document.getElementById('totalFinal').innerText}*`;
-    window.open(`https://wa.me/55SEUNUMERO?text=${encodeURIComponent(msg)}`);
+    window.open(`https://wa.me/5581999998888?text=${encodeURIComponent(msg)}`);
 }
 
 init();
