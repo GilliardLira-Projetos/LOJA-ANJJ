@@ -23,9 +23,9 @@ nav a { color: #fff; text-decoration: none; margin: 0 8px; font-weight: 500; }
 
 /* ---------- CATÁLOGO ---------- */
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px; padding: 0 20px 32px; }
-.card { background: #fff; border-radius: 12px; padding: 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.12); display: flex; flex-direction: column; transition: transform .3s, box-shadow .3s; position: relative; overflow: hidden; }
+.card { background: #fff; border-radius: 12px; padding: 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.12); display: flex; flex-direction: column; transition: transform .3s, box-shadow .3s; overflow: hidden; position: relative; }
 .card:hover { transform: translateY(-6px); box-shadow: 0 12px 28px rgba(0,0,0,0.2); }
-.thumb-container { width: 100%; height: 220px; border-radius: 10px; background: #eee; margin-bottom: 8px; overflow: hidden; position: relative; }
+.thumb-container { width: 100%; height: 220px; border-radius: 10px; background: #eee; margin-bottom: 8px; overflow: hidden; position: relative; cursor: pointer; }
 .thumb-container img { width: 100%; height: 100%; object-fit: cover; border-radius: 10px; position: absolute; top: 0; left: 0; opacity: 0; transition: opacity 0.6s ease; }
 .thumb-container img.active { opacity: 1; }
 .title { font-weight: bold; margin: 8px 0; font-size: 16px; }
@@ -49,14 +49,32 @@ button.add-cart:hover { background: #2563eb; }
 .cart-actions button:first-child { background: #ef4444; color: #fff; }
 .cart-actions button:last-child { background: #10b981; color: #fff; }
 
+/* ---------- MODAL DE IMAGEM ---------- */
+.image-modal {
+  display: none; position: fixed; z-index: 3000;
+  left: 0; top: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.8);
+  justify-content: center; align-items: center;
+}
+.image-modal.open { display: flex; }
+.image-modal img {
+  max-width: 90%; max-height: 80%;
+  border-radius: 10px; box-shadow: 0 0 20px rgba(255,255,255,0.3);
+}
+.image-modal .close {
+  position: absolute; top: 20px; right: 20px;
+  background: rgba(0,0,0,0.6); color: #fff;
+  border: none; font-size: 24px; border-radius: 50%;
+  width: 40px; height: 40px; cursor: pointer;
+}
+
 /* ---------- RESPONSIVIDADE ---------- */
 @media (max-width: 768px) {
-header { flex-direction: column; text-align: center; gap: 10px; }
-.banner { height: 200px; }
-.banner-text h1 { font-size: 1.5em; }
-.grid { padding: 0 10px; gap: 15px; }
-.cart-overlay { max-width: 100%; }
-.cart-actions button { font-size: 16px; }
+  header { flex-direction: column; text-align: center; gap: 10px; }
+  .banner { height: 200px; }
+  .banner-text h1 { font-size: 1.5em; }
+  .grid { padding: 0 10px; gap: 15px; }
+  .cart-overlay { max-width: 100%; }
 }
 </style>
 </head>
@@ -105,6 +123,12 @@ header { flex-direction: column; text-align: center; gap: 10px; }
   </div>
 </div>
 
+<!-- Modal de imagem -->
+<div id="imgModal" class="image-modal" onclick="closeImageModal(event)">
+  <button class="close" onclick="closeImageModal()">✖</button>
+  <img id="modalImg" src="">
+</div>
+
 <script>
 const SHEET_URL = "https://docs.google.com/spreadsheets/d/1BqVAf9A7l7KHKcwpV9HrqBMPWTA4s-aPv1EEna7xuHg/gviz/tq?tqx=out:json&sheet=Products";
 let products=[],cart=[];
@@ -140,7 +164,7 @@ function groupProducts(data){
   return Object.values(grouped);
 }
 
-/* ---------- CARDS COM CARROSSEL ---------- */
+/* ---------- CRIA CARD COM CARROSSEL + CLIQUE ---------- */
 function createCard(p){
   if(!p.variants.length)return null;
   const d=document.createElement("div");
@@ -160,7 +184,7 @@ function createCard(p){
     <select class="qty"><option>1</option></select>
     <button class="add-cart">Adicionar ao Carrinho</button>
   `;
-  
+
   const variantSel=d.querySelector(".variant"),qtySel=d.querySelector(".qty"),priceEl=d.querySelector(".price");
   variantSel.onchange=e=>{
     const sel=e.target.selectedOptions[0];
@@ -177,8 +201,9 @@ function createCard(p){
     updateCart();
   };
 
-  // Carrossel automático
+  // Carrossel automático + clique para ampliar
   const imgsEl = d.querySelectorAll(".thumb-container img");
+  const thumbContainer = d.querySelector(".thumb-container");
   if (imgsEl.length > 1) {
     let idx = 0;
     let interval = setInterval(()=>{
@@ -186,8 +211,8 @@ function createCard(p){
       idx = (idx + 1) % imgsEl.length;
       imgsEl[idx].classList.add("active");
     }, 3000);
-    d.querySelector(".thumb-container").addEventListener("mouseenter",()=>clearInterval(interval));
-    d.querySelector(".thumb-container").addEventListener("mouseleave",()=>{
+    thumbContainer.addEventListener("mouseenter",()=>clearInterval(interval));
+    thumbContainer.addEventListener("mouseleave",()=>{
       interval=setInterval(()=>{
         imgsEl[idx].classList.remove("active");
         idx=(idx+1)%imgsEl.length;
@@ -195,8 +220,20 @@ function createCard(p){
       },3000);
     });
   }
-
+  thumbContainer.onclick = ()=>openImageModal(imgsEl[0].src);
   return d;
+}
+
+/* ---------- MODAL DE IMAGEM ---------- */
+function openImageModal(src){
+  const modal=document.getElementById("imgModal");
+  const img=document.getElementById("modalImg");
+  img.src=src;
+  modal.classList.add("open");
+}
+function closeImageModal(e){
+  if(e && e.target.id!=="imgModal" && !e.target.classList.contains("close")) return;
+  document.getElementById("imgModal").classList.remove("open");
 }
 
 /* ---------- CARRINHO ---------- */
@@ -207,15 +244,13 @@ function updateCart(){
   cart.forEach((item,i)=>{
     const div=document.createElement("div");
     div.className="cart-item";
-    div.innerHTML=`
-      ${item.name} (${item.variant}) x${item.qty} - R$ ${money(item.price*item.qty)}
+    div.innerHTML=`${item.name} (${item.variant}) x${item.qty} - R$ ${money(item.price*item.qty)}
       <div class="buttons">
         <button onclick="changeQty(${i},-1)">➖</button>
         <button onclick="changeQty(${i},1)">➕</button>
         <button class="remove" onclick="removeItem(${i})">🗑️</button>
       </div>`;
-    c.appendChild(div);
-    total+=item.price*item.qty;
+    c.appendChild(div); total+=item.price*item.qty;
   });
   document.getElementById("cartTotal").textContent=money(total);
   document.getElementById("cartCount").textContent=cart.length;
@@ -225,6 +260,7 @@ function removeItem(i){ cart.splice(i,1); updateCart(); }
 function clearCart(){ if(confirm("Tem certeza que deseja cancelar o carrinho?")){ cart=[]; updateCart(); } }
 function toggleCart(){ document.getElementById("cartOverlay").classList.toggle("open"); }
 
+/* ---------- INÍCIO ---------- */
 async function init(){
   const raw=await fetchSheet();
   products=groupProducts(raw);
@@ -233,6 +269,7 @@ async function init(){
   products.forEach(p=>{const card=createCard(p);if(card)grid.appendChild(card);});
 }
 
+/* ---------- ENVIO WHATSAPP ---------- */
 function sendOrder(){
   if(cart.length===0){ alert("Seu carrinho está vazio!"); return; }
   const name=document.getElementById("clientName").value.trim();
