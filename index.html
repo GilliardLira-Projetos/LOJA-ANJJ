@@ -35,12 +35,11 @@ button { cursor: pointer; transition: background .3s; }
 button.add-cart { background: #1d4ed8; color: #fff; border: none; margin-top: 6px; }
 button.add-cart:hover { background: #2563eb; }
 
-/* ---------- Tamanhos clicáveis ---------- */
-.variant-input { width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #ccc; cursor: pointer; box-sizing: border-box; }
-.variant-options { display: none; border: 1px solid #ccc; border-radius: 6px; background: #fafafa; margin-top: 4px; max-height: 150px; overflow-y: auto; position: absolute; z-index: 100; }
-.variant-options div { padding: 8px; cursor: pointer; }
-.variant-options div:hover { background: #e0e0e0; }
-.variant-container { position: relative; }
+/* ---------- BOTÕES DE TAMANHO ---------- */
+.variant-buttons { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.variant-buttons button { flex: 1 1 auto; padding: 6px 10px; border: 1px solid #ccc; border-radius: 6px; background: #fafafa; cursor: pointer; transition: 0.3s; }
+.variant-buttons button.selected { background: #1d4ed8; color: #fff; border-color: #1d4ed8; }
+.variant-buttons button:hover { background: #e0e0e0; }
 
 /* ---------- CARRINHO ---------- */
 .cart-overlay { position: fixed; top: 0; right: 0; width: 100%; max-width: 420px; height: 100%; background: #fff; box-shadow: -4px 0 20px rgba(0,0,0,.2); padding: 20px; transform: translateX(100%); transition: transform .3s; z-index: 2000; overflow-y: auto; }
@@ -147,7 +146,7 @@ function groupProducts(data){
   return Object.values(grouped);
 }
 
-/* ---------- CARDS COM TAMANHOS CLICÁVEIS ---------- */
+/* ---------- CARDS COM BOTÕES DE TAMANHO ---------- */
 function createCard(p){
   if(!p.variants.length)return null;
   const d=document.createElement("div");
@@ -161,12 +160,9 @@ function createCard(p){
     <div class="title">${p.name}</div>
     <div class="price">R$ ${money(p.variants[0].price)}</div>
 
-    <div class="variant-container">
-      <label>Tamanho</label>
-      <input type="text" class="variant-input" readonly placeholder="Clique para selecionar">
-      <div class="variant-options">
-        ${p.variants.map(v=>`<div data-price="${v.price}" data-stock="${v.stock}">${v.name} - R$ ${money(v.price)}</div>`).join("")}
-      </div>
+    <label>Tamanho</label>
+    <div class="variant-buttons">
+      ${p.variants.map(v=>`<button data-price="${v.price}" data-stock="${v.stock}">${v.name}</button>`).join("")}
     </div>
 
     <label>Qtd</label>
@@ -175,38 +171,24 @@ function createCard(p){
   `;
 
   const priceEl=d.querySelector(".price");
-  const variantInput=d.querySelector(".variant-input");
-  const variantOptions=d.querySelector(".variant-options");
   const qtySel=d.querySelector(".qty");
+  const variantButtons=d.querySelectorAll(".variant-buttons button");
+  let selectedVariant=null;
 
-  // Tamanho clicável
-  variantInput.addEventListener("click",()=>{
-    variantOptions.style.display = variantOptions.style.display==="block"?"none":"block";
-  });
-
-  variantOptions.querySelectorAll("div").forEach(opt=>{
-    opt.addEventListener("click",()=>{
-      const price=Number(opt.dataset.price);
-      const stock=Number(opt.dataset.stock||1);
-      variantInput.value=opt.textContent;
-      priceEl.textContent="R$ "+money(price);
-      qtySel.innerHTML=[...Array(stock).keys()].map(i=>`<option>${i+1}</option>`).join("");
-      variantOptions.style.display="none";
+  variantButtons.forEach(btn=>{
+    btn.addEventListener("click",()=>{
+      variantButtons.forEach(b=>b.classList.remove("selected"));
+      btn.classList.add("selected");
+      selectedVariant={name:btn.textContent,price:Number(btn.dataset.price),stock:Number(btn.dataset.stock)};
+      priceEl.textContent="R$ "+money(selectedVariant.price);
+      qtySel.innerHTML=[...Array(selectedVariant.stock).keys()].map(i=>`<option>${i+1}</option>`).join("");
     });
   });
 
-  document.addEventListener("click",e=>{
-    if(!variantInput.contains(e.target) && !variantOptions.contains(e.target)){
-      variantOptions.style.display="none";
-    }
-  });
-
   d.querySelector(".add-cart").onclick=()=>{
-    const vText=variantInput.value;
-    if(!vText){ alert("Selecione um tamanho antes de adicionar."); return; }
-    const price=Number(priceEl.textContent.replace("R$ ","").replace(",",".")) ;
+    if(!selectedVariant){ alert("Selecione um tamanho antes de adicionar."); return; }
     const qty=Number(qtySel.value||1);
-    cart.push({name:p.name,variant:vText,price,qty});
+    cart.push({name:p.name,variant:selectedVariant.name,price:selectedVariant.price,qty});
     updateCart();
   };
 
