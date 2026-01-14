@@ -14,33 +14,37 @@ header{display:flex;justify-content:space-between;align-items:center;padding:16p
 
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:20px;padding:20px}
 .card{background:#fff;border-radius:12px;padding:12px;box-shadow:0 8px 20px rgba(0,0,0,.12);position:relative}
+
 .thumb-container{height:220px;overflow:hidden;border-radius:10px;position:relative;cursor:pointer}
 .thumb-container img{position:absolute;width:100%;height:100%;object-fit:cover;opacity:0;transition:.6s}
 .thumb-container img.active{opacity:1}
 
-.badge-sale{position:absolute;top:12px;left:12px;background:#dc2626;color:#fff;padding:6px 10px;font-size:12px;border-radius:6px;font-weight:600}
-.title{font-weight:600;margin:8px 0}
-.price{margin:6px 0;font-size:16px}
+.badge-sale{
+  position:absolute;top:12px;left:12px;
+  background:#dc2626;color:#fff;
+  padding:6px 10px;font-size:12px;
+  border-radius:6px;font-weight:600
+}
 
-select,button{padding:8px;border:none;border-radius:6px;cursor:pointer;width:100%;margin-top:4px}
-.add-cart{background:#1d4ed8;color:#fff;margin-top:6px}
+.title{font-weight:600;margin:8px 0}
+.price{margin:6px 0}
+
+select,button{padding:8px;border-radius:6px;border:1px solid #ccc;width:100%;box-sizing:border-box}
+button{cursor:pointer}
+.add-cart{background:#1d4ed8;color:#fff;margin-top:6px;border:none}
 
 .cart-overlay{position:fixed;top:0;right:0;width:100%;max-width:420px;height:100%;background:#fff;transform:translateX(100%);transition:.3s;z-index:2000;padding:20px;overflow:auto}
 .cart-overlay.open{transform:translateX(0)}
-.cart-item{border-bottom:1px solid #eee;padding:6px 0;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap}
-.cart-item div{margin:4px 0}
-.cart-item button{border:none;background:none;color:#1d4ed8;font-size:18px;cursor:pointer;margin:0 2px}
-.cart-item button.remove{color:#ef4444;font-size:20px;margin-left:5px}
 
-.image-modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.85);justify-content:center;align-items:center;z-index:3000;flex-direction:column}
+.cart-item{border-bottom:1px solid #eee;padding:6px 0;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap}
+.cart-item div.buttons{display:flex;gap:5px;align-items:center;margin-top:5px}
+
+.image-modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.85);justify-content:center;align-items:center;z-index:3000}
 .image-modal.open{display:flex}
 .image-modal img{max-width:90%;max-height:80%;border-radius:10px}
 .image-modal .close{position:absolute;top:20px;right:20px;font-size:26px;background:#000;color:#fff;border:none;border-radius:50%;width:40px;height:40px}
-
-@media (max-width:768px){.grid{gap:15px;padding:10px}}
 </style>
 </head>
-
 <body>
 
 <header>
@@ -51,225 +55,190 @@ select,button{padding:8px;border:none;border-radius:6px;cursor:pointer;width:100
 <section id="catalog" class="grid"></section>
 
 <div class="cart-overlay" id="cartOverlay">
-  <h3>🛍️ Carrinho</h3>
+  <h3>🛍️ Seu Carrinho</h3>
   <div id="cartItems"></div>
   <p><strong>Total: R$ <span id="cartTotal">0,00</span></strong></p>
-  <hr />
-  <!-- Campos do cliente -->
+  <hr>
   <label>Nome (obrigatório):</label>
-  <input type="text" id="clientName" placeholder="Digite seu nome" required style="width:100%;margin-bottom:8px;">
-  
+  <input type="text" id="clientName" placeholder="Digite seu nome">
   <label>WhatsApp (obrigatório):</label>
-  <input type="text" id="clientPhone" placeholder="Digite seu WhatsApp" required style="width:100%;margin-bottom:8px;">
-  
+  <input type="text" id="clientPhone" placeholder="Digite seu WhatsApp">
   <label>Email (opcional):</label>
-  <input type="email" id="clientEmail" placeholder="Digite seu email (opcional)" style="width:100%;margin-bottom:10px;">
-
-  <div class="cart-actions">
-    <button onclick="clearCart()">🗑️ Cancelar Carrinho</button>
-    <button onclick="sendOrder()">📦 Enviar Pedido</button>
+  <input type="email" id="clientEmail" placeholder="Digite seu email (opcional)">
+  <div style="margin-top:10px;display:flex;gap:10px">
+    <button style="flex:1;background:#ef4444;color:#fff" onclick="clearCart()">🗑️ Cancelar Carrinho</button>
+    <button style="flex:1;background:#10b981;color:#fff" onclick="sendOrder()">📦 Enviar Pedido</button>
   </div>
 </div>
 
-<div id="imgModal" class="image-modal" onclick="closeModal(event)">
-  <button class="close" onclick="closeModal()">✖</button>
+<div id="imgModal" class="image-modal" onclick="closeImageModal(event)">
+  <button class="close" onclick="closeImageModal()">✖</button>
   <img id="modalImg">
 </div>
 
 <script>
 const SHEET_URL="https://docs.google.com/spreadsheets/d/1BqVAf9A7l7KHKcwpV9HrqBMPWTA4s-aPv1EEna7xuHg/gviz/tq?tqx=out:json&sheet=Products";
 
-let cart=[],currentImages=[],currentIndex=0;
+let products=[],cart=[],currentImages=[],currentIndex=0;
 
 function money(v){return Number(v).toFixed(2).replace('.',',')}
 
 async function fetchSheet(){
- const r=await fetch(SHEET_URL);
- const t=await r.text();
- const j=JSON.parse(t.substring(t.indexOf("{"),t.lastIndexOf("}")+1));
- const cols=j.table.cols.map(c=>c.label.toLowerCase());
- return j.table.rows.map(row=>{
-  const o={};
-  row.c.forEach((c,i)=>o[cols[i]]=c?c.v:"");
-  return o;
- })
+  const r=await fetch(SHEET_URL)
+  const t=await r.text()
+  const j=JSON.parse(t.substring(t.indexOf("{"),t.lastIndexOf("}")+1))
+  const cols=j.table.cols.map(c=>c.label.toLowerCase())
+  return j.table.rows.map(row=>{
+    const o={}
+    row.c.forEach((c,i)=>o[cols[i]]=c?c.v:"")
+    return o
+  })
 }
 
 function groupProducts(data){
- const g={};
- data.forEach(p=>{
-  if(String(p.availability).toLowerCase()!=="show")return;
-  if(!g[p.name]) g[p.name]={name:p.name,variants:[],images:[]};
-  g[p.name].variants.push({
-   name:p["variant name"],
-   price:Number(p.price),
-   discount:Number(p["discounted price"]||0),
-   stock:Number(p.stock||1)
-  });
-  [p.thumbnail,p.image1,p.image2,p.image3].forEach(i=>{
-   if(i && !g[p.name].images.includes(i)) g[p.name].images.push(i);
-  });
- });
- return Object.values(g);
+  const g={}
+  data.forEach(p=>{
+    if(String(p.availability).toLowerCase()!=="show")return
+    const name=p.name
+    if(!g[name]) g[name]={name,variants:[],images:[]}
+    g[name].variants.push({
+      name:p["variant name"]||"Único",
+      price:Number(p.price),
+      discount:Number(p["discounted price"]||0),
+      stock:Number(p.stock||1)
+    })
+    [p.thumbnail,p.image1,p.image2,p.image3].forEach(i=>{
+      if(i && !g[name].images.includes(i)) g[name].images.push(i)
+    })
+  })
+  return Object.values(g)
 }
 
 function createCard(p){
- const v=p.variants[0];
- const hasDiscount=v.discount>0;
- const percent=hasDiscount?Math.round((1 - v.discount/v.price)*100):0;
-
- const imgs=p.images.map((s,i)=>`<img src="${s}" class="${i==0?'active':''}">`).join("");
- const d=document.createElement("div");
- d.className="card";
- 
- d.innerHTML=`
- ${hasDiscount?`<div class="badge-sale">PROMO ${percent}%</div>`:""}
- <div class="thumb-container">${imgs}</div>
- <div class="title">${p.name}</div>
- <div class="price" id="priceDisplay">R$ ${money(p.variants[0].discount>0 ? p.variants[0].discount : p.variants[0].price)}</div>
-
- <label>Tamanho</label>
- <select class="variant">
-   <option disabled selected>Selecionar</option>
-   ${p.variants.map(v=>`<option value="${v.price}" data-discount="${v.discount}" data-stock="${v.stock}">${v.name}</option>`).join("")}
- </select>
-
- <label>Qtd</label>
- <select class="qty">
-   <option disabled selected>Selecionar quantidade</option>
- </select>
-
- <button class="add-cart">Adicionar</button>
- `;
-
- // Slider imagens
- let idx=0;
- const imgsEl=d.querySelectorAll(".thumb-container img");
- setInterval(()=>{
-  imgsEl[idx].classList.remove("active");
-  idx=(idx+1)%imgsEl.length;
-  imgsEl[idx].classList.add("active");
- },3000);
-
- // Modal imagem
- d.querySelector(".thumb-container").onclick=()=>{
-  currentImages=p.images;
-  currentIndex=0;
-  modalImg.src=currentImages[0];
-  imgModal.classList.add("open");
- }
-
- const priceDisplay = d.querySelector("#priceDisplay");
- const variantSelect = d.querySelector(".variant");
- const qtySelect = d.querySelector(".qty");
-
- // Atualizar preço e quantidade ao selecionar tamanho
- variantSelect.onchange = ()=>{
-   const selected = variantSelect.selectedOptions[0];
-   const discount = Number(selected.dataset.discount || 0);
-   const price = Number(selected.value);
-   const finalPrice = discount>0 ? discount : price;
-   priceDisplay.innerHTML = discount>0 ? `<span style="text-decoration:line-through;color:#999">R$ ${money(price)}</span><br><span style="color:#dc2626;font-size:20px">R$ ${money(discount)}</span>` : `R$ ${money(price)}`;
-
-   // Preencher quantidade de acordo com estoque
-   const stock = Number(selected.dataset.stock || 1);
-   qtySelect.innerHTML = '<option disabled selected>Selecionar quantidade</option>';
-   for(let i=1;i<=stock;i++){
-     const option = document.createElement("option");
-     option.value=i;
-     option.textContent=i;
-     qtySelect.appendChild(option);
-   }
- }
-
- // Adicionar ao carrinho
- d.querySelector(".add-cart").onclick = ()=>{
-   const selected = variantSelect.selectedOptions[0];
-   const qty = Number(qtySelect.value);
-   if(!selected || qty === 0 || isNaN(qty)) { alert("Selecione tamanho e quantidade!"); return; }
-   const name = p.name + " - " + selected.text;
-   const price = Number(selected.dataset.discount || selected.value);
-   addToCart(name, price, qty);
- }
-
- return d;
-}
-
-// Carrinho
-function addToCart(name, price, qty){
- const existing = cart.find(i=>i.name===name && i.price===price);
- if(existing){
-   existing.qty += qty;
- } else {
-   cart.push({name, price, qty});
- }
- updateCart();
+  const imgsHtml = p.images.map((s,i)=>`<img src="${s}" class="${i==0?'active':''}">`).join("")
+  const d=document.createElement("div")
+  d.className="card"
+  
+  const v0=p.variants[0]
+  const hasDiscount=v0.discount>0
+  const percent=hasDiscount?Math.round(100-(v0.discount/v0.price)*100):0
+  
+  d.innerHTML=`
+    ${hasDiscount?`<div class="badge-sale">PROMO ${percent}%</div>`:""}
+    <div class="thumb-container">${imgsHtml}</div>
+    <div class="title">${p.name}</div>
+    <div class="price">
+      ${hasDiscount?`<span style="text-decoration:line-through;color:#999">R$ ${money(v0.price)}</span><br><span style="color:#dc2626;font-size:20px">R$ ${money(v0.discount)}</span>`:`R$ ${money(v0.price)}`}
+    </div>
+    <label>Tamanho</label>
+    <select class="variant"><option value="">Selecionar tamanho</option>
+      ${p.variants.map(v=>`<option value="${v.price}" data-discount="${v.discount}" data-stock="${v.stock}">${v.name}</option>`).join("")}
+    </select>
+    <label>Qtd</label>
+    <select class="qty"><option value="">Selecionar quantidade</option></select>
+    <button class="add-cart">Adicionar</button>
+  `
+  const variantSel=d.querySelector(".variant")
+  const qtySel=d.querySelector(".qty")
+  const priceEl=d.querySelector(".price")
+  
+  variantSel.onchange=e=>{
+    const sel=e.target.selectedOptions[0]
+    if(!sel.value){ qtySel.innerHTML=`<option value="">Selecionar quantidade</option>`; return;}
+    const stock=Number(sel.dataset.stock||1)
+    const discount=Number(sel.dataset.discount||0)
+    const price=discount>0?discount:Number(sel.value)
+    priceEl.innerHTML=discount>0?`<span style="text-decoration:line-through;color:#999">R$ ${money(sel.value)}</span><br><span style="color:#dc2626;font-size:20px">R$ ${money(discount)}</span>`:`R$ ${money(sel.value)}`
+    qtySel.innerHTML=`<option value="">Selecionar quantidade</option>` + [...Array(stock).keys()].map(i=>`<option value="${i+1}">${i+1}</option>`).join("")
+  }
+  
+  d.querySelector(".add-cart").onclick=()=>{
+    const selVariant=variantSel.value
+    const selQty=Number(qtySel.value)
+    if(!selVariant){ alert("Selecione um tamanho antes de adicionar."); return;}
+    if(!selQty){ alert("Selecione a quantidade antes de adicionar."); return;}
+    const selOption=variantSel.selectedOptions[0]
+    const discount=Number(selOption.dataset.discount||0)
+    const price=discount>0?discount:Number(selOption.value)
+    cart.push({name:p.name,variant:selOption.text,qty:selQty,price})
+    updateCart()
+  }
+  
+  // Auto-slide imagens
+  const imgsEl=d.querySelectorAll(".thumb-container img")
+  let idx=0
+  let interval=setInterval(()=>{
+    imgsEl[idx].classList.remove("active")
+    idx=(idx+1)%imgsEl.length
+    imgsEl[idx].classList.add("active")
+  },3000)
+  const thumbContainer=d.querySelector(".thumb-container")
+  thumbContainer.addEventListener("mouseenter",()=>clearInterval(interval))
+  thumbContainer.addEventListener("mouseleave",()=>{interval=setInterval(()=>{imgsEl[idx].classList.remove("active"); idx=(idx+1)%imgsEl.length; imgsEl[idx].classList.add("active");},3000)})
+  thumbContainer.onclick=()=>openImageModal(p.images)
+  
+  return d
 }
 
 function updateCart(){
- const cartItems=document.getElementById("cartItems");
- const cartTotal=document.getElementById("cartTotal");
- const cartCount=document.getElementById("cartCount");
- cartItems.innerHTML="";
- let total=0;
- cart.forEach((i,index)=>{
-   cartItems.innerHTML+=`
-   <div class="cart-item">
-     <div>${i.name} x${i.qty} - R$ ${money(i.price*i.qty)}</div>
-     <div>
-       <button onclick="changeQty(${index},-1)">➖</button>
-       <button onclick="changeQty(${index},1)">➕</button>
-       <button class="remove" onclick="removeItem(${index})">🗑️</button>
-     </div>
-   </div>
-   `;
-   total += i.price*i.qty;
- });
- cartTotal.textContent = money(total);
- cartCount.textContent = cart.reduce((a,b)=>a+b.qty,0);
+  const c=document.getElementById("cartItems")
+  c.innerHTML=""
+  let total=0
+  cart.forEach((item,i)=>{
+    const div=document.createElement("div")
+    div.className="cart-item"
+    div.innerHTML=`${item.name} - ${item.variant} x${item.qty} - R$ ${money(item.price*item.qty)}
+      <div class="buttons">
+        <button onclick="changeQty(${i},-1)">➖</button>
+        <button onclick="changeQty(${i},1)">➕</button>
+        <button onclick="removeItem(${i})">🗑️</button>
+      </div>`
+    c.appendChild(div)
+    total+=item.price*item.qty
+  })
+  document.getElementById("cartTotal").textContent=money(total)
+  document.getElementById("cartCount").textContent=cart.length
 }
 
 function changeQty(i,d){
- cart[i].qty = Math.max(1,cart[i].qty+d);
- updateCart();
+  cart[i].qty=Math.max(1,cart[i].qty+d)
+  updateCart()
 }
-
-function removeItem(i){
- cart.splice(i,1);
- updateCart();
-}
-
+function removeItem(i){cart.splice(i,1);updateCart()}
+function clearCart(){if(confirm("Deseja cancelar o carrinho?")){cart=[];updateCart()}}
 function toggleCart(){document.getElementById("cartOverlay").classList.toggle("open")}
-function closeModal(e){if(!e||e.target.id==="imgModal"||e.target.classList.contains("close")) imgModal.classList.remove("open")}
-
-function clearCart(){
- if(confirm("Tem certeza que deseja cancelar o carrinho?")){ cart=[]; updateCart(); }
-}
 
 function sendOrder(){
- const name = document.getElementById("clientName").value.trim();
- const phone = document.getElementById("clientPhone").value.trim();
- const email = document.getElementById("clientEmail").value.trim();
- if(!name || !phone){ alert("Nome e WhatsApp são obrigatórios!"); return; }
- const total = cart.reduce((a,b)=>a+b.price*b.qty,0);
- const msg=`Olá, sou ${name}.
-📱 WhatsApp: ${phone}
-✉️ Email: ${email || "Não informado"}
-
-🛍️ Pedido:
-${cart.map(i=>`- ${i.name} (${i.qty}) = R$ ${money(i.price*i.qty)}`).join("\n")}
-Total: R$ ${money(total)}`;
- window.open(`https://wa.me/${phone.replace(/\D/g,"")}?text=${encodeURIComponent(msg)}`,"_blank");
- cart=[]; updateCart(); toggleCart();
+  if(cart.length===0){alert("Carrinho vazio!"); return;}
+  const name=document.getElementById("clientName").value.trim()
+  const phone=document.getElementById("clientPhone").value.trim()
+  const email=document.getElementById("clientEmail").value.trim()
+  if(!name||!phone){alert("Preencha nome e WhatsApp!"); return;}
+  const total=cart.reduce((a,b)=>a+b.price*b.qty,0)
+  let msg=`Olá, sou ${name}.\n📱 WhatsApp: ${phone}\n✉️ Email: ${email||"Não informado"}\n\n🛍️ Pedido:\n`
+  msg+=cart.map(i=>`- ${i.name} (${i.variant}) x${i.qty} = R$ ${money(i.price*i.qty)}`).join("\n")
+  msg+=`\nTotal: R$ ${money(total)}`
+  window.open(`https://wa.me/${phone.replace(/\D/g,"")}?text=${encodeURIComponent(msg)}`,"_blank")
+  cart=[]
+  updateCart()
 }
+
+function openImageModal(imgs){
+  currentImages=imgs
+  currentIndex=0
+  document.getElementById("modalImg").src=currentImages[0]
+  document.getElementById("imgModal").classList.add("open")
+}
+function closeImageModal(e){if(!e||e.target.id==="imgModal")document.getElementById("imgModal").classList.remove("open")}
 
 async function init(){
- const raw = await fetchSheet();
- const products = groupProducts(raw);
- const catalog = document.getElementById("catalog");
- products.forEach(p=>catalog.appendChild(createCard(p)));
+  const raw=await fetchSheet()
+  products=groupProducts(raw)
+  const catalog=document.getElementById("catalog")
+  catalog.innerHTML=""
+  products.forEach(p=>catalog.appendChild(createCard(p)))
 }
-init();
+init()
 </script>
 
 </body>
