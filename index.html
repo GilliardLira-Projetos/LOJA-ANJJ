@@ -6,122 +6,105 @@
     <title>LOJA ANJJ</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet" />
     <style>
-        :root { --green: #22c55e; --bg: #f9fafb; }
+        :root { --green: #22c55e; --bg: #ffffff; }
         body { font-family: 'Poppins', sans-serif; margin: 0; background: var(--bg); color: #333; }
         
-        /* Header Estilo App */
-        header { 
-            background: #fff; padding: 15px 20px; border-bottom: 1px solid #eee;
-            display: flex; justify-content: space-between; align-items: center;
-            position: sticky; top: 0; z-index: 100;
-        }
-        .logo { font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
-        .cart-btn { background: var(--green); color: #fff; border: none; padding: 8px 15px; border-radius: 20px; cursor: pointer; font-weight: 600; }
+        header { padding: 15px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; background: #fff; z-index: 100; }
+        .logo { font-weight: 700; font-size: 14px; text-transform: uppercase; }
 
-        /* Categorias */
-        .category-title { text-align: center; text-transform: uppercase; margin: 40px 0 20px; font-weight: 700; color: #444; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; padding: 0 20px 40px; }
+        /* Filtro de Categorias no Topo */
+        .category-nav { display: flex; gap: 10px; padding: 10px; overflow-x: auto; border-bottom: 1px solid #eee; background: #fff; }
+        .cat-link { border: 1px solid #eee; padding: 5px 15px; border-radius: 4px; font-size: 12px; text-decoration: none; color: #666; white-space: nowrap; }
 
-        /* Card Estilo Store.link */
-        .card { background: #fff; border-radius: 12px; padding: 15px; border: 1px solid #eee; display: flex; flex-direction: column; }
-        .thumb-container { width: 100%; height: 280px; border-radius: 8px; overflow: hidden; margin-bottom: 15px; }
-        .thumb-container img { width: 100%; height: 100%; object-fit: cover; }
+        /* Grid de Produtos */
+        .category-section { padding: 20px 0; border-bottom: 8px solid #f9fafb; }
+        .category-title { text-align: center; text-transform: uppercase; font-size: 16px; margin-bottom: 20px; font-weight: 700; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; padding: 0 15px; }
+
+        .card { border: 1px solid #eee; border-radius: 8px; padding: 12px; display: flex; flex-direction: column; position: relative; }
+        .badge-new { position: absolute; top: 15px; right: 15px; background: #fee2e2; color: #ef4444; font-size: 10px; padding: 2px 8px; border-radius: 10px; font-weight: bold; }
+        .thumb { width: 100%; height: 250px; object-fit: cover; border-radius: 4px; }
         
-        .title { font-weight: 600; font-size: 15px; text-transform: uppercase; margin-bottom: 5px; }
-        .price { font-size: 18px; font-weight: 700; color: #111; margin-bottom: 15px; }
+        .product-name { font-size: 14px; font-weight: 600; margin: 10px 0 5px; text-transform: uppercase; }
+        .product-price { font-size: 15px; font-weight: 700; margin-bottom: 10px; }
 
-        /* Variant Chips */
-        .variant-label { font-size: 12px; color: #888; margin-bottom: 8px; }
-        .variant-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
-        .variant-chip { 
-            border: 1px solid #ddd; padding: 6px 12px; border-radius: 6px; 
-            font-size: 13px; cursor: pointer; transition: 0.2s; 
-        }
-        .variant-chip.selected { border-color: var(--green); background: #f0fdf4; color: var(--green); font-weight: 600; }
+        /* Botão Ver Opções */
+        .btn-options { border: 1px solid var(--green); color: var(--green); background: #fff; padding: 8px; border-radius: 4px; cursor: pointer; font-weight: 600; text-align: center; }
 
-        .add-cart { 
-            background: var(--green); color: white; border: none; padding: 12px; 
-            border-radius: 8px; font-weight: 700; cursor: pointer; width: 100%;
-        }
+        /* Área de Seleção (Invisível até clicar em Ver Opções) */
+        .selection-area { display: none; margin-top: 15px; padding-top: 15px; border-top: 1px dashed #ddd; }
+        .variant-grid { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
+        .variant-chip { border: 1px solid #ddd; padding: 6px 10px; border-radius: 4px; font-size: 12px; cursor: pointer; }
+        .variant-chip.selected { border-color: var(--green); background: #f0fdf4; color: var(--green); }
 
-        /* Carrinho Overlay */
-        .cart-overlay { position: fixed; top: 0; right: 0; width: 100%; max-width: 400px; height: 100%; background: #fff; box-shadow: -5px 0 15px rgba(0,0,0,0.1); padding: 20px; transform: translateX(100%); transition: 0.3s; z-index: 1000; overflow-y: auto; }
-        .cart-overlay.open { transform: translateX(0); }
+        /* Quantidade */
+        .qty-selector { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; }
+        .qty-btn { border: 1px solid #ddd; background: #fff; width: 30px; height: 30px; border-radius: 4px; cursor: pointer; }
+        
+        .btn-add { background: var(--green); color: #fff; border: none; padding: 12px; border-radius: 4px; font-weight: 700; width: 100%; cursor: pointer; }
+
+        /* Carrinho */
+        .cart-count { background: var(--green); color: white; border-radius: 50%; padding: 2px 6px; font-size: 11px; }
     </style>
 </head>
 <body>
 
 <header>
     <div class="logo">LOJA - ANJJ</div>
-    <button class="cart-btn" onclick="toggleCart()">🛒 <span id="cartCount">0</span></button>
+    <div onclick="toggleCart()" style="cursor:pointer">🛒 <span id="cartCount" class="cart-count">0</span></div>
 </header>
 
-<div id="catalog">
-    </div>
+<div class="category-nav" id="categoryNav"></div>
 
-<div class="cart-overlay" id="cartOverlay">
-    <div style="display:flex; justify-content:space-between; align-items:center;">
-        <h3>Resumo do Pedido</h3>
-        <button onclick="toggleCart()" style="border:none; background:none; font-size:20px; cursor:pointer;">✕</button>
-    </div>
-    <hr>
-    <div id="cartItems"></div>
-    <div id="cartTotalArea" style="margin-top:20px; font-weight:700; font-size:18px;">
-        Total: R$ <span id="cartTotal">0,00</span>
-    </div>
-    <button class="add-cart" style="margin-top:20px;" onclick="sendOrder()">Fazer pedido no WhatsApp</button>
-</div>
+<div id="catalog"></div>
 
 <script>
 const SHEET_URL = "https://docs.google.com/spreadsheets/d/1BqVAf9A7l7KHKcwpV9HrqBMPWTA4s-aPv1EEna7xuHg/gviz/tq?tqx=out:json&sheet=Products";
+let productsData = [];
 let cart = [];
 
-function money(v) { return Number(v).toFixed(2).replace('.', ','); }
-
 async function init() {
-    try {
-        const r = await fetch(SHEET_URL);
-        const t = await r.text();
-        const j = JSON.parse(t.substring(t.indexOf("{"), t.lastIndexOf("}") + 1));
-        
-        // Mapeia as colunas baseado no seu cabeçalho
-        const cols = j.table.cols.map(c => c.label.trim());
-        const rows = j.table.rows.map(row => {
-            const o = {};
-            row.c.forEach((c, i) => { o[cols[i]] = c ? (c.v ?? c.f ?? "") : ""; });
-            return o;
-        });
+    const r = await fetch(SHEET_URL);
+    const t = await r.text();
+    const j = JSON.parse(t.substring(t.indexOf("{"), t.lastIndexOf("}") + 1));
+    const cols = j.table.cols.map(c => c.label.trim());
+    const rows = j.table.rows.map(row => {
+        const o = {};
+        row.c.forEach((c, i) => { o[cols[i]] = c ? (c.v ?? c.f ?? "") : ""; });
+        return o;
+    });
 
-        // Agrupar produtos por nome para tratar variantes
-        const grouped = {};
-        rows.forEach(p => {
-            if (String(p.Availability).toLowerCase() !== "show") return;
-            if (!grouped[p.Name]) {
-                grouped[p.Name] = { 
-                    name: p.Name, 
-                    category: p.Category, 
-                    thumb: p.Thumbnail, 
-                    variants: [] 
-                };
-            }
-            grouped[p.Name].variants.push({ name: p["Variant Name"], price: p.Price });
-        });
-
-        renderCatalog(Object.values(grouped));
-    } catch (e) { console.error("Erro ao carregar dados:", e); }
+    const grouped = {};
+    rows.forEach(p => {
+        if (p.Availability.toLowerCase() !== "show") return;
+        if (!grouped[p.Name]) {
+            grouped[p.Name] = { name: p.Name, category: p.Category, thumb: p.Thumbnail, variants: [] };
+        }
+        grouped[p.Name].variants.push({ name: p["Variant Name"], price: p.Price, stock: p.Stock });
+    });
+    
+    productsData = Object.values(grouped);
+    renderAll();
 }
 
-function renderCatalog(products) {
+function renderAll() {
     const catalog = document.getElementById("catalog");
-    const categories = [...new Set(products.map(p => p.category))];
+    const nav = document.getElementById("categoryNav");
+    const categories = [...new Set(productsData.map(p => p.category))];
 
     categories.forEach(cat => {
+        // Nav Filtro
+        nav.innerHTML += `<a href="#${cat}" class="cat-link">${cat}</a>`;
+        
+        // Seções
         const section = document.createElement("section");
-        section.innerHTML = `<h2 class="category-title">${cat}</h2><div class="grid" id="grid-${cat.replace(/\s/g, '')}"></div>`;
+        section.className = "category-section";
+        section.id = cat;
+        section.innerHTML = `<h2 class="category-title">${cat}</h2><div class="grid" id="grid-${cat}"></div>`;
         catalog.appendChild(section);
 
-        const grid = document.getElementById(`grid-${cat.replace(/\s/g, '')}`);
-        products.filter(p => p.category === cat).forEach(p => {
+        const grid = document.getElementById(`grid-${cat}`);
+        productsData.filter(p => p.category === cat).forEach(p => {
             grid.appendChild(createCard(p));
         });
     });
@@ -131,63 +114,67 @@ function createCard(p) {
     const d = document.createElement("div");
     d.className = "card";
     d.innerHTML = `
-        <div class="thumb-container"><img src="${p.thumb}"></div>
-        <div class="title">${p.name}</div>
-        <div class="price">R$ ${money(p.variants[0].price)}</div>
-        <div class="variant-label">Variant Name</div>
-        <div class="variant-grid">
-            ${p.variants.map((v, i) => `<div class="variant-chip ${i === 0 ? 'selected' : ''}" data-price="${v.price}">${v.name}</div>`).join("")}
+        <span class="badge-new">New</span>
+        <img src="${p.thumb}" class="thumb">
+        <div class="product-name">${p.name}</div>
+        <div class="product-price">R$ ${p.variants[0].price.toFixed(2).replace('.',',')}</div>
+        <button class="btn-options" onclick="showOptions(this)">Ver opções</button>
+        
+        <div class="selection-area">
+            <div style="font-size:11px; color:#888;">Selecione o tamanho:</div>
+            <div class="variant-grid">
+                ${p.variants.map((v, i) => `<div class="variant-chip" onclick="selectChip(this, ${v.price})">${v.name}</div>`).join("")}
+            </div>
+            <div class="qty-selector">
+                <button class="qty-btn" onclick="changeQty(this, -1)">-</button>
+                <span class="qty-val">1</span>
+                <button class="qty-btn" onclick="changeQty(this, 1)">+</button>
+            </div>
+            <button class="btn-add" onclick="addToCart('${p.name}', this)">Adicionar ao carrinho</button>
         </div>
-        <button class="add-cart" onclick="addToCart('${p.name}', this)">Adicionar ao carrinho</button>
     `;
-
-    // Lógica de seleção de variante
-    const chips = d.querySelectorAll(".variant-chip");
-    chips.forEach(chip => {
-        chip.onclick = () => {
-            chips.forEach(c => c.classList.remove("selected"));
-            chip.classList.add("selected");
-            d.querySelector(".price").innerText = "R$ " + money(chip.dataset.price);
-        };
-    });
     return d;
 }
 
+function showOptions(btn) {
+    btn.style.display = 'none';
+    btn.parentElement.querySelector('.selection-area').style.display = 'block';
+}
+
+function selectChip(el, price) {
+    const parent = el.parentElement;
+    parent.querySelectorAll('.variant-chip').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+    parent.closest('.card').querySelector('.product-price').innerText = "R$ " + price.toFixed(2).replace('.',',');
+}
+
+function changeQty(btn, delta) {
+    const valSpan = btn.parentElement.querySelector('.qty-val');
+    let v = parseInt(valSpan.innerText) + delta;
+    if (v < 1) v = 1;
+    valSpan.innerText = v;
+}
+
 function addToCart(name, btn) {
-    const card = btn.parentElement;
-    const selected = card.querySelector(".variant-chip.selected");
-    cart.push({
-        name: name,
-        variant: selected.innerText,
-        price: Number(selected.dataset.price)
-    });
-    updateCart();
-    toggleCart(true);
-}
-
-function updateCart() {
-    document.getElementById("cartCount").innerText = cart.length;
-    const itemsDiv = document.getElementById("cartItems");
-    itemsDiv.innerHTML = cart.map((item, i) => `
-        <div style="display:flex; justify-content:space-between; margin-bottom:10px; font-size:14px;">
-            <span>${item.name} (${item.variant})</span>
-            <span>R$ ${money(item.price)} <button onclick="cart.splice(${i},1); updateCart()" style="border:none; color:red; cursor:pointer;">✕</button></span>
-        </div>
-    `).join("");
+    const card = btn.closest('.card');
+    const selected = card.querySelector('.variant-chip.selected');
+    if (!selected) return alert("Selecione um tamanho!");
     
-    const total = cart.reduce((sum, item) => sum + item.price, 0);
-    document.getElementById("cartTotal").innerText = money(total);
+    const qty = parseInt(card.querySelector('.qty-val').innerText);
+    const price = parseFloat(selected.getAttribute('onclick').match(/[\d.]+/)[0]);
+
+    cart.push({ name, variant: selected.innerText, qty, price });
+    document.getElementById("cartCount").innerText = cart.length;
+    alert("Adicionado ao carrinho!");
+    
+    // Resetar card
+    card.querySelector('.selection-area').style.display = 'none';
+    card.querySelector('.btn-options').style.display = 'block';
 }
 
-function toggleCart(forceOpen = false) {
-    const overlay = document.getElementById("cartOverlay");
-    if (forceOpen) overlay.classList.add("open");
-    else overlay.classList.toggle("open");
-}
-
-function sendOrder() {
-    if (cart.length === 0) return alert("Carrinho vazio!");
-    const msg = `Olá! Gostaria de fazer um pedido:\n\n${cart.map(i => `- ${i.name} (${i.variant}): R$ ${money(i.price)}`).join("\n")}\n\nTotal: R$ ${document.getElementById("cartTotal").innerText}`;
+function toggleCart() {
+    if(cart.length === 0) return alert("Carrinho vazio");
+    const msg = `Olá! Meu pedido:\n\n${cart.map(i => `${i.qty}x ${i.name} (${i.variant})`).join('\n')}`;
     window.open(`https://wa.me/55SEUNUMERO?text=${encodeURIComponent(msg)}`);
 }
 
