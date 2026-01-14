@@ -7,54 +7,58 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet" />
     <style>
         :root { --green: #22c55e; --bg: #ffffff; }
-        body { font-family: 'Poppins', sans-serif; margin: 0; background: var(--bg); color: #333; }
+        body { font-family: 'Poppins', sans-serif; margin: 0; background: var(--bg); color: #333; overflow-x: hidden; }
         
-        header { padding: 15px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; background: #fff; z-index: 100; }
+        header { padding: 15px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; background: #fff; z-index: 1000; }
         .logo { font-weight: 700; font-size: 14px; text-transform: uppercase; }
 
-        /* Filtro de Categorias no Topo */
-        .category-nav { display: flex; gap: 10px; padding: 10px; overflow-x: auto; border-bottom: 1px solid #eee; background: #fff; }
-        .cat-link { border: 1px solid #eee; padding: 5px 15px; border-radius: 4px; font-size: 12px; text-decoration: none; color: #666; white-space: nowrap; }
+        /* Filtro de Categorias Estilo Store.link */
+        .category-nav { display: flex; gap: 10px; padding: 10px; overflow-x: auto; border-bottom: 1px solid #eee; background: #fff; scrollbar-width: none; }
+        .cat-link { border: 1px solid #eee; padding: 6px 15px; border-radius: 4px; font-size: 12px; cursor: pointer; color: #666; white-space: nowrap; transition: 0.3s; }
+        .cat-link.active { background: var(--green); color: #fff; border-color: var(--green); }
 
-        /* Grid de Produtos */
-        .category-section { padding: 20px 0; border-bottom: 8px solid #f9fafb; }
+        .category-section { padding: 20px 0; display: none; } /* Escondido por padrão para o filtro */
+        .category-section.active { display: block; }
+        
         .category-title { text-align: center; text-transform: uppercase; font-size: 16px; margin-bottom: 20px; font-weight: 700; }
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; padding: 0 15px; }
 
-        .card { border: 1px solid #eee; border-radius: 8px; padding: 12px; display: flex; flex-direction: column; position: relative; }
-        .badge-new { position: absolute; top: 15px; right: 15px; background: #fee2e2; color: #ef4444; font-size: 10px; padding: 2px 8px; border-radius: 10px; font-weight: bold; }
-        .thumb { width: 100%; height: 250px; object-fit: cover; border-radius: 4px; }
+        .card { border: 1px solid #eee; border-radius: 8px; padding: 12px; display: flex; flex-direction: column; background: #fff; }
         
-        .product-name { font-size: 14px; font-weight: 600; margin: 10px 0 5px; text-transform: uppercase; }
-        .product-price { font-size: 15px; font-weight: 700; margin-bottom: 10px; }
+        /* Carrossel Automático */
+        .carousel { width: 100%; height: 280px; position: relative; overflow: hidden; border-radius: 6px; }
+        .carousel img { width: 100%; height: 100%; object-fit: cover; position: absolute; opacity: 0; transition: opacity 0.8s ease-in-out; }
+        .carousel img.active { opacity: 1; }
+        
+        .product-name { font-size: 14px; font-weight: 600; margin: 12px 0 5px; text-transform: uppercase; }
+        .product-price { font-size: 16px; font-weight: 700; color: #000; margin-bottom: 10px; }
 
-        /* Botão Ver Opções */
-        .btn-options { border: 1px solid var(--green); color: var(--green); background: #fff; padding: 8px; border-radius: 4px; cursor: pointer; font-weight: 600; text-align: center; }
+        .btn-options { border: 1px solid var(--green); color: var(--green); background: #fff; padding: 10px; border-radius: 4px; cursor: pointer; font-weight: 600; }
 
-        /* Área de Seleção (Invisível até clicar em Ver Opções) */
-        .selection-area { display: none; margin-top: 15px; padding-top: 15px; border-top: 1px dashed #ddd; }
+        .selection-area { display: none; margin-top: 15px; border-top: 1px dashed #ddd; padding-top: 10px; }
         .variant-grid { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
-        .variant-chip { border: 1px solid #ddd; padding: 6px 10px; border-radius: 4px; font-size: 12px; cursor: pointer; }
-        .variant-chip.selected { border-color: var(--green); background: #f0fdf4; color: var(--green); }
+        .variant-chip { border: 1px solid #ddd; padding: 6px 12px; border-radius: 4px; font-size: 12px; cursor: pointer; }
+        .variant-chip.selected { border-color: var(--green); background: #f0fdf4; color: var(--green); font-weight: 600; }
+        .variant-chip.no-stock { opacity: 0.4; cursor: not-allowed; background: #f5f5f5; }
 
-        /* Quantidade */
-        .qty-selector { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; }
-        .qty-btn { border: 1px solid #ddd; background: #fff; width: 30px; height: 30px; border-radius: 4px; cursor: pointer; }
-        
-        .btn-add { background: var(--green); color: #fff; border: none; padding: 12px; border-radius: 4px; font-weight: 700; width: 100%; cursor: pointer; }
+        .qty-selector { display: flex; align-items: center; gap: 15px; margin: 15px 0; }
+        .qty-btn { border: 1px solid #ddd; background: #fff; width: 35px; height: 35px; border-radius: 4px; cursor: pointer; font-size: 18px; }
+        .stock-info { font-size: 11px; color: #888; margin-left: auto; }
 
-        /* Carrinho */
-        .cart-count { background: var(--green); color: white; border-radius: 50%; padding: 2px 6px; font-size: 11px; }
+        .btn-add { background: var(--green); color: #fff; border: none; padding: 14px; border-radius: 6px; font-weight: 700; width: 100%; cursor: pointer; }
+        .cart-count { background: var(--green); color: white; border-radius: 50%; padding: 2px 8px; font-size: 12px; margin-left: 5px; }
     </style>
 </head>
 <body>
 
 <header>
     <div class="logo">LOJA - ANJJ</div>
-    <div onclick="toggleCart()" style="cursor:pointer">🛒 <span id="cartCount" class="cart-count">0</span></div>
+    <div onclick="openWhatsApp()" style="cursor:pointer; font-weight: 600;">🛒 Carrinho <span id="cartCount" class="cart-count">0</span></div>
 </header>
 
-<div class="category-nav" id="categoryNav"></div>
+<div class="category-nav" id="categoryNav">
+    <div class="cat-link active" onclick="filterCat('all', this)">Tudo</div>
+</div>
 
 <div id="catalog"></div>
 
@@ -78,9 +82,14 @@ async function init() {
     rows.forEach(p => {
         if (p.Availability.toLowerCase() !== "show") return;
         if (!grouped[p.Name]) {
-            grouped[p.Name] = { name: p.Name, category: p.Category, thumb: p.Thumbnail, variants: [] };
+            grouped[p.Name] = { 
+                name: p.Name, 
+                category: p.Category, 
+                images: [p.Thumbnail, p.Image1, p.Image2, p.Image3].filter(i => i !== ""), 
+                variants: [] 
+            };
         }
-        grouped[p.Name].variants.push({ name: p["Variant Name"], price: p.Price, stock: p.Stock });
+        grouped[p.Name].variants.push({ name: p["Variant Name"], price: p.Price, stock: parseInt(p.Stock || 0) });
     });
     
     productsData = Object.values(grouped);
@@ -93,13 +102,11 @@ function renderAll() {
     const categories = [...new Set(productsData.map(p => p.category))];
 
     categories.forEach(cat => {
-        // Nav Filtro
-        nav.innerHTML += `<a href="#${cat}" class="cat-link">${cat}</a>`;
+        nav.innerHTML += `<div class="cat-link" onclick="filterCat('${cat}', this)">${cat}</div>`;
         
-        // Seções
         const section = document.createElement("section");
-        section.className = "category-section";
-        section.id = cat;
+        section.className = "category-section active"; // Começa ativo
+        section.id = `sec-${cat}`;
         section.innerHTML = `<h2 class="category-title">${cat}</h2><div class="grid" id="grid-${cat}"></div>`;
         catalog.appendChild(section);
 
@@ -108,27 +115,49 @@ function renderAll() {
             grid.appendChild(createCard(p));
         });
     });
+    startCarousels();
+}
+
+function filterCat(cat, el) {
+    document.querySelectorAll('.cat-link').forEach(l => l.classList.remove('active'));
+    el.classList.add('active');
+    
+    document.querySelectorAll('.category-section').forEach(sec => {
+        if (cat === 'all' || sec.id === `sec-${cat}`) {
+            sec.classList.add('active');
+        } else {
+            sec.classList.remove('active');
+        }
+    });
 }
 
 function createCard(p) {
     const d = document.createElement("div");
     d.className = "card";
+    
+    const carouselHtml = p.images.map((img, i) => `<img src="${img}" class="${i === 0 ? 'active' : ''}">`).join("");
+
     d.innerHTML = `
-        <span class="badge-new">New</span>
-        <img src="${p.thumb}" class="thumb">
+        <div class="carousel">${carouselHtml}</div>
         <div class="product-name">${p.name}</div>
         <div class="product-price">R$ ${p.variants[0].price.toFixed(2).replace('.',',')}</div>
         <button class="btn-options" onclick="showOptions(this)">Ver opções</button>
         
         <div class="selection-area">
-            <div style="font-size:11px; color:#888;">Selecione o tamanho:</div>
+            <div style="font-size:11px; color:#888;">Tamanho:</div>
             <div class="variant-grid">
-                ${p.variants.map((v, i) => `<div class="variant-chip" onclick="selectChip(this, ${v.price})">${v.name}</div>`).join("")}
+                ${p.variants.map(v => `
+                    <div class="variant-chip ${v.stock <= 0 ? 'no-stock' : ''}" 
+                         onclick="${v.stock > 0 ? `selectChip(this, ${v.price}, ${v.stock})` : ''}">
+                         ${v.name}
+                    </div>
+                `).join("")}
             </div>
             <div class="qty-selector">
                 <button class="qty-btn" onclick="changeQty(this, -1)">-</button>
                 <span class="qty-val">1</span>
                 <button class="qty-btn" onclick="changeQty(this, 1)">+</button>
+                <span class="stock-info">Estoque: <b class="stock-num">-</b></span>
             </div>
             <button class="btn-add" onclick="addToCart('${p.name}', this)">Adicionar ao carrinho</button>
         </div>
@@ -136,45 +165,70 @@ function createCard(p) {
     return d;
 }
 
+function startCarousels() {
+    setInterval(() => {
+        document.querySelectorAll('.carousel').forEach(car => {
+            const imgs = car.querySelectorAll('img');
+            if (imgs.length <= 1) return;
+            let active = car.querySelector('img.active');
+            let next = active.nextElementSibling || imgs[0];
+            active.classList.remove('active');
+            next.classList.add('active');
+        });
+    }, 3000); // Troca a cada 3 segundos
+}
+
 function showOptions(btn) {
     btn.style.display = 'none';
     btn.parentElement.querySelector('.selection-area').style.display = 'block';
 }
 
-function selectChip(el, price) {
+function selectChip(el, price, stock) {
     const parent = el.parentElement;
     parent.querySelectorAll('.variant-chip').forEach(c => c.classList.remove('selected'));
     el.classList.add('selected');
-    parent.closest('.card').querySelector('.product-price').innerText = "R$ " + price.toFixed(2).replace('.',',');
+    
+    const card = el.closest('.card');
+    card.querySelector('.product-price').innerText = "R$ " + price.toFixed(2).replace('.',',');
+    card.querySelector('.stock-num').innerText = stock;
+    card.querySelector('.qty-val').innerText = 1; // Reseta qty ao mudar tamanho
 }
 
 function changeQty(btn, delta) {
+    const card = btn.closest('.card');
+    const selected = card.querySelector('.variant-chip.selected');
+    if (!selected) return alert("Selecione um tamanho primeiro!");
+
+    const maxStock = parseInt(card.querySelector('.stock-num').innerText);
     const valSpan = btn.parentElement.querySelector('.qty-val');
-    let v = parseInt(valSpan.innerText) + delta;
-    if (v < 1) v = 1;
-    valSpan.innerText = v;
+    let current = parseInt(valSpan.innerText);
+    
+    let novoVal = current + delta;
+    if (novoVal >= 1 && novoVal <= maxStock) {
+        valSpan.innerText = novoVal;
+    }
 }
 
 function addToCart(name, btn) {
     const card = btn.closest('.card');
     const selected = card.querySelector('.variant-chip.selected');
-    if (!selected) return alert("Selecione um tamanho!");
+    if (!selected) return alert("Por favor, selecione o tamanho.");
     
     const qty = parseInt(card.querySelector('.qty-val').innerText);
-    const price = parseFloat(selected.getAttribute('onclick').match(/[\d.]+/)[0]);
+    const price = parseFloat(card.querySelector('.product-price').innerText.replace('R$ ', '').replace(',', '.'));
 
     cart.push({ name, variant: selected.innerText, qty, price });
     document.getElementById("cartCount").innerText = cart.length;
-    alert("Adicionado ao carrinho!");
     
-    // Resetar card
+    alert("Adicionado!");
     card.querySelector('.selection-area').style.display = 'none';
     card.querySelector('.btn-options').style.display = 'block';
 }
 
-function toggleCart() {
-    if(cart.length === 0) return alert("Carrinho vazio");
-    const msg = `Olá! Meu pedido:\n\n${cart.map(i => `${i.qty}x ${i.name} (${i.variant})`).join('\n')}`;
+function openWhatsApp() {
+    if(cart.length === 0) return alert("Seu carrinho está vazio!");
+    const total = cart.reduce((a, b) => a + (b.price * b.qty), 0);
+    const msg = `*Novo Pedido - LOJA ANJJ*\n\n${cart.map(i => `- ${i.qty}x ${i.name} (${i.variant})`).join('\n')}\n\n*Total: R$ ${total.toFixed(2).replace('.',',')}*`;
     window.open(`https://wa.me/55SEUNUMERO?text=${encodeURIComponent(msg)}`);
 }
 
