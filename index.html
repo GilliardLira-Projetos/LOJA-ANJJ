@@ -20,7 +20,7 @@ header{display:flex;justify-content:space-between;align-items:center;padding:16p
 
 .badge-sale{position:absolute;top:12px;left:12px;background:#dc2626;color:#fff;padding:6px 10px;font-size:12px;border-radius:6px;font-weight:600}
 .title{font-weight:600;margin:8px 0}
-.price{margin:6px 0}
+.price{margin:6px 0;font-size:16px}
 
 select,button{padding:8px;border:none;border-radius:6px;cursor:pointer;width:100%}
 .add-cart{background:#1d4ed8;color:#fff;margin-top:6px}
@@ -99,46 +99,37 @@ function groupProducts(data){
 }
 
 function createCard(p){
- const v=p.variants[0];
- const hasDiscount=v.discount>0;
- const percent=hasDiscount?Math.round((1 - v.discount/v.price)*100):0;
-
  const imgs=p.images.map((s,i)=>`<img src="${s}" class="${i==0?'active':''}">`).join("");
  const d=document.createElement("div");
  d.className="card";
+ 
  d.innerHTML=`
- ${hasDiscount?`<div class="badge-sale">PROMO ${percent}%</div>`:""}
  <div class="thumb-container">${imgs}</div>
  <div class="title">${p.name}</div>
- <div class="price">
- ${hasDiscount?`
- <span style="text-decoration:line-through;color:#999">R$ ${money(v.price)}</span><br>
- <span style="color:#dc2626;font-size:20px">R$ ${money(v.discount)}</span>
- `:`R$ ${money(v.price)}`}
- </div>
+ <div class="price" id="priceDisplay">R$ ${money(p.variants[0].discount>0 ? p.variants[0].discount : p.variants[0].price)}</div>
+
  <label>Tamanho</label>
  <select class="variant">
    <option disabled selected>Selecionar</option>
-   ${p.variants.map(v=>`
-     <option value="${v.price}" data-discount="${v.discount}" data-stock="${v.stock}">
-       ${v.name}
-     </option>`).join("")}
+   ${p.variants.map(v=>`<option value="${v.price}" data-discount="${v.discount}" data-stock="${v.stock}">${v.name}</option>`).join("")}
  </select>
 
  <label>Qtd</label>
- <select class="qty">${[...Array(v.stock)].map((_,i)=>`<option>${i+1}</option>`).join("")}</select>
+ <select class="qty">${[...Array(p.variants[0].stock)].map((_,i)=>`<option>${i+1}</option>`).join("")}</select>
 
  <button class="add-cart">Adicionar</button>
  `;
- 
+
+ // Slider imagens
  let idx=0;
  const imgsEl=d.querySelectorAll(".thumb-container img");
- let interval=setInterval(()=>{
+ setInterval(()=>{
   imgsEl[idx].classList.remove("active");
   idx=(idx+1)%imgsEl.length;
   imgsEl[idx].classList.add("active");
  },3000);
 
+ // Modal imagem
  d.querySelector(".thumb-container").onclick=()=>{
   currentImages=p.images;
   currentIndex=0;
@@ -146,25 +137,42 @@ function createCard(p){
   imgModal.classList.add("open");
  }
 
- d.querySelector(".add-cart").onclick=()=>{
-   const variant = d.querySelector(".variant");
-   const qty = Number(d.querySelector(".qty").value);
-   const price = Number(variant.selectedOptions[0].dataset.discount || variant.value);
-   const name = p.name;
+ const priceDisplay = d.querySelector("#priceDisplay");
+ const variantSelect = d.querySelector(".variant");
+ const qtySelect = d.querySelector(".qty");
+
+ // Atualizar preço ao selecionar tamanho
+ variantSelect.onchange = ()=>{
+   const selected = variantSelect.selectedOptions[0];
+   const discount = Number(selected.dataset.discount || 0);
+   const price = Number(selected.value);
+   const finalPrice = discount>0 ? discount : price;
+   priceDisplay.innerHTML = discount>0 ? `<span style="text-decoration:line-through;color:#999">R$ ${money(price)}</span><br><span style="color:#dc2626;font-size:20px">R$ ${money(discount)}</span>` : `R$ ${money(price)}`;
+
+   // Atualizar quantidade disponível
+   const stock = Number(selected.dataset.stock || 1);
+   qtySelect.innerHTML = [...Array(stock)].map((_,i)=>`<option>${i+1}</option>`).join("");
+ }
+
+ // Adicionar ao carrinho
+ d.querySelector(".add-cart").onclick = ()=>{
+   const selected = variantSelect.selectedOptions[0];
+   if(!selected) { alert("Selecione um tamanho"); return; }
+   const name = p.name + " - " + selected.text;
+   const qty = Number(qtySelect.value);
+   const price = Number(selected.dataset.discount || selected.value);
    addToCart(name, price, qty);
  }
 
  return d;
 }
 
+// Carrinho
 function addToCart(name, price, qty){
-  const existing = cart.find(i=>i.name===name && i.price===price);
-  if(existing){
-    existing.qty += qty;
-  } else {
-    cart.push({name, price, qty});
-  }
-  updateCart();
+ const existing = cart.find(i=>i.name===name && i.price===price);
+ if(existing) existing.qty += qty;
+ else cart.push({name, price, qty});
+ updateCart();
 }
 
 function updateCart(){
@@ -211,6 +219,5 @@ async function init(){
 }
 init();
 </script>
-
 </body>
 </html>
