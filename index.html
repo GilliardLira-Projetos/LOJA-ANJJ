@@ -36,10 +36,38 @@ button.add-cart { background: #1d4ed8; color: #fff; border: none; margin-top: 6p
 button.add-cart:hover { background: #2563eb; }
 
 /* ---------- BOTÕES DE TAMANHO ---------- */
-.variant-buttons { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
-.variant-buttons button { flex: 1 1 auto; padding: 6px 10px; border: 1px solid #ccc; border-radius: 6px; background: #fafafa; cursor: pointer; transition: 0.3s; }
-.variant-buttons button.selected { background: #1d4ed8; color: #fff; border-color: #1d4ed8; }
-.variant-buttons button:hover { background: #e0e0e0; }
+.variant-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 6px;
+  justify-content: flex-start;
+}
+.variant-buttons button {
+  flex: 0 1 auto;
+  padding: 4px 8px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background: #fafafa;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: 0.3s;
+}
+.variant-buttons button.selected {
+  background: #1d4ed8;
+  color: #fff;
+  border-color: #1d4ed8;
+}
+.variant-buttons button:hover {
+  background: #e0e0e0;
+}
+@media (max-width: 480px) {
+  .variant-buttons button {
+    padding: 4px 6px;
+    font-size: 13px;
+  }
+}
 
 /* ---------- CARRINHO ---------- */
 .cart-overlay { position: fixed; top: 0; right: 0; width: 100%; max-width: 420px; height: 100%; background: #fff; box-shadow: -4px 0 20px rgba(0,0,0,.2); padding: 20px; transform: translateX(100%); transition: transform .3s; z-index: 2000; overflow-y: auto; }
