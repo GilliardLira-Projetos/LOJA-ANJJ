@@ -13,7 +13,6 @@
         header { padding: 15px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; background: #fff; z-index: 1000; }
         .logo { font-weight: 700; font-size: 14px; text-transform: uppercase; }
         .cart-icon { cursor: pointer; font-weight: 600; background: #f4f4f4; padding: 8px 12px; border-radius: 20px; transition: 0.3s; }
-        .cart-icon:hover { background: #e8e8e8; }
 
         /* NAV CATEGORIAS */
         .category-nav { display: flex; gap: 10px; padding: 10px; overflow-x: auto; border-bottom: 1px solid #eee; background: #fff; scrollbar-width: none; }
@@ -27,11 +26,10 @@
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; padding: 0 15px; }
         .card { border: 1px solid #eee; border-radius: 8px; padding: 12px; background: #fff; }
 
-        /* CARROSSEL COM CLIQUE */
+        /* CARROSSEL */
         .carousel { width: 100%; height: 280px; position: relative; overflow: hidden; border-radius: 6px; cursor: pointer; }
         .carousel img { width: 100%; height: 100%; object-fit: cover; position: absolute; opacity: 0; transition: opacity 0.5s ease; }
         .carousel img.active { opacity: 1; }
-        .carousel::after { content: "Toque para mudar ❯"; position: absolute; bottom: 10px; right: 10px; font-size: 10px; color: #fff; background: rgba(0,0,0,0.3); padding: 2px 8px; border-radius: 10px; pointer-events: none; }
 
         .product-name { font-size: 14px; font-weight: 600; margin: 12px 0 5px; text-transform: uppercase; }
         .product-price { font-size: 16px; font-weight: 700; color: #000; margin-bottom: 10px; }
@@ -44,18 +42,22 @@
         .variant-chip.selected { border-color: var(--green); background: #f0fdf4; color: var(--green); font-weight: 600; }
         .variant-chip.no-stock { opacity: 0.3; cursor: not-allowed; text-decoration: line-through; }
 
-        .qty-selector { display: flex; align-items: center; gap: 15px; margin: 15px 0; }
-        .qty-btn { border: 1px solid #ddd; background: #fff; width: 35px; height: 35px; border-radius: 4px; cursor: pointer; }
+        .qty-selector { display: flex; align-items: center; gap: 10px; margin: 10px 0; }
+        .qty-btn { border: 1px solid #ddd; background: #fff; width: 30px; height: 30px; border-radius: 4px; cursor: pointer; }
         .btn-add { background: var(--green); color: #fff; border: none; padding: 14px; border-radius: 6px; font-weight: 700; width: 100%; cursor: pointer; }
 
         /* CARRINHO LATERAL */
-        .cart-overlay { position: fixed; top: 0; right: 0; width: 100%; max-width: 350px; height: 100%; background: #fff; box-shadow: -5px 0 15px rgba(0,0,0,0.1); z-index: 2000; transform: translateX(100%); transition: 0.3s; padding: 20px; box-sizing: border-box; }
+        .cart-overlay { position: fixed; top: 0; right: 0; width: 100%; max-width: 400px; height: 100%; background: #fff; box-shadow: -5px 0 15px rgba(0,0,0,0.1); z-index: 2000; transform: translateX(100%); transition: 0.3s; padding: 20px; box-sizing: border-box; overflow-y: auto; }
         .cart-overlay.open { transform: translateX(0); }
-        .cart-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 10px; }
-        .cart-items { margin: 20px 0; max-height: 60vh; overflow-y: auto; }
-        .cart-item { display: flex; justify-content: space-between; margin-bottom: 15px; font-size: 13px; border-bottom: 1px solid #f9f9f9; padding-bottom: 10px; }
-        .cart-total { font-weight: 700; font-size: 18px; border-top: 2px solid #eee; padding-top: 10px; }
-        .close-cart { cursor: pointer; font-size: 20px; }
+        .cart-item { border-bottom: 1px solid #f0f0f0; padding: 10px 0; margin-bottom: 10px; }
+        .cart-item-info { display: flex; justify-content: space-between; font-size: 14px; font-weight: 600; }
+        .cart-item-controls { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+        
+        /* FORMULÁRIO */
+        .form-group { margin-top: 15px; }
+        .form-group label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 5px; }
+        .form-group input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
+        .required { color: red; }
     </style>
 </head>
 <body>
@@ -72,14 +74,31 @@
 <div id="catalog"></div>
 
 <div class="cart-overlay" id="cartOverlay">
-    <div class="cart-header">
-        <h3>🛍️ Meu Carrinho</h3>
-        <span class="close-cart" onclick="toggleCart()">✕</span>
+    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #eee; padding-bottom:10px;">
+        <h3 style="margin:0">🛍️ Seu Pedido</h3>
+        <span onclick="toggleCart()" style="cursor:pointer; font-size:20px;">✕</span>
     </div>
-    <div class="cart-items" id="cartItems">
+
+    <div id="cartItems" class="cart-items" style="margin-top:15px;">
         </div>
-    <div class="cart-total">Total: R$ <span id="cartTotal">0,00</span></div>
-    <button class="btn-add" style="margin-top:20px;" onclick="finalizeOrder()">Finalizar no WhatsApp</button>
+
+    <div style="margin-top:20px; padding-top:10px; border-top:2px solid #eee;">
+        <div style="display:flex; justify-content:space-between; font-weight:700; font-size:18px;">
+            <span>Total:</span>
+            <span>R$ <span id="cartTotal">0,00</span></span>
+        </div>
+    </div>
+
+    <div class="form-group" style="margin-top:25px;">
+        <label>Nome Completo <span class="required">*</span></label>
+        <input type="text" id="custName" placeholder="Ex: João Silva">
+    </div>
+    <div class="form-group">
+        <label>WhatsApp (DDD + Número) <span class="required">*</span></label>
+        <input type="tel" id="custPhone" placeholder="Ex: 11999999999" maxlength="11">
+    </div>
+
+    <button class="btn-add" style="margin-top:20px;" onclick="finalizeOrder()">Fazer pedido no WhatsApp</button>
 </div>
 
 <script>
@@ -152,19 +171,14 @@ function createCard(p) {
                 <button class="qty-btn" onclick="changeQty(this, -1)">-</button>
                 <span class="qty-val">1</span>
                 <button class="qty-btn" onclick="changeQty(this, 1)">+</button>
-                <span style="font-size:11px; color:#999; margin-left:auto">Qtd: <b class="stk-n">-</b></span>
+                <span style="font-size:10px; color:#999; margin-left:auto">Estoque: <b class="stk-n">-</b></span>
             </div>
             <button class="btn-add" onclick="addToCart('${p.name}', this)">Adicionar</button>
         </div>`;
     return d;
 }
 
-// LÓGICA DE IMAGEM
-function autoCarousel() {
-    setInterval(() => {
-        document.querySelectorAll('.carousel').forEach(car => manualNext(car));
-    }, 4000);
-}
+function autoCarousel() { setInterval(() => { document.querySelectorAll('.carousel').forEach(car => manualNext(car)); }, 4000); }
 function manualNext(carousel) {
     const imgs = carousel.querySelectorAll('img');
     if (imgs.length <= 1) return;
@@ -174,7 +188,6 @@ function manualNext(carousel) {
     next.classList.add('active');
 }
 
-// LÓGICA DE FILTRO E SELEÇÃO
 function filterCat(cat, el) {
     document.querySelectorAll('.cat-link').forEach(l => l.classList.remove('active'));
     el.classList.add('active');
@@ -182,7 +195,9 @@ function filterCat(cat, el) {
         sec.style.display = (cat === 'all' || sec.id === `sec-${cat}`) ? 'block' : 'none';
     });
 }
+
 function showOptions(btn) { btn.style.display = 'none'; btn.parentElement.querySelector('.selection-area').style.display = 'block'; }
+
 function selectChip(el, pr, st) {
     el.parentElement.querySelectorAll('.variant-chip').forEach(c => c.classList.remove('selected'));
     el.classList.add('selected');
@@ -190,14 +205,15 @@ function selectChip(el, pr, st) {
     card.querySelector('.product-price').innerText = "R$ " + pr.toFixed(2).replace('.',',');
     card.querySelector('.stk-n').innerText = st;
 }
+
 function changeQty(btn, d) {
     const val = btn.parentElement.querySelector('.qty-val');
-    const max = parseInt(btn.parentElement.querySelector('.stk-n').innerText) || 1;
+    const max = parseInt(btn.parentElement.querySelector('.stk-n').innerText) || 999;
     let n = parseInt(val.innerText) + d;
     if (n >= 1 && n <= max) val.innerText = n;
 }
 
-// CARRINHO
+// LÓGICA DO CARRINHO
 function toggleCart() { document.getElementById('cartOverlay').classList.toggle('open'); }
 
 function addToCart(name, btn) {
@@ -205,9 +221,18 @@ function addToCart(name, btn) {
     const sel = card.querySelector('.variant-chip.selected');
     if (!sel) return alert("Selecione um tamanho!");
     const qty = parseInt(card.querySelector('.qty-val').innerText);
-    const pr = parseFloat(card.querySelector('.product-price').innerText.replace('R$ ', '').replace(',', '.'));
+    const price = parseFloat(card.querySelector('.product-price').innerText.replace('R$ ', '').replace(',', '.'));
+    const max = parseInt(card.querySelector('.stk-n').innerText);
+
+    // Verifica se já existe no carrinho para somar
+    const index = cart.findIndex(i => i.name === name && i.variant === sel.innerText);
+    if(index > -1) {
+        if(cart[index].qty + qty > max) cart[index].qty = max;
+        else cart[index].qty += qty;
+    } else {
+        cart.push({ name, variant: sel.innerText, qty, price, maxStock: max });
+    }
     
-    cart.push({ name, variant: sel.innerText, qty, price: pr });
     updateCartUI();
     toggleCart();
 }
@@ -215,24 +240,53 @@ function addToCart(name, btn) {
 function updateCartUI() {
     document.getElementById('cartCount').innerText = cart.length;
     const itemsCont = document.getElementById('cartItems');
+    
     itemsCont.innerHTML = cart.map((item, i) => `
         <div class="cart-item">
-            <div><b>${item.qty}x</b> ${item.name} (${item.variant})</div>
-            <div>R$ ${(item.price * item.qty).toFixed(2).replace('.',',')} 
-            <span onclick="removeFromCart(${i})" style="color:red; margin-left:10px; cursor:pointer">✕</span></div>
+            <div class="cart-item-info">
+                <span>${item.name} (${item.variant})</span>
+                <span>R$ ${(item.price * item.qty).toFixed(2).replace('.',',')}</span>
+            </div>
+            <div class="cart-item-controls">
+                <button class="qty-btn" onclick="updateItemQty(${i}, -1)">-</button>
+                <span>${item.qty}</span>
+                <button class="qty-btn" onclick="updateItemQty(${i}, 1)">+</button>
+                <button onclick="removeFromCart(${i})" style="margin-left:auto; border:none; background:none; color:red; cursor:pointer; font-size:18px;">🗑️</button>
+            </div>
         </div>
     `).join("");
+
     const total = cart.reduce((a, b) => a + (b.price * b.qty), 0);
     document.getElementById('cartTotal').innerText = total.toFixed(2).replace('.',',');
+}
+
+function updateItemQty(index, delta) {
+    const item = cart[index];
+    let newQty = item.qty + delta;
+    if(newQty >= 1 && newQty <= item.maxStock) {
+        item.qty = newQty;
+        updateCartUI();
+    }
 }
 
 function removeFromCart(i) { cart.splice(i, 1); updateCartUI(); }
 
 function finalizeOrder() {
-    if(!cart.length) return;
+    const name = document.getElementById('custName').value.trim();
+    const phone = document.getElementById('custPhone').value.trim();
+
+    if (!cart.length) return alert("Adicione produtos ao carrinho!");
+    if (!name || !phone) return alert("Por favor, preencha o Nome e o WhatsApp corretamente!");
+    if (phone.length < 10) return alert("Número de WhatsApp inválido!");
+
     const total = document.getElementById('cartTotal').innerText;
-    const text = `*Pedido LOJA ANJJ*\n\n${cart.map(i => `- ${i.qty}x ${i.name} (${i.variant})`).join('\n')}\n\n*Total: R$ ${total}*`;
-    window.open(`https://wa.me/55SEUNUMERO?text=${encodeURIComponent(text)}`);
+    const text = `*NOVO PEDIDO - LOJA ANJJ*\n\n` +
+                 `*Cliente:* ${name}\n` +
+                 `*Contato:* ${phone}\n\n` +
+                 `*Itens:*\n${cart.map(i => `- ${i.qty}x ${i.name} (${i.variant})`).join('\n')}\n\n` +
+                 `*TOTAL: R$ ${total}*`;
+
+    window.open(`https://wa.me/55${phone.replace(/\D/g,'')}?text=${encodeURIComponent(text)}`);
 }
 
 init();
