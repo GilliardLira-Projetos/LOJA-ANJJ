@@ -25,16 +25,19 @@ nav a { color: #fff; text-decoration: none; margin: 0 8px; font-weight: 500; }
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px; padding: 0 20px 32px; }
 .card { background: #fff; border-radius: 12px; padding: 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.12); display: flex; flex-direction: column; transition: transform .3s, box-shadow .3s; }
 .card:hover { transform: translateY(-6px); box-shadow: 0 12px 28px rgba(0,0,0,0.2); }
-.thumb-container { width: 100%; height: 220px; overflow: hidden; border-radius: 10px; background: #eee; margin-bottom: 8px; }
-.thumb-container img { width: 100%; height: 100%; object-fit: cover; }
+.thumb-container { width: 100%; height: 220px; overflow: hidden; border-radius: 10px; background: #eee; margin-bottom: 8px; position: relative; display: flex; justify-content: center; align-items: center; }
+.thumb-container img { max-width: 100%; max-height: 100%; object-fit: contain; cursor: pointer; user-select: none; }
+
+.image-controls { display: flex; justify-content: center; gap: 20px; margin-bottom: 8px; }
+.image-controls button { background: #1d4ed8; color: #fff; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 18px; transition: background 0.3s; }
+.image-controls button:hover { background: #2563eb; }
+
 .title { font-weight: bold; margin: 8px 0; font-size: 16px; }
 .price { font-size: 18px; margin: 6px 0; color: #1d4ed8; }
 select, input, button { padding: 8px; border-radius: 6px; border: 1px solid #ccc; width: 100%; }
 button { cursor: pointer; transition: background .3s; }
 button.add-cart { background: #1d4ed8; color: #fff; border: none; margin-top: 6px; }
 button.add-cart:hover { background: #2563eb; }
-button.view-images { background: #10b981; color: #fff; border: none; margin-top: 6px; }
-button.view-images:hover { background: #059669; }
 
 /* ---------- CARRINHO ---------- */
 .cart-overlay { position: fixed; top: 0; right: 0; width: 100%; max-width: 420px; height: 100%; background: #fff; box-shadow: -4px 0 20px rgba(0,0,0,.2); padding: 20px; transform: translateX(100%); transition: transform .3s; z-index: 2000; overflow-y: auto; }
@@ -54,8 +57,8 @@ button.view-images:hover { background: #059669; }
 .modal { display: none; position: fixed; z-index: 3000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); justify-content: center; align-items: center; }
 .modal.open { display: flex; }
 .modal-content { position: relative; max-width: 90%; max-height: 80%; display: flex; align-items: center; justify-content: center; }
-.modal-content img { max-width: 100%; max-height: 80vh; object-fit: contain; border-radius: 10px; }
-.close-modal, .prev, .next { position: absolute; font-size: 28px; color: #fff; background: rgba(0,0,0,0.5); border: none; padding: 10px 16px; cursor: pointer; border-radius: 50%; }
+.modal-content img { max-width: 100%; max-height: 80vh; object-fit: contain; border-radius: 10px; cursor: zoom-out; }
+.close-modal, .prev, .next { position: absolute; font-size: 28px; color: #fff; background: rgba(0,0,0,0.5); border: none; padding: 10px 16px; cursor: pointer; border-radius: 50%; user-select: none; }
 .close-modal { top: 10px; right: 10px; transform: none; }
 .prev, .next { top: 50%; transform: translateY(-50%); font-size: 32px; z-index: 10; }
 .prev { left: -60px; }
@@ -123,15 +126,15 @@ header { flex-direction: column; text-align: center; gap: 10px; }
 <div id="imageModal" class="modal">
   <div class="modal-content">
     <button class="close-modal" onclick="closeModal()">✖</button>
-    <button class="prev" onclick="changeImage(-1)">⬅</button>
+    <button class="prev" onclick="changeImageModal(-1)">⬅</button>
     <img id="modalImage" src="" alt="Imagem do Produto">
-    <button class="next" onclick="changeImage(1)">➡</button>
+    <button class="next" onclick="changeImageModal(1)">➡</button>
   </div>
 </div>
 
 <script>
 const SHEET_URL = "https://docs.google.com/spreadsheets/d/1BqVAf9A7l7KHKcwpV9HrqBMPWTA4s-aPv1EEna7xuHg/gviz/tq?tqx=out:json&sheet=Products";
-let products=[],cart=[],currentImages=[],currentIndex=0;
+let products=[], cart=[], currentImages=[], currentIndex=0;
 
 function money(v){return Number(v).toFixed(2).replace('.', ',');}
 
@@ -154,23 +157,32 @@ function groupProducts(data){
     if(String(p.availability).toLowerCase()!=="show")return;
     const name=String(p.name).trim();
     if(!name)return;
-    if(!grouped[name]) grouped[name]={name,variants:[],images:[]};
+    if(!grouped[name]) grouped[name]={name, variants:[], images:[]};
     const size=String(p["variant name"]||"").trim();
-    if(size) grouped[name].variants.push({name:size||"Único",price:Number(p.price||0),stock:Number(p.stock||1)});
-    [p.thumbnail,p.image1,p.image2,p.image3].forEach(img=>{
-      if(img&&!grouped[name].images.includes(img)) grouped[name].images.push(img);
+    if(size) grouped[name].variants.push({name:size||"Único", price:Number(p.price||0), stock:Number(p.stock||1)});
+    [p.thumbnail, p.image1, p.image2, p.image3].forEach(img=>{
+      if(img && !grouped[name].images.includes(img)) grouped[name].images.push(img);
     });
   });
   return Object.values(grouped);
 }
 
 function createCard(p){
-  if(!p.variants.length)return null;
+  if(!p.variants.length) return null;
   const d=document.createElement("div");
   d.className="card";
-  const imgSrc=p.images[0]||"Images/placeholder.jpg";
+
+  // Para controlar imagem atual do card
+  let currentImgIndex = 0;
+
   d.innerHTML=`
-    <div class="thumb-container"><img class="thumb" src="${imgSrc}" alt="${p.name}"></div>
+    <div class="thumb-container">
+      <img class="thumb" src="${p.images[0]||"Images/placeholder.jpg"}" alt="${p.name}">
+    </div>
+    <div class="image-controls">
+      <button class="prev-btn">⬅</button>
+      <button class="next-btn">➡</button>
+    </div>
     <div class="title">${p.name}</div>
     <div class="price">R$ ${money(p.variants[0].price)}</div>
     <label>Tamanho</label>
@@ -181,50 +193,68 @@ function createCard(p){
     <label>Qtd</label>
     <select class="qty"><option>1</option></select>
     <button class="add-cart">Adicionar ao Carrinho</button>
-    <button class="view-images">Ver Imagens</button>
   `;
-  const variantSel=d.querySelector(".variant"),qtySel=d.querySelector(".qty"),priceEl=d.querySelector(".price");
-  variantSel.onchange=e=>{
-    const sel=e.target.selectedOptions[0];
-    priceEl.textContent="R$ "+money(Number(sel.value));
-    const stock=Number(sel.dataset.stock||1);
-    qtySel.innerHTML=[...Array(stock).keys()].map(i=>`<option>${i+1}</option>`).join("");
+
+  const imgEl = d.querySelector(".thumb");
+  const prevBtn = d.querySelector(".prev-btn");
+  const nextBtn = d.querySelector(".next-btn");
+  const variantSel = d.querySelector(".variant");
+  const qtySel = d.querySelector(".qty");
+  const priceEl = d.querySelector(".price");
+
+  // Atualiza a imagem no card ao clicar nas setas
+  function updateCardImage(){
+    imgEl.src = p.images[currentImgIndex];
+  }
+
+  prevBtn.onclick = () => {
+    currentImgIndex = (currentImgIndex - 1 + p.images.length) % p.images.length;
+    updateCardImage();
   };
-  d.querySelector(".add-cart").onclick=()=>{
-    const vPrice=Number(variantSel.value);
-    if(!vPrice){alert("Selecione um tamanho antes de adicionar.");return;}
-    const vName=variantSel.selectedOptions[0].text;
-    const qty=Number(qtySel.value||1);
-    cart.push({name:p.name,variant:vName,price:vPrice,qty});
+
+  nextBtn.onclick = () => {
+    currentImgIndex = (currentImgIndex + 1) % p.images.length;
+    updateCardImage();
+  };
+
+  // Ao clicar na imagem, abre modal com as imagens
+  imgEl.onclick = () => {
+    currentImages = p.images;
+    currentIndex = currentImgIndex;
+    document.getElementById("modalImage").src = currentImages[currentIndex];
+    document.getElementById("imageModal").classList.add("open");
+  };
+
+  variantSel.onchange = e => {
+    const sel = e.target.selectedOptions[0];
+    priceEl.textContent = "R$ " + money(Number(sel.value));
+    const stock = Number(sel.dataset.stock || 1);
+    qtySel.innerHTML = [...Array(stock).keys()].map(i => `<option>${i+1}</option>`).join("");
+  };
+
+  d.querySelector(".add-cart").onclick = () => {
+    const vPrice = Number(variantSel.value);
+    if(!vPrice) {
+      alert("Selecione um tamanho antes de adicionar.");
+      return;
+    }
+    const vName = variantSel.selectedOptions[0].text;
+    const qty = Number(qtySel.value || 1);
+    cart.push({name: p.name, variant: vName, price: vPrice, qty});
     updateCart();
   };
-  d.querySelector(".view-images").onclick=()=>openModal(p.images);
+
   return d;
 }
 
-function openModal(images){
-  currentImages=images;
-  currentIndex=0;
-  document.getElementById("modalImage").src=currentImages[0];
-  document.getElementById("imageModal").classList.add("open");
-}
-
-function closeModal(){ document.getElementById("imageModal").classList.remove("open"); }
-
-function changeImage(step){
-  if(!currentImages.length)return;
-  currentIndex=(currentIndex+step+currentImages.length)%currentImages.length;
-  document.getElementById("modalImage").src=currentImages[currentIndex];
-}
-
 function updateCart(){
-  const c=document.getElementById("cartItems");
-  c.innerHTML="";
-  let total=0;
-  cart.forEach((item,i)=>{
-    const div=document.createElement("div");
-    div.className="cart-item";
-    div.innerHTML=`
+  const c = document.getElementById("cartItems");
+  c.innerHTML = "";
+  let total = 0;
+  cart.forEach((item,i) => {
+    const div = document.createElement("div");
+    div.className = "cart-item";
+    div.innerHTML = `
       ${item.name} (${item.variant}) x${item.qty} - R$ ${money(item.price*item.qty)}
       <div class="buttons">
         <button onclick="changeQty(${i},-1)">➖</button>
@@ -233,38 +263,63 @@ function updateCart(){
       </div>
     `;
     c.appendChild(div);
-    total+=item.price*item.qty;
+    total += item.price * item.qty;
   });
-  document.getElementById("cartTotal").textContent=money(total);
-  document.getElementById("cartCount").textContent=cart.length;
+  document.getElementById("cartTotal").textContent = money(total);
+  document.getElementById("cartCount").textContent = cart.length;
 }
 
-function changeQty(i,d){ cart[i].qty=Math.max(1,cart[i].qty+d); updateCart(); }
+function changeQty(i,d){ cart[i].qty = Math.max(1, cart[i].qty + d); updateCart(); }
 function removeItem(i){ cart.splice(i,1); updateCart(); }
 function clearCart(){ if(confirm("Tem certeza que deseja cancelar o carrinho?")){ cart=[]; updateCart(); } }
 function toggleCart(){ document.getElementById("cartOverlay").classList.toggle("open"); }
 
 async function init(){
-  const raw=await fetchSheet();
-  products=groupProducts(raw);
-  const grid=document.getElementById("catalog");
-  grid.innerHTML="";
-  products.forEach(p=>{const card=createCard(p);if(card)grid.appendChild(card);});
+  const raw = await fetchSheet();
+  products = groupProducts(raw);
+  const grid = document.getElementById("catalog");
+  grid.innerHTML = "";
+  products.forEach(p => {
+    const card = createCard(p);
+    if(card) grid.appendChild(card);
+  });
 }
 
 function sendOrder(){
-  if(cart.length===0){ alert("Seu carrinho está vazio! Adicione produtos antes de enviar."); return; }
-  const name=document.getElementById("clientName").value.trim();
-  const phone=document.getElementById("clientPhone").value.trim();
-  const email=document.getElementById("clientEmail").value.trim();
-  if(!name||!phone){ alert("Preencha nome e WhatsApp!"); return; }
-  const total=cart.reduce((a,b)=>a+b.price*b.qty,0);
-  const msg=`Olá, sou ${name}. 📱 WhatsApp: ${phone} ✉️ Email: ${email||"Não informado"} 🛍️ Pedido: ${cart.map(i=>`- ${i.name} (${i.variant}) x${i.qty} = R$ ${money(i.price*i.qty)}`).join("\n")} Total: R$ ${money(total)}`;
-  window.open(`https://wa.me/${phone.replace(/\D/g,"")}?text=${encodeURIComponent(msg)}`,"_blank");
-  cart=[]; updateCart(); toggleCart();
+  if(cart.length === 0){
+    alert("Seu carrinho está vazio! Adicione produtos antes de enviar.");
+    return;
+  }
+  const name = document.getElementById("clientName").value.trim();
+  const phone = document.getElementById("clientPhone").value.trim();
+  const email = document.getElementById("clientEmail").value.trim();
+  if(!name || !phone){
+    alert("Preencha nome e WhatsApp!");
+    return;
+  }
+  const total = cart.reduce((a,b) => a + b.price * b.qty, 0);
+  const msg = `Olá, sou ${name}. 📱 WhatsApp: ${phone} ✉️ Email: ${email || "Não informado"} 🛍️ Pedido: ${cart.map(i => `- ${i.name} (${i.variant}) x${i.qty} = R$ ${money(i.price*i.qty)}`).join("\n")} Total: R$ ${money(total)}`;
+  window.open(`https://wa.me/${phone.replace(/\D/g,"")}?text=${encodeURIComponent(msg)}`, "_blank");
+  cart = [];
+  updateCart();
+  toggleCart();
 }
+
+// Modal functions
+function closeModal(){
+  document.getElementById("imageModal").classList.remove("open");
+}
+
+function changeImageModal(step){
+  if(!currentImages.length) return;
+  currentIndex = (currentIndex + step + currentImages.length) % currentImages.length;
+  document.getElementById("modalImage").src = currentImages[currentIndex];
+}
+
+document.getElementById("modalImage").onclick = closeModal;
 
 init();
 </script>
+
 </body>
 </html>
