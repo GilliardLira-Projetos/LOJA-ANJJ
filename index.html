@@ -135,7 +135,10 @@ function createCard(p){
  </select>
 
  <label>Qtd</label>
- <select class="qty">${[...Array(p.variants[0].stock)].map((_,i)=>`<option>${i+1}</option>`).join("")}</select>
+ <select class="qty">
+   <option disabled selected>Selecionar quantidade</option>
+   ${[...Array(p.variants[0].stock)].map((_,i)=>`<option>${i+1}</option>`).join("")}
+ </select>
 
  <button class="add-cart">Adicionar</button>
  `;
@@ -178,7 +181,7 @@ function createCard(p){
  d.querySelector(".add-cart").onclick = ()=>{
    const selected = variantSelect.selectedOptions[0];
    const qty = Number(qtySelect.value);
-   if(!selected || !qty) { alert("Selecione tamanho e quantidade!"); return; } // Validação
+   if(!selected || qty === 0) { alert("Selecione tamanho e quantidade!"); return; } // Validação
    const name = p.name + " - " + selected.text;
    const price = Number(selected.dataset.discount || selected.value);
    addToCart(name, price, qty);
