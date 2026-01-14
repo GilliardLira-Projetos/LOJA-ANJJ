@@ -3,72 +3,107 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>LOJA ANJJ - Catálogo Profissional</title>
+    <title>LOJA ANJJ</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet" />
     <style>
-        :root { --green: #22c55e; --bg: #ffffff; --red: #ef4444; --gray: #94a3b8; }
-        body { font-family: 'Poppins', sans-serif; margin: 0; background: var(--bg); color: #333; }
+        :root { --green: #22c55e; --bg: #ffffff; --red: #ef4444; }
+        body { font-family: 'Poppins', sans-serif; margin: 0; background: var(--bg); color: #333; overflow-x: hidden; }
         
         header { padding: 15px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; background: #fff; z-index: 1000; }
         .logo { font-weight: 700; font-size: 14px; text-transform: uppercase; }
-        .cart-icon { cursor: pointer; font-weight: 600; background: var(--green); color: white; padding: 6px 14px; border-radius: 20px; font-size: 12px; }
+        .cart-icon { cursor: pointer; font-weight: 600; background: #22c55e; color: white; padding: 5px 12px; border-radius: 20px; font-size: 12px; }
 
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 25px; padding: 20px 15px; }
-        .card { border: 1px solid #eee; border-radius: 12px; padding: 15px; background: #fff; display: flex; flex-direction: column; }
+        .category-nav { display: flex; gap: 10px; padding: 10px; overflow-x: auto; border-bottom: 1px solid #eee; background: #fff; scrollbar-width: none; }
+        .cat-link { border: 1px solid #eee; padding: 6px 15px; border-radius: 4px; font-size: 12px; cursor: pointer; color: #666; white-space: nowrap; transition: 0.3s; }
+        .cat-link.active { background: var(--green); color: #fff; border-color: var(--green); }
 
-        /* CARROSSEL */
-        .carousel { width: 100%; height: 280px; position: relative; overflow: hidden; border-radius: 8px; background: #f1f5f9; }
+        .category-section { padding: 20px 0; display: block; border-bottom: 8px solid #f9fafb; }
+        .category-title { text-align: center; text-transform: uppercase; font-size: 18px; margin-bottom: 25px; font-weight: 700; color: #111; }
+        
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 25px; padding: 0 15px; }
+        .card { border: 1px solid #eee; border-radius: 12px; padding: 15px; background: #fff; position: relative; transition: transform 0.2s; }
+
+        .discount-badge { position: absolute; top: 20px; left: 20px; background: var(--red); color: #fff; font-size: 10px; padding: 3px 8px; border-radius: 4px; font-weight: 700; z-index: 10; }
+
+        .carousel { width: 100%; height: 280px; position: relative; overflow: hidden; border-radius: 8px; cursor: pointer; background: #f4f4f4; }
         .carousel img { width: 100%; height: 100%; object-fit: cover; position: absolute; opacity: 0; transition: opacity 0.5s ease; }
         .carousel img.active { opacity: 1; }
 
-        /* PREÇO E CORES (LADO A LADO) */
-        .price-row { display: flex; align-items: center; justify-content: space-between; margin-top: 15px; }
-        .current-price { font-size: 20px; font-weight: 700; color: #000; }
-        .color-group { display: flex; gap: 8px; }
-        .color-dot { width: 24px; height: 24px; border-radius: 50%; border: 2px solid #eee; cursor: pointer; transition: 0.2s; box-shadow: inset 0 0 2px rgba(0,0,0,0.1); }
-        .color-dot.selected { border-color: #000; transform: scale(1.15); box-shadow: 0 0 5px rgba(0,0,0,0.2); }
-        .color-dot.disabled { opacity: 0.1; cursor: not-allowed; pointer-events: none; }
+        .product-name { font-size: 14px; font-weight: 600; margin: 15px 0 5px; text-transform: uppercase; color: #222; }
+        .price-container { margin-bottom: 15px; }
+        .old-price { font-size: 12px; color: #999; text-decoration: line-through; display: block; }
+        .current-price { font-size: 18px; font-weight: 700; color: #000; }
 
-        .product-name { font-size: 14px; font-weight: 600; margin: 10px 0 5px; text-transform: uppercase; }
+        .selection-area { margin-top: 15px; border-top: 1px dashed #eee; padding-top: 15px; }
+        .variant-grid { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
+        .variant-chip { border: 1px solid #ddd; padding: 6px 12px; border-radius: 4px; font-size: 12px; cursor: pointer; transition: 0.2s; }
+        .variant-chip.selected { border-color: var(--green); background: #f0fdf4; color: var(--green); font-weight: 600; }
+        .variant-chip.no-stock { opacity: 0.3; cursor: not-allowed; text-decoration: line-through; }
 
-        /* TAMANHOS (ABAIXO) */
-        .section-label { font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-top: 12px; }
-        .variant-grid { display: flex; flex-wrap: wrap; gap: 8px; margin: 6px 0 15px; }
-        .size-chip { border: 1px solid #ddd; padding: 7px 14px; border-radius: 6px; font-size: 12px; cursor: pointer; min-width: 40px; text-align: center; background: #fff; transition: 0.2s; }
-        .size-chip.selected { background: #000; color: #fff; border-color: #000; font-weight: 600; }
-        .size-chip.disabled { opacity: 0.2; cursor: not-allowed; pointer-events: none; text-decoration: line-through; background: #f9f9f9; }
+        .qty-selector { display: flex; align-items: center; gap: 12px; margin: 15px 0; }
+        .qty-btn { border: 1px solid #ddd; background: #fff; width: 32px; height: 32px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .btn-add { background: var(--green); color: #fff; border: none; padding: 12px; border-radius: 6px; font-weight: 700; width: 100%; cursor: pointer; font-size: 14px; }
 
-        .btn-add { background: var(--green); color: #fff; border: none; padding: 15px; border-radius: 10px; font-weight: 700; width: 100%; cursor: pointer; font-size: 13px; }
-        .btn-add.disabled { background: #cbd5e1 !important; cursor: not-allowed; }
-
-        /* CARRINHO */
-        .cart-overlay { position: fixed; top: 0; right: 0; width: 100%; max-width: 400px; height: 100%; background: #fff; z-index: 2000; transform: translateX(100%); transition: 0.4s; padding: 25px; box-sizing: border-box; box-shadow: -10px 0 30px rgba(0,0,0,0.1); overflow-y: auto; }
+        /* CARRINHO / CHECKOUT */
+        .cart-overlay { position: fixed; top: 0; right: 0; width: 100%; max-width: 450px; height: 100%; background: #fff; box-shadow: -5px 0 20px rgba(0,0,0,0.1); z-index: 2000; transform: translateX(100%); transition: 0.3s; padding: 25px; box-sizing: border-box; overflow-y: auto; }
         .cart-overlay.open { transform: translateX(0); }
-        .cart-item { display: flex; gap: 15px; padding: 15px 0; border-bottom: 1px solid #f1f5f9; align-items: center; }
-        .cart-item img { width: 60px; height: 60px; border-radius: 8px; object-fit: cover; }
-        .total-box { margin: 20px 0; padding-top: 15px; border-top: 2px solid #eee; font-size: 18px; font-weight: 700; display: flex; justify-content: space-between; }
-        input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 10px; font-family: inherit; }
+        
+        .cart-item { display: flex; align-items: center; gap: 15px; padding: 15px 0; border-bottom: 1px solid #f0f0f0; position: relative; }
+        .cart-item img { width: 60px; height: 60px; object-fit: cover; border-radius: 6px; }
+        .cart-info { flex: 1; }
+        .cart-info h4 { margin: 0; font-size: 13px; text-transform: uppercase; }
+        .cart-info p { margin: 3px 0; font-size: 12px; color: #666; }
+        
+        .checkout-box { background: #f9f9f9; padding: 20px; border-radius: 12px; margin-top: 25px; }
+        .summary-row { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 14px; }
+        .form-group { margin-top: 20px; }
+        .form-group label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 8px; color: #555; }
+        .form-group input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; outline: none; }
+        .form-group input:focus { border-color: var(--green); }
     </style>
 </head>
 <body>
 
 <header>
     <div class="logo">LOJA - ANJJ</div>
-    <div class="cart-icon" onclick="toggleCart()">CARRINHO (<span id="cartCount">0</span>)</div>
+    <div class="cart-icon" onclick="toggleCart()">🛒 <span id="cartCount">0</span></div>
 </header>
 
-<div id="catalog" class="grid"></div>
+<div class="category-nav" id="categoryNav">
+    <div class="cat-link active" onclick="filterCat('all', this)">Tudo</div>
+</div>
+
+<div id="catalog"></div>
 
 <div class="cart-overlay" id="cartOverlay">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-        <h3 style="margin:0">🛍️ Seu Pedido</h3>
+        <h3 style="margin:0; font-size:18px;">🛒 Finalizar Pedido</h3>
         <span onclick="toggleCart()" style="cursor:pointer; font-size:24px;">✕</span>
     </div>
+
     <div id="cartItems"></div>
-    <div class="total-box"><span>Total</span> <span id="totalCart">R$ 0,00</span></div>
-    <input type="text" id="custName" placeholder="Seu Nome Completo">
-    <input type="tel" id="custPhone" placeholder="Seu WhatsApp (DDD + Número)">
-    <button class="btn-add" onclick="finalizeOrder()">ENVIAR PEDIDO AO WHATSAPP</button>
+
+    <div class="checkout-box">
+        <h4 style="margin-top:0">Resumo do Pedido</h4>
+        <div class="summary-row"><span>Subtotal</span> <span id="subtotal">R$ 0,00</span></div>
+        <div class="summary-row"><span>Envio</span> <span style="color:var(--green)">LIVRE</span></div>
+        <div class="summary-row" style="font-weight:700; font-size:16px; border-top:1px solid #ddd; pt:10px; margin-top:10px;">
+            <span>Total</span> <span id="totalFinal">R$ 0,00</span>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label>Nome Completo *</label>
+        <input type="text" id="custName" placeholder="Como deseja ser chamado?">
+    </div>
+    <div class="form-group">
+        <label>WhatsApp (DDD + Número) *</label>
+        <input type="tel" id="custPhone" placeholder="Ex: 11999999999" maxlength="11">
+    </div>
+
+    <button class="btn-add" style="margin-top:25px; height:50px; background:var(--green)" onclick="finalizeOrder()">
+        ✅ Fazer pedido no WhatsApp
+    </button>
 </div>
 
 <script>
@@ -76,132 +111,190 @@ const SHEET_URL = "https://docs.google.com/spreadsheets/d/1BqVAf9A7l7KHKcwpV9Hrq
 let productsData = [];
 let cart = [];
 
-const colorMap = { 'preto': '#000', 'branco': '#fff', 'vermelho': '#f00', 'azul': '#00f', 'verde': '#080', 'amarelo': '#ff0', 'rosa': '#ff69b4', 'cinza': '#808080' };
+function money(v) { return Number(v).toLocaleString('pt-br', { style: 'currency', currency: 'BRL' }); }
 
 async function init() {
-    const r = await fetch(SHEET_URL);
-    const t = await r.text();
-    const j = JSON.parse(t.substring(t.indexOf("{"), t.lastIndexOf("}") + 1));
-    const cols = j.table.cols.map(c => c.label.trim());
-    const rows = j.table.rows.map(row => {
-        const o = {}; row.c.forEach((c, i) => { o[cols[i]] = c ? (c.v ?? c.f ?? "") : ""; });
-        return o;
-    });
-
-    const grouped = {};
-    rows.forEach(p => {
-        if (String(p.Availability).toLowerCase() !== "show") return;
-        if (!grouped[p.Name]) grouped[p.Name] = { name: p.Name, images: [p.Thumbnail, p.Image1, p.Image2, p.Image3].filter(img => img), skus: [] };
-        grouped[p.Name].skus.push({ 
-            color: p["Tag"].trim(), 
-            size: p["Variant Name"].toString().trim(), 
-            price: parseFloat(p["Discounted Price"] || p.Price), 
-            stock: parseInt(p.Stock || 0) 
+    try {
+        const r = await fetch(SHEET_URL);
+        const t = await r.text();
+        const j = JSON.parse(t.substring(t.indexOf("{"), t.lastIndexOf("}") + 1));
+        const cols = j.table.cols.map(c => c.label.trim());
+        const rows = j.table.rows.map(row => {
+            const o = {};
+            row.c.forEach((c, i) => { o[cols[i]] = c ? (c.v ?? c.f ?? "") : ""; });
+            return o;
         });
-    });
-    productsData = Object.values(grouped);
-    renderAll();
+
+        const grouped = {};
+        rows.forEach(p => {
+            if (String(p.Availability).toLowerCase() !== "show") return;
+            if (!grouped[p.Name]) {
+                grouped[p.Name] = { 
+                    name: p.Name, category: p.Category, 
+                    images: [p.Thumbnail, p.Image1, p.Image2, p.Image3].filter(i => i !== ""), 
+                    variants: [] 
+                };
+            }
+            const origPrice = parseFloat(p.Price || 0);
+            const discPrice = parseFloat(p["Discounted Price"] || 0);
+            grouped[p.Name].variants.push({ 
+                name: p["Variant Name"], 
+                price: discPrice > 0 ? discPrice : origPrice, 
+                oldPrice: discPrice > 0 ? origPrice : 0,
+                stock: parseInt(p.Stock || 0) 
+            });
+        });
+        
+        productsData = Object.values(grouped);
+        renderAll();
+    } catch (e) { alert("Erro ao carregar produtos. Verifique sua conexão."); }
 }
 
 function renderAll() {
     const catalog = document.getElementById("catalog");
-    productsData.forEach(p => {
-        const id = p.name.replace(/\s+/g, '');
-        const colors = [...new Set(p.skus.map(s => s.color))];
-        const sizes = [...new Set(p.skus.map(s => s.size))];
-        
-        const card = document.createElement("div");
-        card.className = "card";
-        card.id = `card-${id}`;
-        card.innerHTML = `
-            <div class="carousel" onclick="nextImg(this)">${p.images.map((img, i) => `<img src="${img}" class="${i===0?'active':''}">`).join("")}</div>
-            <div class="price-row">
-                <span class="current-price">R$ ${p.skus[0].price.toFixed(2).replace('.',',')}</span>
-                <div class="color-group">${colors.map(c => `<div class="color-dot" style="background-color:${colorMap[c.toLowerCase()] || c}" data-color="${c}" onclick="updateSelection('${id}', 'color', '${c}')"></div>`).join("")}</div>
+    const nav = document.getElementById("categoryNav");
+    const categories = [...new Set(productsData.map(p => p.category))];
+
+    categories.forEach(cat => {
+        nav.innerHTML += `<div class="cat-link" onclick="filterCat('${cat}', this)">${cat}</div>`;
+        const section = document.createElement("section");
+        section.className = "category-section";
+        section.id = `sec-${cat}`;
+        section.innerHTML = `<h2 class="category-title">${cat}</h2><div class="grid" id="grid-${cat.replace(/\s+/g,'')}"></div>`;
+        catalog.appendChild(section);
+
+        const categoryGrid = document.getElementById(`grid-${cat.replace(/\s+/g,'')}`);
+        productsData.filter(p => p.category === cat).forEach(p => {
+            categoryGrid.appendChild(createCard(p));
+        });
+    });
+    autoCarousel();
+}
+
+function createCard(p) {
+    const d = document.createElement("div");
+    d.className = "card";
+    const v = p.variants[0];
+    d.innerHTML = `
+        ${v.oldPrice > 0 ? `<div class="discount-badge">OFERTA</div>` : ''}
+        <div class="carousel" onclick="manualNext(this)">${p.images.map((img, i) => `<img src="${img}" class="${i === 0 ? 'active' : ''}">`).join("")}</div>
+        <div class="product-name">${p.name}</div>
+        <div class="price-container">
+            ${v.oldPrice > 0 ? `<span class="old-price">${money(v.oldPrice)}</span>` : ''}
+            <span class="current-price">${money(v.price)}</span>
+        </div>
+        <div class="selection-area">
+            <div class="variant-grid">${p.variants.map(varnt => `<div class="variant-chip ${varnt.stock <= 0 ? 'no-stock' : ''}" onclick="${varnt.stock > 0 ? `selectChip(this, ${varnt.price}, ${varnt.oldPrice}, ${varnt.stock})` : ''}">${varnt.name}</div>`).join("")}</div>
+            <div class="qty-selector">
+                <button class="qty-btn" onclick="changeQty(this, -1)">-</button>
+                <span class="qty-val">1</span>
+                <button class="qty-btn" onclick="changeQty(this, 1)">+</button>
+                <span style="font-size:10px; color:#999; margin-left:auto">Estoque: <b class="stk-n">-</b></span>
             </div>
-            <div class="product-name">${p.name}</div>
-            <div class="section-label">Tamanho</div>
-            <div class="variant-grid">${sizes.map(s => `<div class="size-chip" data-size="${s}" onclick="updateSelection('${id}', 'size', '${s}')">${s}</div>`).join("")}</div>
-            <button class="btn-add" onclick="add('${id}')">ADICIONAR AO CARRINHO</button>
-        `;
-        catalog.appendChild(card);
+            <button class="btn-add" onclick="addToCart('${p.name}', '${p.images[0]}', this)">Adicionar ao carrinho</button>
+        </div>`;
+    return d;
+}
+
+function filterCat(cat, el) {
+    document.querySelectorAll('.cat-link').forEach(l => l.classList.remove('active'));
+    el.classList.add('active');
+    document.querySelectorAll('.category-section').forEach(sec => {
+        sec.style.display = (cat === 'all' || sec.id === `sec-${cat}`) ? 'block' : 'none';
     });
 }
 
-function updateSelection(id, type, val) {
-    const card = document.getElementById(`card-${id}`);
-    const product = productsData.find(p => p.name.replace(/\s+/g, '') === id);
-    
-    // 1. Marca o botão clicado
-    card.querySelectorAll(type === 'color' ? '.color-dot' : '.size-chip').forEach(el => {
-        el.classList.remove('selected');
-        if(el.dataset[type] === val) el.classList.add('selected');
-    });
-
-    const selCol = card.querySelector('.color-dot.selected')?.dataset.color;
-    const selSize = card.querySelector('.size-chip.selected')?.dataset.size;
-
-    // 2. Bloqueia tamanhos indisponíveis para a cor escolhida
-    card.querySelectorAll('.size-chip').forEach(chip => {
-        const hasStock = product.skus.some(s => s.size === chip.dataset.size && (selCol ? s.color === selCol : true) && s.stock > 0);
-        chip.classList.toggle('disabled', !hasStock);
-    });
-
-    // 3. Bloqueia cores indisponíveis para o tamanho escolhido
-    card.querySelectorAll('.color-dot').forEach(dot => {
-        const hasStock = product.skus.some(s => s.color === dot.dataset.color && (selSize ? s.size === selSize : true) && s.stock > 0);
-        dot.classList.toggle('disabled', !hasStock);
-    });
-
-    // 4. Atualiza Preço Dinamicamente
-    if(selCol && selSize) {
-        const sku = product.skus.find(s => s.color === selCol && s.size === selSize);
-        if(sku) card.querySelector('.current-price').innerText = `R$ ${sku.price.toFixed(2).replace('.',',')}`;
-    }
-}
-
-function nextImg(car) {
-    const imgs = car.querySelectorAll('img'); if(imgs.length < 2) return;
-    let act = car.querySelector('img.active'), nxt = act.nextElementSibling || imgs[0];
+function manualNext(car) {
+    const imgs = car.querySelectorAll('img'); if (imgs.length <= 1) return;
+    let act = car.querySelector('img.active');
+    let nxt = act.nextElementSibling || imgs[0];
     act.classList.remove('active'); nxt.classList.add('active');
+}
+function autoCarousel() { setInterval(() => { document.querySelectorAll('.carousel').forEach(c => manualNext(c)); }, 4000); }
+
+function selectChip(el, pr, old, st) {
+    el.parentElement.querySelectorAll('.variant-chip').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+    const card = el.closest('.card');
+    card.querySelector('.current-price').innerText = money(pr);
+    if(old > 0) {
+        if(!card.querySelector('.old-price')) {
+            const s = document.createElement('span'); s.className = 'old-price';
+            card.querySelector('.price-container').prepend(s);
+        }
+        card.querySelector('.old-price').innerText = money(old);
+    } else if (card.querySelector('.old-price')) card.querySelector('.old-price').remove();
+    card.querySelector('.stk-n').innerText = st;
+}
+
+function changeQty(btn, d) {
+    const val = btn.parentElement.querySelector('.qty-val');
+    const max = parseInt(btn.parentElement.querySelector('.stk-n').innerText) || 999;
+    let n = parseInt(val.innerText) + d;
+    if (n >= 1 && n <= max) val.innerText = n;
 }
 
 function toggleCart() { document.getElementById('cartOverlay').classList.toggle('open'); }
 
-function add(id) {
-    const card = document.getElementById(`card-${id}`);
-    const product = productsData.find(p => p.name.replace(/\s+/g, '') === id);
-    const color = card.querySelector('.color-dot.selected')?.dataset.color;
-    const size = card.querySelector('.size-chip.selected')?.dataset.size;
+function addToCart(name, img, btn) {
+    const card = btn.closest('.card');
+    const sel = card.querySelector('.variant-chip.selected');
+    if (!sel) return alert("Selecione um tamanho!");
+    const qty = parseInt(card.querySelector('.qty-val').innerText);
+    const pr = parseFloat(card.querySelector('.current-price').innerText.replace(/[^\d,]/g, '').replace(',', '.'));
+    const max = parseInt(card.querySelector('.stk-n').innerText);
 
-    if(!color || !size) return alert("Por favor, selecione COR e TAMANHO primeiro!");
-
-    const sku = product.skus.find(s => s.color === color && s.size === size);
-    cart.push({ name: product.name, color, size, price: sku.price, img: product.images[0] });
+    const idx = cart.findIndex(i => i.name === name && i.variant === sel.innerText);
+    if(idx > -1) cart[idx].qty = Math.min(cart[idx].qty + qty, max);
+    else cart.push({ name, img, variant: sel.innerText, qty, price: pr, maxStock: max });
     
-    renderCart();
+    updateCartUI();
     toggleCart();
 }
 
-function renderCart() {
+function updateCartUI() {
     document.getElementById('cartCount').innerText = cart.length;
-    document.getElementById('cartItems').innerHTML = cart.map((item, i) => `
+    const itemsCont = document.getElementById('cartItems');
+    itemsCont.innerHTML = cart.map((item, i) => `
         <div class="cart-item">
             <img src="${item.img}">
-            <div style="flex:1"><b>${item.name}</b><br><small>${item.color} / ${item.size}</small></div>
-            <div>R$ ${item.price.toFixed(2)} <span onclick="cart.splice(${i},1);renderCart()" style="color:red; cursor:pointer; margin-left:10px">✕</span></div>
-        </div>`).join("");
-    const total = cart.reduce((a, b) => a + b.price, 0);
-    document.getElementById('totalCart').innerText = `R$ ${total.toFixed(2).replace('.',',')}`;
+            <div class="cart-info">
+                <h4>${item.name}</h4>
+                <p>Tamanho: ${item.variant}</p>
+                <p><b>${money(item.price)}</b></p>
+                <div class="qty-selector" style="margin:5px 0">
+                    <button class="qty-btn" onclick="updateItemQty(${i}, -1)">-</button>
+                    <span>${item.qty}</span>
+                    <button class="qty-btn" onclick="updateItemQty(${i}, 1)">+</button>
+                    <button onclick="removeFromCart(${i})" style="margin-left:auto; border:none; color:red; cursor:pointer; background:none">Remover</button>
+                </div>
+            </div>
+        </div>
+    `).join("");
+    const total = cart.reduce((a, b) => a + (b.price * b.qty), 0);
+    document.getElementById('subtotal').innerText = money(total);
+    document.getElementById('totalFinal').innerText = money(total);
 }
 
+function updateItemQty(idx, d) {
+    const it = cart[idx];
+    if(it.qty + d >= 1 && it.qty + d <= it.maxStock) { it.qty += d; updateCartUI(); }
+}
+
+function removeFromCart(i) { cart.splice(i, 1); updateCartUI(); }
+
 function finalizeOrder() {
-    const name = document.getElementById('custName').value;
-    const phone = document.getElementById('custPhone').value;
-    if(!cart.length || !name || !phone) return alert("Preencha todos os campos!");
+    const name = document.getElementById('custName').value.trim();
+    const phone = document.getElementById('custPhone').value.trim();
+    if (!cart.length) return alert("Carrinho vazio!");
+    if (!name || phone.length < 10) return alert("Preencha Nome e WhatsApp (DDD + número) corretamente!");
     
-    const msg = `*PEDIDO LOJA ANJJ*\n*Cliente:* ${name}\n*Zap:* ${phone}\n\n*ITENS:*\n${cart.map(i => `- ${i.name} (${i.color}/${i.size})`).join('\n')}\n\n*TOTAL: ${document.getElementById('totalCart').innerText}*`;
-    window.open(`https://wa.me/55SEUNUMERO?text=${encodeURIComponent(msg)}`);
+    const text = `*NOVO PEDIDO - LOJA ANJJ*\n\n` +
+                 `*Cliente:* ${name}\n*Fone:* ${phone}\n\n` +
+                 `*Itens:*\n${cart.map(i => `- ${i.qty}x ${i.name} (${i.variant})`).join('\n')}\n\n` +
+                 `*TOTAL: ${document.getElementById('totalFinal').innerText}*`;
+    
+    window.open(`https://wa.me/55SEUNUMERO?text=${encodeURIComponent(text)}`);
 }
 
 init();
