@@ -91,6 +91,8 @@
 
 <script>
 const SHEET_URL = "https://docs.google.com/spreadsheets/d/1uCx_JB4xZnU0vBIQjlrwBgsTRia_wSlUWPJlaN0EbhE/gviz/tq?tqx=out:json&sheet=Products";
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxfMDIOjHdKUbpQuIo1oE-lmZPgvyoH_RKwinsD65Jo7iCMOUMaXlwzZz0mwdIxXFL2Kw/exec';
+
 let productsData = [];
 let cart = [];
 let lbImages = [];
@@ -231,7 +233,6 @@ function addToCart(id) {
     toggleCart();
 }
 
-// FUNÇÕES DE CARRINHO ATUALIZADAS
 function updateCartUI() {
     document.getElementById('cartCount').innerText = cart.length;
     document.getElementById('cartItems').innerHTML = cart.map((item, i) => `
@@ -260,7 +261,7 @@ function updateCartQty(index, delta) {
         item.qty = newQty;
         updateCartUI();
     } else if (newQty > item.max) {
-        alert("Limite de estoque atingido para este item.");
+        alert("Limite de estoque atingido.");
     }
 }
 
@@ -272,11 +273,44 @@ function filterCat(cat, el) {
     document.querySelectorAll('.category-section').forEach(sec => sec.style.display = (cat === 'all' || sec.id === `sec-${cat.replace(/\s+/g,'')}`) ? 'block' : 'none');
 }
 
-function finalizeOrder() {
-    const n = document.getElementById('custName').value, p = document.getElementById('custPhone').value;
+async function finalizeOrder() {
+    const n = document.getElementById('custName').value;
+    const p = document.getElementById('custPhone').value;
+    const total = document.getElementById('totalFinal').innerText;
+
     if(!cart.length || !n || !p) return alert("Preencha os dados e o carrinho!");
-    const msg = `*NOVO PEDIDO ANJJ*\n*Cliente:* ${n}\n*WhatsApp:* ${p}\n\n*Itens:*\n${cart.map(i => `- ${i.qty}x ${i.name} (${i.color}/${i.size})`).join("\n")}\n\n*TOTAL: ${document.getElementById('totalFinal').innerText}*`;
-    window.open(`https://wa.me/5581999998888?text=${encodeURIComponent(msg)}`);
+
+    const orderNo = "#" + new Date().getTime();
+
+    const orderData = {
+        name: n,
+        phone: p,
+        total: total,
+        items: cart.map(i => `${i.qty}x ${i.name} (${i.color}/${i.size})`).join(", ")
+    };
+
+    try {
+        // Envia para a planilha
+        fetch(APPS_SCRIPT_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(orderData)
+        });
+
+        // WhatsApp
+        const msg = `*PEDIDO: ${orderNo}*\n----------------------------\n*Cliente:* ${n}\n*WhatsApp:* ${p}\n\n*Itens:*\n${cart.map(i => `- ${i.qty}x ${i.name} (${i.color}/${i.size})`).join("\n")}\n\n*TOTAL: ${total}*\n----------------------------\n_Enviado via Loja Online_`;
+        
+        setTimeout(() => {
+            window.open(`https://wa.me/+5581997512215?text=${encodeURIComponent(msg)}`);
+            cart = [];
+            updateCartUI();
+            toggleCart();
+        }, 500);
+
+    } catch (error) {
+        alert("Erro ao salvar. Tente novamente.");
+    }
 }
 
 init();
