@@ -23,18 +23,17 @@ nav a { color: #fff; text-decoration: none; margin: 0 8px; font-weight: 500; }
 
 /* ---------- CATÁLOGO ---------- */
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px; padding: 0 20px 32px; }
-.card { background: #fff; border-radius: 12px; padding: 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.12); display: flex; flex-direction: column; transition: transform .3s, box-shadow .3s; }
+.card { background: #fff; border-radius: 12px; padding: 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.12); display: flex; flex-direction: column; transition: transform .3s, box-shadow .3s; position: relative; overflow: hidden; }
 .card:hover { transform: translateY(-6px); box-shadow: 0 12px 28px rgba(0,0,0,0.2); }
-.thumb-container { width: 100%; height: 220px; overflow: hidden; border-radius: 10px; background: #eee; margin-bottom: 8px; }
-.thumb-container img { width: 100%; height: 100%; object-fit: cover; }
+.thumb-container { width: 100%; height: 220px; border-radius: 10px; background: #eee; margin-bottom: 8px; overflow: hidden; position: relative; }
+.thumb-container img { width: 100%; height: 100%; object-fit: cover; border-radius: 10px; position: absolute; top: 0; left: 0; opacity: 0; transition: opacity 0.6s ease; }
+.thumb-container img.active { opacity: 1; }
 .title { font-weight: bold; margin: 8px 0; font-size: 16px; }
 .price { font-size: 18px; margin: 6px 0; color: #1d4ed8; }
 select, input, button { padding: 8px; border-radius: 6px; border: 1px solid #ccc; width: 100%; }
 button { cursor: pointer; transition: background .3s; }
 button.add-cart { background: #1d4ed8; color: #fff; border: none; margin-top: 6px; }
 button.add-cart:hover { background: #2563eb; }
-button.view-images { background: #10b981; color: #fff; border: none; margin-top: 6px; }
-button.view-images:hover { background: #059669; }
 
 /* ---------- CARRINHO ---------- */
 .cart-overlay { position: fixed; top: 0; right: 0; width: 100%; max-width: 420px; height: 100%; background: #fff; box-shadow: -4px 0 20px rgba(0,0,0,.2); padding: 20px; transform: translateX(100%); transition: transform .3s; z-index: 2000; overflow-y: auto; }
@@ -50,24 +49,11 @@ button.view-images:hover { background: #059669; }
 .cart-actions button:first-child { background: #ef4444; color: #fff; }
 .cart-actions button:last-child { background: #10b981; color: #fff; }
 
-/* ---------- MODAL ---------- */
-.modal { display: none; position: fixed; z-index: 3000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); justify-content: center; align-items: center; }
-.modal.open { display: flex; }
-.modal-content { position: relative; max-width: 90%; max-height: 80%; display: flex; align-items: center; justify-content: center; }
-.modal-content img { max-width: 100%; max-height: 80vh; object-fit: contain; border-radius: 10px; }
-.close-modal, .prev, .next { position: absolute; font-size: 28px; color: #fff; background: rgba(0,0,0,0.5); border: none; padding: 10px 16px; cursor: pointer; border-radius: 50%; }
-.close-modal { top: 10px; right: 10px; transform: none; }
-.prev, .next { top: 50%; transform: translateY(-50%); font-size: 32px; z-index: 10; }
-.prev { left: -60px; }
-.next { right: -60px; }
-@media(max-width:768px){ .prev { left: 10px; } .next { right: 10px; } }
-
 /* ---------- RESPONSIVIDADE ---------- */
 @media (max-width: 768px) {
 header { flex-direction: column; text-align: center; gap: 10px; }
 .banner { height: 200px; }
 .banner-text h1 { font-size: 1.5em; }
-.banner-text p { font-size: 0.9em; }
 .grid { padding: 0 10px; gap: 15px; }
 .cart-overlay { max-width: 100%; }
 .cart-actions button { font-size: 16px; }
@@ -106,11 +92,11 @@ header { flex-direction: column; text-align: center; gap: 10px; }
     <hr />
     <div>
       <label>Nome:</label>
-      <input type="text" id="clientName" placeholder="Digite seu nome" style="width:100%;margin-bottom:8px;">
+      <input type="text" id="clientName" placeholder="Digite seu nome">
       <label>WhatsApp:</label>
-      <input type="text" id="clientPhone" placeholder="Digite seu WhatsApp" style="width:100%;margin-bottom:8px;">
+      <input type="text" id="clientPhone" placeholder="Digite seu WhatsApp">
       <label>Email:</label>
-      <input type="email" id="clientEmail" placeholder="Digite seu email (opcional)" style="width:100%;margin-bottom:10px;">
+      <input type="email" id="clientEmail" placeholder="Digite seu email (opcional)">
     </div>
     <div class="cart-actions">
       <button onclick="clearCart()">🗑️ Cancelar Carrinho</button>
@@ -119,19 +105,9 @@ header { flex-direction: column; text-align: center; gap: 10px; }
   </div>
 </div>
 
-<!-- Modal -->
-<div id="imageModal" class="modal">
-  <div class="modal-content">
-    <button class="close-modal" onclick="closeModal()">✖</button>
-    <button class="prev" onclick="changeImage(-1)">⬅</button>
-    <img id="modalImage" src="" alt="Imagem do Produto">
-    <button class="next" onclick="changeImage(1)">➡</button>
-  </div>
-</div>
-
 <script>
 const SHEET_URL = "https://docs.google.com/spreadsheets/d/1BqVAf9A7l7KHKcwpV9HrqBMPWTA4s-aPv1EEna7xuHg/gviz/tq?tqx=out:json&sheet=Products";
-let products=[],cart=[],currentImages=[],currentIndex=0;
+let products=[],cart=[];
 
 function money(v){return Number(v).toFixed(2).replace('.', ',');}
 
@@ -164,13 +140,15 @@ function groupProducts(data){
   return Object.values(grouped);
 }
 
+/* ---------- CARDS COM CARROSSEL ---------- */
 function createCard(p){
   if(!p.variants.length)return null;
   const d=document.createElement("div");
   d.className="card";
-  const imgSrc=p.images[0]||"Images/placeholder.jpg";
+  const imgs = p.images.length ? p.images : ["Images/placeholder.jpg"];
+  const imgElements = imgs.map((src,i)=>`<img src="${src}" class="${i===0?'active':''}">`).join("");
   d.innerHTML=`
-    <div class="thumb-container"><img class="thumb" src="${imgSrc}" alt="${p.name}"></div>
+    <div class="thumb-container">${imgElements}</div>
     <div class="title">${p.name}</div>
     <div class="price">R$ ${money(p.variants[0].price)}</div>
     <label>Tamanho</label>
@@ -181,8 +159,8 @@ function createCard(p){
     <label>Qtd</label>
     <select class="qty"><option>1</option></select>
     <button class="add-cart">Adicionar ao Carrinho</button>
-    <button class="view-images">Ver Imagens</button>
   `;
+  
   const variantSel=d.querySelector(".variant"),qtySel=d.querySelector(".qty"),priceEl=d.querySelector(".price");
   variantSel.onchange=e=>{
     const sel=e.target.selectedOptions[0];
@@ -198,25 +176,30 @@ function createCard(p){
     cart.push({name:p.name,variant:vName,price:vPrice,qty});
     updateCart();
   };
-  d.querySelector(".view-images").onclick=()=>openModal(p.images);
+
+  // Carrossel automático
+  const imgsEl = d.querySelectorAll(".thumb-container img");
+  if (imgsEl.length > 1) {
+    let idx = 0;
+    let interval = setInterval(()=>{
+      imgsEl[idx].classList.remove("active");
+      idx = (idx + 1) % imgsEl.length;
+      imgsEl[idx].classList.add("active");
+    }, 3000);
+    d.querySelector(".thumb-container").addEventListener("mouseenter",()=>clearInterval(interval));
+    d.querySelector(".thumb-container").addEventListener("mouseleave",()=>{
+      interval=setInterval(()=>{
+        imgsEl[idx].classList.remove("active");
+        idx=(idx+1)%imgsEl.length;
+        imgsEl[idx].classList.add("active");
+      },3000);
+    });
+  }
+
   return d;
 }
 
-function openModal(images){
-  currentImages=images;
-  currentIndex=0;
-  document.getElementById("modalImage").src=currentImages[0];
-  document.getElementById("imageModal").classList.add("open");
-}
-
-function closeModal(){ document.getElementById("imageModal").classList.remove("open"); }
-
-function changeImage(step){
-  if(!currentImages.length)return;
-  currentIndex=(currentIndex+step+currentImages.length)%currentImages.length;
-  document.getElementById("modalImage").src=currentImages[currentIndex];
-}
-
+/* ---------- CARRINHO ---------- */
 function updateCart(){
   const c=document.getElementById("cartItems");
   c.innerHTML="";
@@ -230,15 +213,13 @@ function updateCart(){
         <button onclick="changeQty(${i},-1)">➖</button>
         <button onclick="changeQty(${i},1)">➕</button>
         <button class="remove" onclick="removeItem(${i})">🗑️</button>
-      </div>
-    `;
+      </div>`;
     c.appendChild(div);
     total+=item.price*item.qty;
   });
   document.getElementById("cartTotal").textContent=money(total);
   document.getElementById("cartCount").textContent=cart.length;
 }
-
 function changeQty(i,d){ cart[i].qty=Math.max(1,cart[i].qty+d); updateCart(); }
 function removeItem(i){ cart.splice(i,1); updateCart(); }
 function clearCart(){ if(confirm("Tem certeza que deseja cancelar o carrinho?")){ cart=[]; updateCart(); } }
@@ -253,17 +234,22 @@ async function init(){
 }
 
 function sendOrder(){
-  if(cart.length===0){ alert("Seu carrinho está vazio! Adicione produtos antes de enviar."); return; }
+  if(cart.length===0){ alert("Seu carrinho está vazio!"); return; }
   const name=document.getElementById("clientName").value.trim();
   const phone=document.getElementById("clientPhone").value.trim();
   const email=document.getElementById("clientEmail").value.trim();
   if(!name||!phone){ alert("Preencha nome e WhatsApp!"); return; }
   const total=cart.reduce((a,b)=>a+b.price*b.qty,0);
-  const msg=`Olá, sou ${name}. 📱 WhatsApp: ${phone} ✉️ Email: ${email||"Não informado"} 🛍️ Pedido: ${cart.map(i=>`- ${i.name} (${i.variant}) x${i.qty} = R$ ${money(i.price*i.qty)}`).join("\n")} Total: R$ ${money(total)}`;
+  const msg=`Olá, sou ${name}.
+📱 WhatsApp: ${phone}
+✉️ Email: ${email||"Não informado"}
+
+🛍️ Pedido:
+${cart.map(i=>`- ${i.name} (${i.variant}) x${i.qty} = R$ ${money(i.price*i.qty)}`).join("\n")}
+Total: R$ ${money(total)}`;
   window.open(`https://wa.me/${phone.replace(/\D/g,"")}?text=${encodeURIComponent(msg)}`,"_blank");
   cart=[]; updateCart(); toggleCart();
 }
-
 init();
 </script>
 </body>
