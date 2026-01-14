@@ -1,256 +1,124 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>LOJA ANJJ</title>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Produto</title>
 <style>
-/* ---------- ESTILO GERAL ---------- */
-body { font-family: 'Poppins', sans-serif; margin: 0; padding: 0; background: #f6f6f6; }
-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 32px; background: #1d4ed8; color: #fff; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 8px rgba(0,0,0,.1); }
-.logo { font-weight: 600; font-size: 22px; }
-nav a { color: #fff; text-decoration: none; margin: 0 8px; font-weight: 500; }
-.cart-btn { background: #f59e0b; color: #fff; padding: 8px 12px; border: none; border-radius: 6px; cursor: pointer; position: relative; }
-.cart-count { position: absolute; top: -6px; right: -6px; background: red; color: #fff; border-radius: 50%; padding: 2px 6px; font-size: 12px; }
+  body {
+    font-family: Arial, sans-serif;
+    padding: 20px;
+    background: #f5f5f5;
+  }
 
-/* ---------- BANNER ---------- */
-.banner { position: relative; text-align: center; overflow: hidden; height: 300px; margin-bottom: 20px; }
-.banner img { width: 100%; height: 100%; object-fit: cover; }
-.banner-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #fff; text-shadow: 0 2px 6px rgba(0,0,0,.6); width: 90%; }
-.banner-text h1 { font-size: 2em; margin: 0; }
-.banner-text p { font-size: 1em; }
+  .produto {
+    max-width: 350px;
+    margin: auto;
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  }
 
-/* ---------- CATÁLOGO ---------- */
-.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px; padding: 0 20px 32px; }
-.card { background: #fff; border-radius: 12px; padding: 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.12); display: flex; flex-direction: column; transition: transform .3s, box-shadow .3s; position: relative; overflow: hidden; }
-.card:hover { transform: translateY(-6px); box-shadow: 0 12px 28px rgba(0,0,0,0.2); }
-.thumb-container { width: 100%; height: 220px; border-radius: 10px; background: #eee; margin-bottom: 8px; overflow: hidden; position: relative; }
-.thumb-container img { width: 100%; height: 100%; object-fit: cover; border-radius: 10px; position: absolute; top: 0; left: 0; opacity: 0; transition: opacity 0.6s ease; }
-.thumb-container img.active { opacity: 1; }
-.title { font-weight: bold; margin: 8px 0; font-size: 16px; }
-.price { font-size: 18px; margin: 6px 0; color: #1d4ed8; }
-select, input, button { padding: 8px; border-radius: 6px; border: 1px solid #ccc; width: 100%; }
-button { cursor: pointer; transition: background .3s; }
-button.add-cart { background: #1d4ed8; color: #fff; border: none; margin-top: 6px; }
-button.add-cart:hover { background: #2563eb; }
+  .campo {
+    margin-bottom: 15px;
+  }
 
-/* ---------- CARRINHO ---------- */
-.cart-overlay { position: fixed; top: 0; right: 0; width: 100%; max-width: 420px; height: 100%; background: #fff; box-shadow: -4px 0 20px rgba(0,0,0,.2); padding: 20px; transform: translateX(100%); transition: transform .3s; z-index: 2000; overflow-y: auto; }
-.cart-overlay.open { transform: translateX(0); }
-.cart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-.cart-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 6px; flex-wrap: wrap; }
-.cart-item div.buttons { display: flex; align-items: center; margin-top: 5px; }
-.cart-item button { border: none; background: none; color: #1d4ed8; font-size: 18px; cursor: pointer; margin: 0 3px; }
-.cart-item button.remove { margin-left: 10px; color: #ef4444; font-size: 20px; }
-.cart-footer { margin-top: 20px; }
-.cart-actions { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
-.cart-actions button { padding: 10px; border: none; border-radius: 6px; font-weight: 500; }
-.cart-actions button:first-child { background: #ef4444; color: #fff; }
-.cart-actions button:last-child { background: #10b981; color: #fff; }
+  label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+  }
 
-/* ---------- RESPONSIVIDADE ---------- */
-@media (max-width: 768px) {
-header { flex-direction: column; text-align: center; gap: 10px; }
-.banner { height: 200px; }
-.banner-text h1 { font-size: 1.5em; }
-.grid { padding: 0 10px; gap: 15px; }
-.cart-overlay { max-width: 100%; }
-.cart-actions button { font-size: 16px; }
-}
+  input[type="number"], input[type="text"] {
+    width: 100%;
+    padding: 10px;
+    font-size: 16px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+    cursor: pointer;
+  }
+
+  input[type="number"]::placeholder {
+    color: #888;
+  }
+
+  .opcoes-tamanho {
+    display: none;
+    margin-top: 5px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background: #f9f9f9;
+  }
+
+  .opcoes-tamanho div {
+    padding: 8px 10px;
+    cursor: pointer;
+  }
+
+  .opcoes-tamanho div:hover {
+    background: #e0e0e0;
+  }
+
+  .preco {
+    font-size: 20px;
+    font-weight: bold;
+    margin-top: 10px;
+  }
 </style>
 </head>
 <body>
 
-<header>
-  <div class="logo">🏆 LOJA ANJJ</div>
-  <nav>
-    <a href="#catalog">Catálogo</a>
-    <button class="cart-btn" onclick="toggleCart()">🛒 Carrinho <span id="cartCount" class="cart-count">0</span></button>
-  </nav>
-</header>
-
-<section class="banner">
-  <img src="Image/jiujitsu.jpg" alt="Banner" />
-  <div class="banner-text">
-    <h1>Novas Camisas Jiu Jitsu</h1>
-    <p>Confira os lançamentos!</p>
+<div class="produto">
+  <div class="campo">
+    <label for="quantidade">Quantidade:</label>
+    <input type="number" id="quantidade" placeholder="Selecione a quantidade" min="1">
   </div>
-</section>
 
-<section id="catalog" class="grid"></section>
-
-<!-- Carrinho -->
-<div class="cart-overlay" id="cartOverlay">
-  <div class="cart-header">
-    <h3>🛍️ Seu Carrinho</h3>
-    <button onclick="toggleCart()">✖</button>
-  </div>
-  <div id="cartItems"></div>
-  <div class="cart-footer">
-    <p><strong>Total: R$ <span id="cartTotal">0,00</span></strong></p>
-    <hr />
-    <div>
-      <label>Nome:</label>
-      <input type="text" id="clientName" placeholder="Digite seu nome">
-      <label>WhatsApp:</label>
-      <input type="text" id="clientPhone" placeholder="Digite seu WhatsApp">
-      <label>Email:</label>
-      <input type="email" id="clientEmail" placeholder="Digite seu email (opcional)">
-    </div>
-    <div class="cart-actions">
-      <button onclick="clearCart()">🗑️ Cancelar Carrinho</button>
-      <button onclick="sendOrder()">📦 Enviar Pedido</button>
+  <div class="campo">
+    <label for="tamanho">Tamanho:</label>
+    <input type="text" id="tamanho" readonly placeholder="Clique para selecionar">
+    <div class="opcoes-tamanho" id="opcoesTamanho">
+      <div data-tamanho="P" data-preco="89.90">P - R$ 89,90</div>
+      <div data-tamanho="M" data-preco="99.90">M - R$ 99,90</div>
+      <div data-tamanho="G" data-preco="109.90">G - R$ 109,90</div>
+      <div data-tamanho="GG" data-preco="119.90">GG - R$ 119,90</div>
     </div>
   </div>
+
+  <div class="preco" id="preco">Preço: R$ 0,00</div>
 </div>
 
 <script>
-const SHEET_URL = "https://docs.google.com/spreadsheets/d/1BqVAf9A7l7KHKcwpV9HrqBMPWTA4s-aPv1EEna7xuHg/gviz/tq?tqx=out:json&sheet=Products";
-let products=[],cart=[];
+  const tamanhoInput = document.getElementById('tamanho');
+  const opcoesTamanho = document.getElementById('opcoesTamanho');
+  const precoDisplay = document.getElementById('preco');
 
-function money(v){return Number(v).toFixed(2).replace('.', ',');}
-
-async function fetchSheet(){
-  const r=await fetch(SHEET_URL);
-  const t=await r.text();
-  const j=JSON.parse(t.substring(t.indexOf("{"),t.lastIndexOf("}")+1));
-  const cols=j.table.cols.map(c=>c.label.trim().toLowerCase());
-  const rows=j.table.rows||[];
-  return rows.map(row=>{
-    const o={};
-    row.c.forEach((c,i)=>o[cols[i]]=c?(c.v??c.f??""):"");
-    return o;
+  // Abre ou fecha a lista de tamanhos ao clicar no campo
+  tamanhoInput.addEventListener('click', () => {
+    opcoesTamanho.style.display = opcoesTamanho.style.display === 'block' ? 'none' : 'block';
   });
-}
 
-function groupProducts(data){
-  const grouped={};
-  data.forEach(p=>{
-    if(String(p.availability).toLowerCase()!=="show")return;
-    const name=String(p.name).trim();
-    if(!name)return;
-    if(!grouped[name]) grouped[name]={name,variants:[],images:[]};
-    const size=String(p["variant name"]||"").trim();
-    if(size) grouped[name].variants.push({name:size||"Único",price:Number(p.price||0),stock:Number(p.stock||1)});
-    [p.thumbnail,p.image1,p.image2,p.image3].forEach(img=>{
-      if(img&&!grouped[name].images.includes(img)) grouped[name].images.push(img);
+  // Seleciona o tamanho e atualiza o preço
+  opcoesTamanho.querySelectorAll('div').forEach(div => {
+    div.addEventListener('click', () => {
+      const tamanho = div.dataset.tamanho;
+      const preco = parseFloat(div.dataset.preco).toFixed(2);
+
+      tamanhoInput.value = tamanho;
+      precoDisplay.textContent = `Preço: R$ ${preco}`;
+      opcoesTamanho.style.display = 'none';
     });
   });
-  return Object.values(grouped);
-}
 
-/* ---------- CARDS COM CARROSSEL ---------- */
-function createCard(p){
-  if(!p.variants.length)return null;
-  const d=document.createElement("div");
-  d.className="card";
-  const imgs = p.images.length ? p.images : ["Images/placeholder.jpg"];
-  const imgElements = imgs.map((src,i)=>`<img src="${src}" class="${i===0?'active':''}">`).join("");
-  d.innerHTML=`
-    <div class="thumb-container">${imgElements}</div>
-    <div class="title">${p.name}</div>
-    <div class="price">R$ ${money(p.variants[0].price)}</div>
-    <label>Tamanho</label>
-    <select class="variant">
-      <option value="" disabled selected>Selecionar tamanho</option>
-      ${p.variants.map(v=>`<option value="${v.price}" data-stock="${v.stock}">${v.name}</option>`).join("")}
-    </select>
-    <label>Qtd</label>
-    <select class="qty"><option>1</option></select>
-    <button class="add-cart">Adicionar ao Carrinho</button>
-  `;
-  
-  const variantSel=d.querySelector(".variant"),qtySel=d.querySelector(".qty"),priceEl=d.querySelector(".price");
-  variantSel.onchange=e=>{
-    const sel=e.target.selectedOptions[0];
-    priceEl.textContent="R$ "+money(Number(sel.value));
-    const stock=Number(sel.dataset.stock||1);
-    qtySel.innerHTML=[...Array(stock).keys()].map(i=>`<option>${i+1}</option>`).join("");
-  };
-  d.querySelector(".add-cart").onclick=()=>{
-    const vPrice=Number(variantSel.value);
-    if(!vPrice){alert("Selecione um tamanho antes de adicionar.");return;}
-    const vName=variantSel.selectedOptions[0].text;
-    const qty=Number(qtySel.value||1);
-    cart.push({name:p.name,variant:vName,price:vPrice,qty});
-    updateCart();
-  };
-
-  // Carrossel automático
-  const imgsEl = d.querySelectorAll(".thumb-container img");
-  if (imgsEl.length > 1) {
-    let idx = 0;
-    let interval = setInterval(()=>{
-      imgsEl[idx].classList.remove("active");
-      idx = (idx + 1) % imgsEl.length;
-      imgsEl[idx].classList.add("active");
-    }, 3000);
-    d.querySelector(".thumb-container").addEventListener("mouseenter",()=>clearInterval(interval));
-    d.querySelector(".thumb-container").addEventListener("mouseleave",()=>{
-      interval=setInterval(()=>{
-        imgsEl[idx].classList.remove("active");
-        idx=(idx+1)%imgsEl.length;
-        imgsEl[idx].classList.add("active");
-      },3000);
-    });
-  }
-
-  return d;
-}
-
-/* ---------- CARRINHO ---------- */
-function updateCart(){
-  const c=document.getElementById("cartItems");
-  c.innerHTML="";
-  let total=0;
-  cart.forEach((item,i)=>{
-    const div=document.createElement("div");
-    div.className="cart-item";
-    div.innerHTML=`
-      ${item.name} (${item.variant}) x${item.qty} - R$ ${money(item.price*item.qty)}
-      <div class="buttons">
-        <button onclick="changeQty(${i},-1)">➖</button>
-        <button onclick="changeQty(${i},1)">➕</button>
-        <button class="remove" onclick="removeItem(${i})">🗑️</button>
-      </div>`;
-    c.appendChild(div);
-    total+=item.price*item.qty;
+  // Fecha a lista se clicar fora
+  document.addEventListener('click', (e) => {
+    if (!tamanhoInput.contains(e.target) && !opcoesTamanho.contains(e.target)) {
+      opcoesTamanho.style.display = 'none';
+    }
   });
-  document.getElementById("cartTotal").textContent=money(total);
-  document.getElementById("cartCount").textContent=cart.length;
-}
-function changeQty(i,d){ cart[i].qty=Math.max(1,cart[i].qty+d); updateCart(); }
-function removeItem(i){ cart.splice(i,1); updateCart(); }
-function clearCart(){ if(confirm("Tem certeza que deseja cancelar o carrinho?")){ cart=[]; updateCart(); } }
-function toggleCart(){ document.getElementById("cartOverlay").classList.toggle("open"); }
-
-async function init(){
-  const raw=await fetchSheet();
-  products=groupProducts(raw);
-  const grid=document.getElementById("catalog");
-  grid.innerHTML="";
-  products.forEach(p=>{const card=createCard(p);if(card)grid.appendChild(card);});
-}
-
-function sendOrder(){
-  if(cart.length===0){ alert("Seu carrinho está vazio!"); return; }
-  const name=document.getElementById("clientName").value.trim();
-  const phone=document.getElementById("clientPhone").value.trim();
-  const email=document.getElementById("clientEmail").value.trim();
-  if(!name||!phone){ alert("Preencha nome e WhatsApp!"); return; }
-  const total=cart.reduce((a,b)=>a+b.price*b.qty,0);
-  const msg=`Olá, sou ${name}.
-📱 WhatsApp: ${phone}
-✉️ Email: ${email||"Não informado"}
-
-🛍️ Pedido:
-${cart.map(i=>`- ${i.name} (${i.variant}) x${i.qty} = R$ ${money(i.price*i.qty)}`).join("\n")}
-Total: R$ ${money(total)}`;
-  window.open(`https://wa.me/${phone.replace(/\D/g,"")}?text=${encodeURIComponent(msg)}`,"_blank");
-  cart=[]; updateCart(); toggleCart();
-}
-init();
 </script>
+
 </body>
 </html>
