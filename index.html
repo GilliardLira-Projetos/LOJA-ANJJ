@@ -6,7 +6,6 @@
 <title>LOJA ANJJ</title>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
 <style>
-/* ---------- ESTILO GERAL ---------- */
 body { font-family: 'Poppins', sans-serif; margin: 0; padding: 0; background: #f6f6f6; }
 header { display: flex; justify-content: space-between; align-items: center; padding: 16px 32px; background: #1d4ed8; color: #fff; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 8px rgba(0,0,0,.1); }
 .logo { font-weight: 600; font-size: 22px; }
@@ -14,32 +13,31 @@ nav a { color: #fff; text-decoration: none; margin: 0 8px; font-weight: 500; }
 .cart-btn { background: #f59e0b; color: #fff; padding: 8px 12px; border: none; border-radius: 6px; cursor: pointer; position: relative; }
 .cart-count { position: absolute; top: -6px; right: -6px; background: red; color: #fff; border-radius: 50%; padding: 2px 6px; font-size: 12px; }
 
-/* ---------- BANNER ---------- */
 .banner { position: relative; text-align: center; overflow: hidden; height: 300px; margin-bottom: 20px; }
 .banner img { width: 100%; height: 100%; object-fit: cover; }
 .banner-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #fff; text-shadow: 0 2px 6px rgba(0,0,0,.6); width: 90%; }
 .banner-text h1 { font-size: 2em; margin: 0; }
 .banner-text p { font-size: 1em; }
 
-/* ---------- CATÁLOGO ---------- */
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px; padding: 0 20px 32px; }
-.card { background: #fff; border-radius: 12px; padding: 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.12); display: flex; flex-direction: column; transition: transform .3s, box-shadow .3s; position: relative; }
+
+.card { background: #fff; border-radius: 12px; padding: 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.12); display: flex; flex-direction: column; transition: transform .3s, box-shadow .3s; }
 .card:hover { transform: translateY(-6px); box-shadow: 0 12px 28px rgba(0,0,0,0.2); }
+
 .thumb-container { width: 100%; height: 220px; overflow: hidden; border-radius: 10px; background: #eee; margin-bottom: 8px; position: relative; }
-.thumb-container img { width: 100%; height: 100%; object-fit: cover; cursor: pointer; }
-.arrow { position: absolute; top: 50%; transform: translateY(-50%); font-size: 28px; color: rgba(255,255,255,0.8); background: rgba(0,0,0,0.2); border: none; padding: 8px 12px; cursor: pointer; border-radius: 50%; z-index: 10; transition: background .3s; }
-.arrow:hover { background: rgba(0,0,0,0.4); }
-.arrow-left { left: 8px; }
-.arrow-right { right: 8px; }
+.thumb-container img { width: 100%; height: 100%; object-fit: cover; cursor: pointer; border-radius: 10px; }
+
+.image-controls { display: flex; justify-content: center; gap: 20px; margin-top: 6px; }
+.image-controls button { padding: 6px 12px; background: #1d4ed8; color: #fff; border: none; border-radius: 6px; cursor: pointer; transition: background .3s; }
+.image-controls button:hover { background: #2563eb; }
 
 .title { font-weight: bold; margin: 8px 0; font-size: 16px; }
 .price { font-size: 18px; margin: 6px 0; color: #1d4ed8; }
 select, input, button { padding: 8px; border-radius: 6px; border: 1px solid #ccc; width: 100%; }
-button { cursor: pointer; transition: background .3s; }
 button.add-cart { background: #1d4ed8; color: #fff; border: none; margin-top: 6px; }
 button.add-cart:hover { background: #2563eb; }
 
-/* ---------- CARRINHO ---------- */
+/* Carrinho */
 .cart-overlay { position: fixed; top: 0; right: 0; width: 100%; max-width: 420px; height: 100%; background: #fff; box-shadow: -4px 0 20px rgba(0,0,0,.2); padding: 20px; transform: translateX(100%); transition: transform .3s; z-index: 2000; overflow-y: auto; }
 .cart-overlay.open { transform: translateX(0); }
 .cart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
@@ -53,27 +51,22 @@ button.add-cart:hover { background: #2563eb; }
 .cart-actions button:first-child { background: #ef4444; color: #fff; }
 .cart-actions button:last-child { background: #10b981; color: #fff; }
 
-/* ---------- MODAL ---------- */
+/* Modal */
 .modal { display: none; position: fixed; z-index: 3000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); justify-content: center; align-items: center; }
 .modal.open { display: flex; }
-.modal-content { position: relative; max-width: 90%; max-height: 80%; }
-.modal-content img { width: 100%; max-height: 80vh; object-fit: contain; border-radius: 10px; cursor: pointer; }
-.close-modal, .prev, .next { position: absolute; top: 50%; transform: translateY(-50%); font-size: 28px; color: #fff; background: rgba(0,0,0,0.5); border: none; padding: 10px 16px; cursor: pointer; border-radius: 50%; }
-.close-modal { top: 10px; right: 10px; transform: none; }
-.prev { left: -50px; }
-.next { right: -50px; }
+.modal-content { position: relative; max-width: 90%; max-height: 80%; display: flex; flex-direction: column; align-items: center; }
+.modal-content img { width: 100%; max-height: 80vh; object-fit: contain; border-radius: 10px; cursor: pointer; margin-bottom: 8px; }
+.modal-controls { display: flex; justify-content: center; gap: 20px; }
+.close-modal { position: absolute; top: 10px; right: 10px; font-size: 28px; color: #fff; background: rgba(0,0,0,0.5); border: none; padding: 10px 16px; cursor: pointer; border-radius: 50%; }
+.close-modal:hover { background: rgba(0,0,0,0.7); }
 
-/* ---------- RESPONSIVIDADE ---------- */
-@media (max-width: 768px) {
+/* Responsivo */
+@media (max-width: 768px){
     header { flex-direction: column; text-align: center; gap: 10px; }
     .banner { height: 200px; }
     .banner-text h1 { font-size: 1.5em; }
     .banner-text p { font-size: 0.9em; }
     .grid { padding: 0 10px; gap: 15px; }
-    .cart-overlay { max-width: 100%; }
-    .cart-actions button { font-size: 16px; }
-    .prev { left: 5px; }
-    .next { right: 5px; }
 }
 </style>
 </head>
@@ -96,7 +89,6 @@ button.add-cart:hover { background: #2563eb; }
 
 <section id="catalog" class="grid"></section>
 
-<!-- Carrinho -->
 <div class="cart-overlay" id="cartOverlay">
     <div class="cart-header">
         <h3>🛍️ Seu Carrinho</h3>
@@ -121,61 +113,39 @@ button.add-cart:hover { background: #2563eb; }
     </div>
 </div>
 
-<!-- Modal -->
 <div id="imageModal" class="modal" onclick="if(event.target===this)closeModal()">
     <div class="modal-content">
         <button class="close-modal" onclick="closeModal()">✖</button>
-        <button class="prev" onclick="changeImage(-1)">⬅</button>
-        <img id="modalImage" src="" alt="Imagem do Produto">
-        <button class="next" onclick="changeImage(1)">➡</button>
+        <img id="modalImage" src="">
+        <div class="modal-controls">
+            <button onclick="changeImage(-1)">⬅</button>
+            <button onclick="changeImage(1)">➡</button>
+        </div>
     </div>
 </div>
 
 <script>
-const SHEET_URL = "https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID/gviz/tq?tqx=out:json&sheet=Products";
-let products=[],cart=[],currentImages=[],currentIndex=0;
+let products=[], cart=[], currentImages=[], currentIndex=0;
 
-function money(v){return Number(v).toFixed(2).replace('.', ',');}
+function money(v){ return Number(v).toFixed(2).replace('.', ','); }
 
-async function fetchSheet(){
-    const r=await fetch(SHEET_URL);
-    const t=await r.text();
-    const j=JSON.parse(t.substring(t.indexOf("{"),t.lastIndexOf("}")+1));
-    const cols=j.table.cols.map(c=>c.label.trim().toLowerCase());
-    const rows=j.table.rows||[];
-    return rows.map(row=>{
-        const o={};
-        row.c.forEach((c,i)=>o[cols[i]]=c?(c.v??c.f??""):"");
-        return o;
-    });
-}
-
-function groupProducts(data){
-    const grouped={};
-    data.forEach(p=>{
-        if(String(p.availability).toLowerCase()!=="show")return;
-        const name=String(p.name).trim();
-        if(!name)return;
-        if(!grouped[name]) grouped[name]={name,variants:[],images:[]};
-        const size=String(p["variant name"]||"").trim();
-        if(size) grouped[name].variants.push({name:size||"Único",price:Number(p.price||0),stock:Number(p.stock||1)});
-        [p.thumbnail,p.image1,p.image2,p.image3].forEach(img=>{
-            if(img&&!grouped[name].images.includes(img)) grouped[name].images.push(img);
-        });
-    });
-    return Object.values(grouped);
-}
+// Exemplo de produtos
+products = [
+  {name:"Camisa Jiu Jitsu", variants:[{name:"P",price:89,stock:5},{name:"M",price:89,stock:10}], images:["Image/jiujitsu.jpg","Image/jiujitsu2.jpg","Image/jiujitsu3.jpg"]}
+];
 
 function createCard(p){
     if(!p.variants.length) return null;
-    const d=document.createElement("div");
-    d.className="card";
-    const imgSrc=p.images[0]||"Images/placeholder.jpg";
-    d.innerHTML = `
+    let index = 0;
+    const card = document.createElement("div");
+    card.className="card";
+    card.innerHTML = `
         <div class="thumb-container">
-            <button class="arrow arrow-left" onclick="prevImageCard(this)">⬅</button>
-            <img class="thumb" src="${imgSrc}" alt="${p.name}">
-            <button class="arrow arrow-right" onclick="nextImageCard(this)">➡</button>
+            <img src="${p.images[0]}" alt="${p.name}">
+        </div>
+        <div class="image-controls">
+            <button class="prev-btn">⬅</button>
+            <button class="next-btn">➡</button>
         </div>
         <div class="title">${p.name}</div>
         <div class="price">R$ ${money(p.variants[0].price)}</div>
@@ -188,10 +158,17 @@ function createCard(p){
         <select class="qty"><option>1</option></select>
         <button class="add-cart">Adicionar ao Carrinho</button>
     `;
-    const variantSel=d.querySelector(".variant"), qtySel=d.querySelector(".qty"), priceEl=d.querySelector(".price");
-    let cardImages = p.images.slice();
-    let cardIndex = 0;
-    const thumb = d.querySelector(".thumb");
+    const imgEl = card.querySelector(".thumb-container img");
+    const prevBtn = card.querySelector(".prev-btn");
+    const nextBtn = card.querySelector(".next-btn");
+    const variantSel = card.querySelector(".variant");
+    const qtySel = card.querySelector(".qty");
+    const priceEl = card.querySelector(".price");
+
+    prevBtn.onclick = () => { index = (index-1+p.images.length)%p.images.length; imgEl.src = p.images[index]; };
+    nextBtn.onclick = () => { index = (index+1)%p.images.length; imgEl.src = p.images[index]; };
+
+    imgEl.onclick = () => { currentImages = p.images; currentIndex = index; document.getElementById("modalImage").src = currentImages[currentIndex]; document.getElementById("imageModal").classList.add("open"); };
 
     variantSel.onchange = e => {
         const sel = e.target.selectedOptions[0];
@@ -200,89 +177,42 @@ function createCard(p){
         qtySel.innerHTML = [...Array(stock).keys()].map(i=>`<option>${i+1}</option>`).join("");
     };
 
-    d.querySelector(".add-cart").onclick = () => {
+    card.querySelector(".add-cart").onclick = () => {
         const vPrice = Number(variantSel.value);
-        if(!vPrice){alert("Selecione um tamanho antes de adicionar.");return;}
+        if(!vPrice){ alert("Selecione um tamanho antes de adicionar."); return; }
         const vName = variantSel.selectedOptions[0].text;
         const qty = Number(qtySel.value||1);
         cart.push({name:p.name,variant:vName,price:vPrice,qty});
         updateCart();
     };
 
-    thumb.onclick = () => openModal(cardImages, cardIndex);
-
-    d.prevImageCard = () => {
-        cardIndex = (cardIndex-1+cardImages.length)%cardImages.length;
-        thumb.src = cardImages[cardIndex];
-    };
-    d.nextImageCard = () => {
-        cardIndex = (cardIndex+1)%cardImages.length;
-        thumb.src = cardImages[cardIndex];
-    };
-
-    return d;
+    return card;
 }
 
-// Funções setas no card
-function prevImageCard(btn){ btn.closest('.card').prevImageCard(); }
-function nextImageCard(btn){ btn.closest('.card').nextImageCard(); }
-
-// Modal
-function openModal(images, index=0){
-    currentImages = images;
-    currentIndex = index;
-    const modal = document.getElementById("imageModal");
-    const modalImg = document.getElementById("modalImage");
-    modalImg.src = currentImages[currentIndex];
-    modal.classList.add("open");
-}
-
-function closeModal(){
-    document.getElementById("imageModal").classList.remove("open");
-}
-
-function changeImage(step){
-    if(!currentImages.length) return;
-    currentIndex = (currentIndex + step + currentImages.length) % currentImages.length;
-    document.getElementById("modalImage").src = currentImages[currentIndex];
-}
-
-// Carrinho
 function updateCart(){
     const c = document.getElementById("cartItems");
-    c.innerHTML = "";
-    let total = 0;
+    c.innerHTML="";
+    let total=0;
     cart.forEach((item,i)=>{
-        const div = document.createElement("div");
-        div.className = "cart-item";
-        div.innerHTML = `${item.name} (${item.variant}) x${item.qty} - R$ ${money(item.price*item.qty)}
+        const div=document.createElement("div");
+        div.className="cart-item";
+        div.innerHTML=`${item.name} (${item.variant}) x${item.qty} - R$ ${money(item.price*item.qty)}
             <div class="buttons">
                 <button onclick="changeQty(${i},-1)">➖</button>
                 <button onclick="changeQty(${i},1)">➕</button>
                 <button class="remove" onclick="removeItem(${i})">🗑️</button>
             </div>`;
         c.appendChild(div);
-        total += item.price*item.qty;
+        total+=item.price*item.qty;
     });
-    document.getElementById("cartTotal").textContent = money(total);
-    document.getElementById("cartCount").textContent = cart.length;
+    document.getElementById("cartTotal").textContent=money(total);
+    document.getElementById("cartCount").textContent=cart.length;
 }
+
 function changeQty(i,d){ cart[i].qty=Math.max(1,cart[i].qty+d); updateCart(); }
 function removeItem(i){ cart.splice(i,1); updateCart(); }
 function clearCart(){ if(confirm("Tem certeza que deseja cancelar o carrinho?")){ cart=[]; updateCart(); } }
 function toggleCart(){ document.getElementById("cartOverlay").classList.toggle("open"); }
-
-async function init(){
-    const raw = await fetchSheet();
-    products = groupProducts(raw);
-    const grid = document.getElementById("catalog");
-    grid.innerHTML = "";
-    products.forEach(p=>{
-        const card = createCard(p);
-        if(card) grid.appendChild(card);
-    });
-}
-
 function sendOrder(){
     if(cart.length===0){ alert("Seu carrinho está vazio!"); return; }
     const name = document.getElementById("clientName").value.trim();
@@ -295,7 +225,12 @@ function sendOrder(){
     cart=[]; updateCart(); toggleCart();
 }
 
-init();
+function changeImage(step){ currentIndex = (currentIndex+step+currentImages.length)%currentImages.length; document.getElementById("modalImage").src = currentImages[currentIndex]; }
+function closeModal(){ document.getElementById("imageModal").classList.remove("open"); }
+
+// Inicializa catálogo
+const grid = document.getElementById("catalog");
+products.forEach(p => { const c = createCard(p); if(c) grid.appendChild(c); });
 </script>
 </body>
 </html>
