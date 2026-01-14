@@ -39,10 +39,12 @@ button{cursor:pointer}
 .cart-item{border-bottom:1px solid #eee;padding:6px 0;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap}
 .cart-item div.buttons{display:flex;gap:5px;align-items:center;margin-top:5px}
 
-.image-modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.85);justify-content:center;align-items:center;z-index:3000}
+.image-modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.85);justify-content:center;align-items:center;z-index:3000;flex-direction:column}
 .image-modal.open{display:flex}
 .image-modal img{max-width:90%;max-height:80%;border-radius:10px}
 .image-modal .close{position:absolute;top:20px;right:20px;font-size:26px;background:#000;color:#fff;border:none;border-radius:50%;width:40px;height:40px}
+
+@media (max-width:768px){.grid{gap:15px;padding:10px}}
 </style>
 </head>
 <body>
@@ -60,11 +62,14 @@ button{cursor:pointer}
   <p><strong>Total: R$ <span id="cartTotal">0,00</span></strong></p>
   <hr>
   <label>Nome (obrigatório):</label>
-  <input type="text" id="clientName" placeholder="Digite seu nome">
+  <input type="text" id="clientName" placeholder="Digite seu nome" required style="width:100%;margin-bottom:8px;">
+  
   <label>WhatsApp (obrigatório):</label>
-  <input type="text" id="clientPhone" placeholder="Digite seu WhatsApp">
+  <input type="text" id="clientPhone" placeholder="Digite seu WhatsApp" required style="width:100%;margin-bottom:8px;">
+  
   <label>Email (opcional):</label>
-  <input type="email" id="clientEmail" placeholder="Digite seu email (opcional)">
+  <input type="email" id="clientEmail" placeholder="Digite seu email (opcional)" style="width:100%;margin-bottom:10px;">
+  
   <div style="margin-top:10px;display:flex;gap:10px">
     <button style="flex:1;background:#ef4444;color:#fff" onclick="clearCart()">🗑️ Cancelar Carrinho</button>
     <button style="flex:1;background:#10b981;color:#fff" onclick="sendOrder()">📦 Enviar Pedido</button>
@@ -205,22 +210,24 @@ function changeQty(i,d){
   updateCart()
 }
 function removeItem(i){cart.splice(i,1);updateCart()}
-function clearCart(){if(confirm("Deseja cancelar o carrinho?")){cart=[];updateCart()}}
 function toggleCart(){document.getElementById("cartOverlay").classList.toggle("open")}
 
+function clearCart(){
+ if(confirm("Deseja cancelar o carrinho?")){ cart=[]; updateCart() }
+}
+
 function sendOrder(){
-  if(cart.length===0){alert("Carrinho vazio!"); return;}
-  const name=document.getElementById("clientName").value.trim()
-  const phone=document.getElementById("clientPhone").value.trim()
-  const email=document.getElementById("clientEmail").value.trim()
-  if(!name||!phone){alert("Preencha nome e WhatsApp!"); return;}
-  const total=cart.reduce((a,b)=>a+b.price*b.qty,0)
-  let msg=`Olá, sou ${name}.\n📱 WhatsApp: ${phone}\n✉️ Email: ${email||"Não informado"}\n\n🛍️ Pedido:\n`
-  msg+=cart.map(i=>`- ${i.name} (${i.variant}) x${i.qty} = R$ ${money(i.price*i.qty)}`).join("\n")
-  msg+=`\nTotal: R$ ${money(total)}`
-  window.open(`https://wa.me/${phone.replace(/\D/g,"")}?text=${encodeURIComponent(msg)}`,"_blank")
-  cart=[]
-  updateCart()
+ const name=document.getElementById("clientName").value.trim()
+ const phone=document.getElementById("clientPhone").value.trim()
+ const email=document.getElementById("clientEmail").value.trim()
+ if(!name||!phone){alert("Nome e WhatsApp são obrigatórios!"); return;}
+ const total=cart.reduce((a,b)=>a+b.price*b.qty,0)
+ let msg=`Olá, sou ${name}.\n📱 WhatsApp: ${phone}\n✉️ Email: ${email||"Não informado"}\n\n🛍️ Pedido:\n`
+ msg+=cart.map(i=>`- ${i.name} (${i.variant}) x${i.qty} = R$ ${money(i.price*i.qty)}`).join("\n")
+ msg+=`\nTotal: R$ ${money(total)}`
+ window.open(`https://wa.me/${phone.replace(/\D/g,"")}?text=${encodeURIComponent(msg)}`,"_blank")
+ cart=[]
+ updateCart()
 }
 
 function openImageModal(imgs){
