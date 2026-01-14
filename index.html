@@ -99,7 +99,7 @@ header { flex-direction: column; text-align: center; gap: 10px; }
       <label>Nome:</label>
       <input type="text" id="clientName" placeholder="Digite seu nome">
       <label>WhatsApp:</label>
-      <input type="text" id="clientPhone" placeholder="Digite seu WhatsApp">
+      <input type="text" id="clientPhone" placeholder="DDD + número apenas" maxlength="11">
       <label>Email:</label>
       <input type="email" id="clientEmail" placeholder="Digite seu email (opcional)">
     </div>
@@ -151,7 +151,7 @@ function groupProducts(data){
   return Object.values(grouped);
 }
 
-/* ---------- CARDS COM SELECT DE TAMANHO E QUANTIDADE + E - ---------- */
+/* ---------- CARDS ---------- */
 function createCard(p){
   if(!p.variants.length) return null;
   const d = document.createElement("div");
@@ -291,9 +291,19 @@ async function init(){
 function sendOrder(){
   if(cart.length===0){ alert("Seu carrinho está vazio!"); return; }
   const name=document.getElementById("clientName").value.trim();
-  const phone=document.getElementById("clientPhone").value.trim();
+  let phone=document.getElementById("clientPhone").value.trim();
   const email=document.getElementById("clientEmail").value.trim();
   if(!name||!phone){ alert("Preencha nome e WhatsApp!"); return; }
+
+  // Limpa tudo que não for número
+  phone = phone.replace(/\D/g,"");
+  if(phone.length < 10 || phone.length > 11){
+    alert("Por favor, informe DDD + número corretamente!");
+    return;
+  }
+  // Adiciona +55 automaticamente
+  phone = "55"+phone;
+
   const total=cart.reduce((a,b)=>a+b.price*b.qty,0);
   const msg=`Olá, sou ${name}.
 📱 WhatsApp: ${phone}
@@ -302,7 +312,8 @@ function sendOrder(){
 🛍️ Pedido:
 ${cart.map(i=>`- ${i.name} (${i.variant}) x${i.qty} = R$ ${money(i.price*i.qty)}`).join("\n")}
 Total: R$ ${money(total)}`;
-  window.open(`https://wa.me/${phone.replace(/\D/g,"")}?text=${encodeURIComponent(msg)}`,"_blank");
+
+  window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`,"_blank");
   cart=[]; updateCart(); toggleCart();
 }
 
