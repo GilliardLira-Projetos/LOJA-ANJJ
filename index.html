@@ -3,70 +3,77 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>LOJA ANJJ</title>
+    <title>LOJA ANJJ - Catálogo Profissional</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet" />
     <style>
-        :root { --green: #22c55e; --bg: #ffffff; --red: #ef4444; }
+        :root { --green: #22c55e; --bg: #ffffff; --red: #ef4444; --gray: #94a3b8; }
         body { font-family: 'Poppins', sans-serif; margin: 0; background: var(--bg); color: #333; overflow-x: hidden; }
         
+        /* HEADER */
         header { padding: 15px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; background: #fff; z-index: 1000; }
         .logo { font-weight: 700; font-size: 14px; text-transform: uppercase; }
-        .cart-icon { cursor: pointer; font-weight: 600; background: #22c55e; color: white; padding: 5px 12px; border-radius: 20px; font-size: 12px; }
+        .cart-icon { cursor: pointer; font-weight: 600; background: var(--green); color: white; padding: 6px 14px; border-radius: 20px; font-size: 13px; }
 
+        /* FILTROS */
         .category-nav { display: flex; gap: 10px; padding: 10px; overflow-x: auto; border-bottom: 1px solid #eee; background: #fff; scrollbar-width: none; }
         .cat-link { border: 1px solid #eee; padding: 6px 15px; border-radius: 4px; font-size: 12px; cursor: pointer; color: #666; white-space: nowrap; transition: 0.3s; }
         .cat-link.active { background: var(--green); color: #fff; border-color: var(--green); }
 
-        .category-section { padding: 20px 0; display: block; border-bottom: 8px solid #f9fafb; }
-        .category-title { text-align: center; text-transform: uppercase; font-size: 18px; margin-bottom: 25px; font-weight: 700; color: #111; }
-        
+        /* SEÇÕES E GRID */
+        .category-section { padding: 25px 0; border-bottom: 8px solid #f8fafc; }
+        .category-title { text-align: center; text-transform: uppercase; font-size: 18px; margin-bottom: 25px; font-weight: 700; letter-spacing: 1px; }
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 25px; padding: 0 15px; }
-        .card { border: 1px solid #eee; border-radius: 12px; padding: 15px; background: #fff; position: relative; transition: transform 0.2s; }
+        
+        /* CARDS */
+        .card { border: 1px solid #eee; border-radius: 12px; padding: 15px; background: #fff; position: relative; display: flex; flex-direction: column; }
+        .discount-badge { position: absolute; top: 20px; left: 20px; background: var(--red); color: #fff; font-size: 10px; padding: 4px 8px; border-radius: 4px; font-weight: 700; z-index: 10; }
 
-        .discount-badge { position: absolute; top: 20px; left: 20px; background: var(--red); color: #fff; font-size: 10px; padding: 3px 8px; border-radius: 4px; font-weight: 700; z-index: 10; }
-
-        .carousel { width: 100%; height: 280px; position: relative; overflow: hidden; border-radius: 8px; cursor: pointer; background: #f4f4f4; }
+        /* CARROSSEL MANUAL E AUTO */
+        .carousel { width: 100%; height: 280px; position: relative; overflow: hidden; border-radius: 8px; cursor: pointer; background: #f1f5f9; }
         .carousel img { width: 100%; height: 100%; object-fit: cover; position: absolute; opacity: 0; transition: opacity 0.5s ease; }
         .carousel img.active { opacity: 1; }
 
-        .product-name { font-size: 14px; font-weight: 600; margin: 15px 0 5px; text-transform: uppercase; color: #222; }
-        .price-container { margin-bottom: 15px; }
-        .old-price { font-size: 12px; color: #999; text-decoration: line-through; display: block; }
+        .product-name { font-size: 14px; font-weight: 600; margin: 15px 0 5px; text-transform: uppercase; }
+        .old-price { font-size: 12px; color: var(--gray); text-decoration: line-through; display: block; height: 18px; }
         .current-price { font-size: 18px; font-weight: 700; color: #000; }
 
-        .selection-area { margin-top: 15px; border-top: 1px dashed #eee; padding-top: 15px; }
-        .variant-grid { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
-        .variant-chip { border: 1px solid #ddd; padding: 6px 12px; border-radius: 4px; font-size: 12px; cursor: pointer; transition: 0.2s; }
+        /* OPÇÕES (CORES/TAMANHOS) */
+        .variant-grid { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+        .variant-chip { border: 1px solid #ddd; padding: 6px 12px; border-radius: 4px; font-size: 11px; cursor: pointer; transition: 0.2s; }
         .variant-chip.selected { border-color: var(--green); background: #f0fdf4; color: var(--green); font-weight: 600; }
-        .variant-chip.no-stock { opacity: 0.3; cursor: not-allowed; text-decoration: line-through; }
+        .variant-chip.no-stock { opacity: 0.3; cursor: not-allowed; text-decoration: line-through; background: #f1f5f9; }
 
         .qty-selector { display: flex; align-items: center; gap: 12px; margin: 15px 0; }
-        .qty-btn { border: 1px solid #ddd; background: #fff; width: 32px; height: 32px; border-radius: 4px; cursor: pointer; font-weight: bold; }
-        .btn-add { background: var(--green); color: #fff; border: none; padding: 12px; border-radius: 6px; font-weight: 700; width: 100%; cursor: pointer; font-size: 14px; }
+        .qty-btn { border: 1px solid #ddd; background: #fff; width: 30px; height: 30px; border-radius: 4px; cursor: pointer; }
+        
+        /* BOTÃO ADICIONAR / ESGOTADO */
+        .btn-add { background: var(--green); color: #fff; border: none; padding: 14px; border-radius: 8px; font-weight: 700; width: 100%; cursor: pointer; font-size: 13px; transition: 0.3s; }
+        .btn-add.disabled { background: #cbd5e1 !important; cursor: not-allowed; }
+        .out-stock-msg { color: var(--red); font-size: 11px; font-weight: 600; margin-top: 8px; text-align: center; display: block; }
 
-        /* CARRINHO / CHECKOUT */
-        .cart-overlay { position: fixed; top: 0; right: 0; width: 100%; max-width: 450px; height: 100%; background: #fff; box-shadow: -5px 0 20px rgba(0,0,0,0.1); z-index: 2000; transform: translateX(100%); transition: 0.3s; padding: 25px; box-sizing: border-box; overflow-y: auto; }
+        /* CHECKOUT / CARRINHO */
+        .cart-overlay { position: fixed; top: 0; right: 0; width: 100%; max-width: 420px; height: 100%; background: #fff; box-shadow: -5px 0 25px rgba(0,0,0,0.15); z-index: 2000; transform: translateX(100%); transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); padding: 25px; box-sizing: border-box; overflow-y: auto; }
         .cart-overlay.open { transform: translateX(0); }
         
-        .cart-item { display: flex; align-items: center; gap: 15px; padding: 15px 0; border-bottom: 1px solid #f0f0f0; position: relative; }
-        .cart-item img { width: 60px; height: 60px; object-fit: cover; border-radius: 6px; }
+        .cart-item { display: flex; gap: 15px; padding: 15px 0; border-bottom: 1px solid #f1f5f9; }
+        .cart-item img { width: 70px; height: 70px; object-fit: cover; border-radius: 8px; }
         .cart-info { flex: 1; }
-        .cart-info h4 { margin: 0; font-size: 13px; text-transform: uppercase; }
-        .cart-info p { margin: 3px 0; font-size: 12px; color: #666; }
+        .cart-info h4 { margin: 0; font-size: 13px; }
         
-        .checkout-box { background: #f9f9f9; padding: 20px; border-radius: 12px; margin-top: 25px; }
-        .summary-row { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 14px; }
-        .form-group { margin-top: 20px; }
-        .form-group label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 8px; color: #555; }
-        .form-group input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; outline: none; }
-        .form-group input:focus { border-color: var(--green); }
+        .resumo-caixa { background: #f8fafc; padding: 20px; border-radius: 12px; margin: 25px 0; border: 1px solid #e2e8f0; }
+        .linha-resumo { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; }
+        
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 6px; color: #475569; }
+        .form-group input { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; box-sizing: border-box; font-family: inherit; }
+        .form-group input:focus { border-color: var(--green); outline: none; }
     </style>
 </head>
 <body>
 
 <header>
     <div class="logo">LOJA - ANJJ</div>
-    <div class="cart-icon" onclick="toggleCart()">🛒 <span id="cartCount">0</span></div>
+    <div class="cart-icon" onclick="toggleCart()">MEU CARRINHO (<span id="cartCount">0</span>)</div>
 </header>
 
 <div class="category-nav" id="categoryNav">
@@ -77,32 +84,31 @@
 
 <div class="cart-overlay" id="cartOverlay">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-        <h3 style="margin:0; font-size:18px;">🛒 Finalizar Pedido</h3>
+        <h3 style="margin:0">🛍️ Resumo do Pedido</h3>
         <span onclick="toggleCart()" style="cursor:pointer; font-size:24px;">✕</span>
     </div>
 
     <div id="cartItems"></div>
 
-    <div class="checkout-box">
-        <h4 style="margin-top:0">Resumo do Pedido</h4>
-        <div class="summary-row"><span>Subtotal</span> <span id="subtotal">R$ 0,00</span></div>
-        <div class="summary-row"><span>Envio</span> <span style="color:var(--green)">LIVRE</span></div>
-        <div class="summary-row" style="font-weight:700; font-size:16px; border-top:1px solid #ddd; pt:10px; margin-top:10px;">
+    <div class="resumo-caixa">
+        <div class="linha-resumo"><span>Subtotal</span> <span id="subtotal">R$ 0,00</span></div>
+        <div class="linha-resumo"><span>Envio</span> <span style="color:var(--green); font-weight:600">LIVRE</span></div>
+        <div class="linha-resumo" style="font-weight:700; font-size:17px; margin-top:10px; padding-top:10px; border-top:1px solid #cbd5e1;">
             <span>Total</span> <span id="totalFinal">R$ 0,00</span>
         </div>
     </div>
 
     <div class="form-group">
         <label>Nome Completo *</label>
-        <input type="text" id="custName" placeholder="Como deseja ser chamado?">
+        <input type="text" id="custName" placeholder="Digite seu nome">
     </div>
     <div class="form-group">
         <label>WhatsApp (DDD + Número) *</label>
-        <input type="tel" id="custPhone" placeholder="Ex: 11999999999" maxlength="11">
+        <input type="tel" id="custPhone" placeholder="Ex: 81999999999" maxlength="11">
     </div>
 
-    <button class="btn-add" style="margin-top:25px; height:50px; background:var(--green)" onclick="finalizeOrder()">
-        ✅ Fazer pedido no WhatsApp
+    <button class="btn-add" style="margin-top:10px; height:55px;" onclick="finalizeOrder()">
+        FAZER PEDIDO NO WHATSAPP
     </button>
 </div>
 
@@ -111,7 +117,7 @@ const SHEET_URL = "https://docs.google.com/spreadsheets/d/1BqVAf9A7l7KHKcwpV9Hrq
 let productsData = [];
 let cart = [];
 
-function money(v) { return Number(v).toLocaleString('pt-br', { style: 'currency', currency: 'BRL' }); }
+const money = (v) => v.toLocaleString('pt-br', { style: 'currency', currency: 'BRL' });
 
 async function init() {
     try {
@@ -135,19 +141,19 @@ async function init() {
                     variants: [] 
                 };
             }
-            const origPrice = parseFloat(p.Price || 0);
-            const discPrice = parseFloat(p["Discounted Price"] || 0);
+            const pNormal = parseFloat(p.Price || 0);
+            const pDesc = parseFloat(p["Discounted Price"] || 0);
             grouped[p.Name].variants.push({ 
                 name: p["Variant Name"], 
-                price: discPrice > 0 ? discPrice : origPrice, 
-                oldPrice: discPrice > 0 ? origPrice : 0,
+                price: pDesc > 0 ? pDesc : pNormal, 
+                oldPrice: pDesc > 0 ? pNormal : 0,
                 stock: parseInt(p.Stock || 0) 
             });
         });
         
         productsData = Object.values(grouped);
         renderAll();
-    } catch (e) { alert("Erro ao carregar produtos. Verifique sua conexão."); }
+    } catch (e) { console.error("Erro planilha:", e); }
 }
 
 function renderAll() {
@@ -163,67 +169,61 @@ function renderAll() {
         section.innerHTML = `<h2 class="category-title">${cat}</h2><div class="grid" id="grid-${cat.replace(/\s+/g,'')}"></div>`;
         catalog.appendChild(section);
 
-        const categoryGrid = document.getElementById(`grid-${cat.replace(/\s+/g,'')}`);
+        const grid = document.getElementById(`grid-${cat.replace(/\s+/g,'')}`);
         productsData.filter(p => p.category === cat).forEach(p => {
-            categoryGrid.appendChild(createCard(p));
+            grid.appendChild(createCard(p));
         });
     });
-    autoCarousel();
+    startCarousels();
 }
 
 function createCard(p) {
     const d = document.createElement("div");
     d.className = "card";
-    const v = p.variants[0];
+    const firstV = p.variants[0];
+    const totalStock = p.variants.reduce((a, b) => a + b.stock, 0);
+    const esgotado = totalStock <= 0;
+
     d.innerHTML = `
-        ${v.oldPrice > 0 ? `<div class="discount-badge">OFERTA</div>` : ''}
+        ${firstV.oldPrice > 0 ? `<div class="discount-badge">OFERTA</div>` : ''}
         <div class="carousel" onclick="manualNext(this)">${p.images.map((img, i) => `<img src="${img}" class="${i === 0 ? 'active' : ''}">`).join("")}</div>
         <div class="product-name">${p.name}</div>
         <div class="price-container">
-            ${v.oldPrice > 0 ? `<span class="old-price">${money(v.oldPrice)}</span>` : ''}
-            <span class="current-price">${money(v.price)}</span>
+            <span class="old-price">${firstV.oldPrice > 0 ? money(firstV.oldPrice) : ''}</span>
+            <span class="current-price">${money(firstV.price)}</span>
         </div>
-        <div class="selection-area">
-            <div class="variant-grid">${p.variants.map(varnt => `<div class="variant-chip ${varnt.stock <= 0 ? 'no-stock' : ''}" onclick="${varnt.stock > 0 ? `selectChip(this, ${varnt.price}, ${varnt.oldPrice}, ${varnt.stock})` : ''}">${varnt.name}</div>`).join("")}</div>
-            <div class="qty-selector">
-                <button class="qty-btn" onclick="changeQty(this, -1)">-</button>
-                <span class="qty-val">1</span>
-                <button class="qty-btn" onclick="changeQty(this, 1)">+</button>
-                <span style="font-size:10px; color:#999; margin-left:auto">Estoque: <b class="stk-n">-</b></span>
-            </div>
-            <button class="btn-add" onclick="addToCart('${p.name}', '${p.images[0]}', this)">Adicionar ao carrinho</button>
-        </div>`;
+        <div class="variant-grid">
+            ${p.variants.map(v => `<div class="variant-chip ${v.stock <= 0 ? 'no-stock' : ''}" onclick="${v.stock > 0 ? `selectChip(this, ${v.price}, ${v.oldPrice}, ${v.stock})` : ''}">${v.name}</div>`).join("")}
+        </div>
+        <div class="qty-selector">
+            <button class="qty-btn" onclick="changeQty(this, -1)">-</button>
+            <span class="qty-val">1</span>
+            <button class="qty-btn" onclick="changeQty(this, 1)">+</button>
+            <span style="font-size:10px; color:#94a3b8; margin-left:auto">Estoque: <b class="stk-n">${esgotado ? 0 : '-'}</b></span>
+        </div>
+        <button class="btn-add ${esgotado ? 'disabled' : ''}" onclick="addToCart('${p.name}', '${p.images[0]}', this)">
+            ${esgotado ? 'PRODUTO ESGOTADO' : 'ADICIONAR AO CARRINHO'}
+        </button>
+        ${esgotado ? '<span class="out-stock-msg">Indisponível no momento</span>' : ''}
+    `;
     return d;
 }
 
-function filterCat(cat, el) {
-    document.querySelectorAll('.cat-link').forEach(l => l.classList.remove('active'));
-    el.classList.add('active');
-    document.querySelectorAll('.category-section').forEach(sec => {
-        sec.style.display = (cat === 'all' || sec.id === `sec-${cat}`) ? 'block' : 'none';
-    });
-}
-
+// LÓGICA DE INTERAÇÃO
 function manualNext(car) {
     const imgs = car.querySelectorAll('img'); if (imgs.length <= 1) return;
     let act = car.querySelector('img.active');
     let nxt = act.nextElementSibling || imgs[0];
     act.classList.remove('active'); nxt.classList.add('active');
 }
-function autoCarousel() { setInterval(() => { document.querySelectorAll('.carousel').forEach(c => manualNext(c)); }, 4000); }
+function startCarousels() { setInterval(() => { document.querySelectorAll('.carousel').forEach(c => manualNext(c)); }, 4500); }
 
 function selectChip(el, pr, old, st) {
     el.parentElement.querySelectorAll('.variant-chip').forEach(c => c.classList.remove('selected'));
     el.classList.add('selected');
     const card = el.closest('.card');
     card.querySelector('.current-price').innerText = money(pr);
-    if(old > 0) {
-        if(!card.querySelector('.old-price')) {
-            const s = document.createElement('span'); s.className = 'old-price';
-            card.querySelector('.price-container').prepend(s);
-        }
-        card.querySelector('.old-price').innerText = money(old);
-    } else if (card.querySelector('.old-price')) card.querySelector('.old-price').remove();
+    card.querySelector('.old-price').innerText = old > 0 ? money(old) : '';
     card.querySelector('.stk-n').innerText = st;
 }
 
@@ -234,12 +234,14 @@ function changeQty(btn, d) {
     if (n >= 1 && n <= max) val.innerText = n;
 }
 
+// CARRINHO E CHECKOUT
 function toggleCart() { document.getElementById('cartOverlay').classList.toggle('open'); }
 
 function addToCart(name, img, btn) {
     const card = btn.closest('.card');
     const sel = card.querySelector('.variant-chip.selected');
-    if (!sel) return alert("Selecione um tamanho!");
+    if (!sel) return alert("Por favor, selecione uma Cor/Tamanho!");
+    
     const qty = parseInt(card.querySelector('.qty-val').innerText);
     const pr = parseFloat(card.querySelector('.current-price').innerText.replace(/[^\d,]/g, '').replace(',', '.'));
     const max = parseInt(card.querySelector('.stk-n').innerText);
@@ -254,23 +256,24 @@ function addToCart(name, img, btn) {
 
 function updateCartUI() {
     document.getElementById('cartCount').innerText = cart.length;
-    const itemsCont = document.getElementById('cartItems');
-    itemsCont.innerHTML = cart.map((item, i) => `
+    const cont = document.getElementById('cartItems');
+    cont.innerHTML = cart.map((item, i) => `
         <div class="cart-item">
             <img src="${item.img}">
             <div class="cart-info">
                 <h4>${item.name}</h4>
-                <p>Tamanho: ${item.variant}</p>
-                <p><b>${money(item.price)}</b></p>
-                <div class="qty-selector" style="margin:5px 0">
+                <p style="font-size:11px; color:#64748b">Opção: ${item.variant}</p>
+                <div style="display:flex; align-items:center; gap:10px; margin-top:8px;">
                     <button class="qty-btn" onclick="updateItemQty(${i}, -1)">-</button>
-                    <span>${item.qty}</span>
+                    <span style="font-size:14px; font-weight:600">${item.qty}</span>
                     <button class="qty-btn" onclick="updateItemQty(${i}, 1)">+</button>
-                    <button onclick="removeFromCart(${i})" style="margin-left:auto; border:none; color:red; cursor:pointer; background:none">Remover</button>
+                    <span style="margin-left:auto; font-weight:700">${money(item.price * item.qty)}</span>
+                    <button onclick="removeFromCart(${i})" style="border:none; color:red; background:none; cursor:pointer; font-size:16px; padding-left:10px">🗑️</button>
                 </div>
             </div>
         </div>
     `).join("");
+    
     const total = cart.reduce((a, b) => a + (b.price * b.qty), 0);
     document.getElementById('subtotal').innerText = money(total);
     document.getElementById('totalFinal').innerText = money(total);
@@ -283,18 +286,28 @@ function updateItemQty(idx, d) {
 
 function removeFromCart(i) { cart.splice(i, 1); updateCartUI(); }
 
+function filterCat(cat, el) {
+    document.querySelectorAll('.cat-link').forEach(l => l.classList.remove('active'));
+    el.classList.add('active');
+    document.querySelectorAll('.category-section').forEach(sec => {
+        sec.style.display = (cat === 'all' || sec.id === `sec-${cat}`) ? 'block' : 'none';
+    });
+}
+
 function finalizeOrder() {
     const name = document.getElementById('custName').value.trim();
     const phone = document.getElementById('custPhone').value.trim();
-    if (!cart.length) return alert("Carrinho vazio!");
+    if (!cart.length) return alert("Seu carrinho está vazio!");
     if (!name || phone.length < 10) return alert("Preencha Nome e WhatsApp (DDD + número) corretamente!");
     
-    const text = `*NOVO PEDIDO - LOJA ANJJ*\n\n` +
-                 `*Cliente:* ${name}\n*Fone:* ${phone}\n\n` +
-                 `*Itens:*\n${cart.map(i => `- ${i.qty}x ${i.name} (${i.variant})`).join('\n')}\n\n` +
-                 `*TOTAL: ${document.getElementById('totalFinal').innerText}*`;
+    const msg = `*PEDIDO LOJA ANJJ*\n\n` +
+                `*Cliente:* ${name}\n` +
+                `*WhatsApp:* ${phone}\n\n` +
+                `*Produtos:*\n${cart.map(i => `- ${i.qty}x ${i.name} (${i.variant}) - ${money(i.price * i.qty)}`).join('\n')}\n\n` +
+                `*TOTAL: ${document.getElementById('totalFinal').innerText}*`;
     
-    window.open(`https://wa.me/55SEUNUMERO?text=${encodeURIComponent(text)}`);
+    // Substitua pelo seu número real abaixo
+    window.open(`https://wa.me/55SEUNUMERO?text=${encodeURIComponent(msg)}`);
 }
 
 init();
