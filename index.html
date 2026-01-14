@@ -9,7 +9,7 @@
         :root { --green: #16a34a; --bg: #ffffff; --red: #dc2626; --gray: #94a3b8; }
         body { font-family: 'Poppins', sans-serif; margin: 0; background: #f8fafc; color: #1e293b; overflow-x: hidden; }
         
-        /* HEADER PREMIUM COM GRADIENTE E INSTAGRAM */
+        /* HEADER PREMIUM */
         header { 
             padding: 20px 5%; 
             display: flex; 
@@ -23,32 +23,10 @@
         }
         .brand-area { display: flex; flex-direction: column; }
         .logo { font-weight: 700; font-size: 24px; text-transform: uppercase; letter-spacing: 2px; color: #fff; line-height: 1; }
-        .insta-link { 
-            color: #d1d5db; 
-            font-size: 12px; 
-            text-decoration: none; 
-            margin-top: 5px; 
-            display: flex; 
-            align-items: center; 
-            gap: 5px; 
-            transition: 0.3s;
-        }
+        .insta-link { color: #d1d5db; font-size: 12px; text-decoration: none; margin-top: 5px; display: flex; align-items: center; gap: 5px; transition: 0.3s; }
         .insta-link:hover { color: #f472b6; }
 
-        .cart-icon-btn { 
-            cursor: pointer; 
-            background: var(--green); 
-            color: white; 
-            padding: 10px 20px; 
-            border-radius: 30px; 
-            font-weight: 700; 
-            display: flex; 
-            align-items: center; 
-            gap: 10px; 
-            border: 2px solid rgba(255,255,255,0.1); 
-            transition: 0.3s; 
-            box-shadow: 0 4px 12px rgba(22, 163, 74, 0.4);
-        }
+        .cart-icon-btn { cursor: pointer; background: var(--green); color: white; padding: 10px 20px; border-radius: 30px; font-weight: 700; display: flex; align-items: center; gap: 10px; border: 2px solid rgba(255,255,255,0.1); transition: 0.3s; box-shadow: 0 4px 12px rgba(22, 163, 74, 0.4); }
 
         /* NAVEGAÇÃO */
         .category-nav { display: flex; gap: 10px; padding: 15px 5%; overflow-x: auto; border-bottom: 1px solid #eee; background: #fff; scrollbar-width: none; position: sticky; top: 84px; z-index: 999; }
@@ -63,7 +41,7 @@
         .card { border: 1px solid #eee; border-radius: 20px; padding: 12px; background: #fff; position: relative; display: flex; flex-direction: column; transition: 0.3s; }
         .promo-badge { position: absolute; top: 20px; left: 20px; background: var(--red); color: #fff; padding: 4px 12px; border-radius: 8px; font-size: 11px; font-weight: 700; z-index: 10; display: none; }
 
-        .carousel-wrap { position: relative; width: 100%; height: 280px; border-radius: 15px; overflow: hidden; background: #f1f5f9; margin-bottom: 15px; }
+        .carousel-wrap { position: relative; width: 100%; height: 280px; border-radius: 15px; overflow: hidden; background: #f1f5f9; margin-bottom: 10px; }
         @media (max-width: 480px) { .carousel-wrap { height: 180px; } }
         .carousel-img { width: 100%; height: 100%; object-fit: cover; position: absolute; opacity: 0; transition: 0.5s; cursor: zoom-in; }
         .carousel-img.active { opacity: 1; }
@@ -72,14 +50,19 @@
         .arrow-prev { left: 8px; }
         .arrow-next { right: 8px; }
 
-        /* VARIANTES E PREÇOS */
+        /* PREÇOS E VARIANTES */
+        .old-price { font-size: 13px; color: var(--gray); text-decoration: line-through; display: block; height: 18px; }
+        .current-price { font-size: 20px; font-weight: 700; color: #000; }
+        .color-dots { display: flex; gap: 8px; margin: 10px 0; }
         .color-dot { width: 26px; height: 26px; border-radius: 50%; border: 2px solid #eee; cursor: pointer; transition: 0.2s; position: relative; }
         .color-dot.selected { border-color: #000; transform: scale(1.15); box-shadow: 0 0 0 2px #fff, 0 0 0 4px #000; }
-        .variant-chip { border: 1px solid #ddd; padding: 6px 12px; border-radius: 8px; font-size: 12px; cursor: pointer; }
+
+        .variant-chip { border: 1px solid #ddd; padding: 6px 12px; border-radius: 8px; font-size: 12px; cursor: pointer; background: #fff; }
         .variant-chip.selected { background: #000; color: #fff; border-color: #000; }
 
         .qty-selector { display: flex; align-items: center; gap: 10px; background: #f1f5f9; padding: 6px; border-radius: 10px; margin: 15px 0; }
-        .btn-add { background: var(--green); color: #fff; border: none; padding: 14px; border-radius: 12px; font-weight: 700; width: 100%; cursor: pointer; }
+        .qty-btn { border: none; background: #fff; width: 30px; height: 30px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        .btn-add { background: var(--green); color: #fff; border: none; padding: 14px; border-radius: 12px; font-weight: 700; width: 100%; cursor: pointer; transition: 0.2s; }
 
         /* LIGHTBOX */
         #lightbox { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.95); display: none; z-index: 3000; justify-content: center; align-items: center; }
@@ -96,13 +79,9 @@
 <header>
     <div class="brand-area">
         <div class="logo">LOJA ANJJ</div>
-        <a href="https://www.instagram.com/anjj_noronha" target="_blank" class="insta-link">
-            📸 @anjj_noronha
-        </a>
+        <a href="https://www.instagram.com/anjj_noronha" target="_blank" class="insta-link">📸 @anjj_noronha</a>
     </div>
-    <button class="cart-icon-btn" onclick="toggleCart()">
-        🛒 <span id="cartCount">0</span>
-    </button>
+    <button class="cart-icon-btn" onclick="toggleCart()">🛒 <span id="cartCount">0</span></button>
 </header>
 
 <div class="category-nav" id="categoryNav"><div class="cat-link active" onclick="filterCat('all', this)">Tudo</div></div>
@@ -114,23 +93,22 @@
 </div>
 
 <div class="cart-overlay" id="cartOverlay">
-    <div style="display:flex; justify-content:space-between; align-items:center;">
-        <h2>Meu Pedido</h2>
-        <span onclick="toggleCart()" style="cursor:pointer; font-size:35px;">&times;</span>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+        <h2 style="margin:0">Meu Pedido</h2>
+        <span onclick="toggleCart()" style="cursor:pointer; font-size:35px; color:#ccc;">&times;</span>
     </div>
-    <div id="cartItems" style="flex:1; overflow-y:auto; margin: 20px 0;"></div>
-    <div style="border-top: 2px solid #eee; padding-top: 20px;">
-        <div style="display:flex; justify-content:space-between; font-weight:700; font-size:22px; margin-bottom:20px;">
+    <div id="cartItems" style="flex:1; overflow-y:auto;"></div>
+    <div style="border-top: 2px solid #f1f5f9; padding-top: 20px; margin-top: auto;">
+        <div style="display:flex; justify-content:space-between; font-weight:700; font-size:22px; margin-bottom:15px;">
             <span>Total:</span><span id="totalFinal">R$ 0,00</span>
         </div>
         <input type="text" id="custName" style="width:100%; padding:12px; margin-bottom:10px; border-radius:10px; border:1px solid #ddd;" placeholder="Nome Completo">
-        <input type="tel" id="custPhone" style="width:100%; padding:12px; margin-bottom:10px; border-radius:10px; border:1px solid #ddd;" placeholder="WhatsApp">
+        <input type="tel" id="custPhone" style="width:100%; padding:12px; margin-bottom:15px; border-radius:10px; border:1px solid #ddd;" placeholder="WhatsApp">
         <button class="btn-add" style="height: 60px;" onclick="finalizeOrder()">FINALIZAR NO WHATSAPP</button>
     </div>
 </div>
 
 <script>
-// LÓGICA DE DADOS E FUNCIONALIDADES (Igual à anterior, mantendo cálculos e carrossel)
 const SHEET_URL = "https://docs.google.com/spreadsheets/d/1BqVAf9A7l7KHKcwpV9HrqBMPWTA4s-aPv1EEna7xuHg/gviz/tq?tqx=out:json&sheet=Products";
 let productsData = [];
 let cart = [];
@@ -166,17 +144,17 @@ async function init() {
 
 function renderAll() {
     const catalog = document.getElementById("catalog");
+    const nav = document.getElementById("categoryNav");
     const categories = [...new Set(productsData.map(p => p.category))];
     categories.forEach(cat => {
-        const section = document.createElement("section");
-        section.className = "category-section";
-        section.id = `sec-${cat.replace(/\s+/g,'')}`;
+        const btn = document.createElement("div"); btn.className = "cat-link"; btn.innerText = cat; btn.onclick = (e) => filterCat(cat, e.target); nav.appendChild(btn);
+        const section = document.createElement("section"); section.className = "category-section"; section.id = `sec-${cat.replace(/\s+/g,'')}`;
         section.innerHTML = `<h2 style="text-transform:uppercase; font-size:18px; border-left:4px solid var(--green); padding-left:10px; margin-bottom:20px;">${cat}</h2><div class="grid" id="grid-${cat.replace(/\s+/g,'')}"></div>`;
         catalog.appendChild(section);
-        productsData.filter(p => p.category === cat).forEach(p => {
-            document.getElementById(`grid-${cat.replace(/\s+/g,'')}`).appendChild(createCard(p));
-        });
+        productsData.filter(p => p.category === cat).forEach(p => { document.getElementById(`grid-${cat.replace(/\s+/g,'')}`).appendChild(createCard(p)); });
     });
+    // Auto Carrossel
+    setInterval(() => { document.querySelectorAll('.carousel-wrap').forEach(w => { if(!w.dataset.manual) manualMove(w.parentElement.id.replace('card-',''), 1); }); }, 5000);
 }
 
 function createCard(p) {
@@ -187,37 +165,56 @@ function createCard(p) {
     d.innerHTML = `
         <div class="promo-badge">OFERTA</div>
         <div class="carousel-wrap">
-            <button class="car-arrow arrow-prev" onclick="manualMove('${id}', -1)">&#10094;</button>
+            <button class="car-arrow arrow-prev" onclick="event.stopPropagation(); manualMove('${id}', -1, true)">&#10094;</button>
             ${p.images.map((img, i) => `<img src="${img}" class="carousel-img ${i===0?'active':''}" onclick="openLightbox('${id}', ${i})">`).join("")}
-            <button class="car-arrow arrow-next" onclick="manualMove('${id}', 1)">&#10095;</button>
+            <button class="car-arrow arrow-next" onclick="event.stopPropagation(); manualMove('${id}', 1, true)">&#10095;</button>
         </div>
+        <div class="old-price"></div>
         <div style="display:flex; justify-content:space-between; align-items:center;">
-            <span style="font-weight:700; font-size:20px;">R$ ${p.skus[0].currentPrice.toFixed(2)}</span>
-            <div style="display:flex; gap:6px;">
-                ${colors.map(c => `<div class="color-dot" style="background:${colorMap[c.toLowerCase()] || c}" data-color="${c}" onclick="syncVariant('${id}', 'color', '${c}')"></div>`).join("")}
-            </div>
+            <span class="current-price">R$ ${p.skus[0].currentPrice.toFixed(2)}</span>
+            <div class="color-dots">${colors.map(c => `<div class="color-dot" style="background:${colorMap[c.toLowerCase()] || c}" data-color="${c}" onclick="syncVariant('${id}', 'color', '${c}')"></div>`).join("")}</div>
         </div>
-        <div style="font-weight:600; margin:10px 0; font-size:14px;">${p.name}</div>
-        <div style="display:flex; flex-wrap:wrap; gap:5px; margin-bottom:15px;">
+        <div style="font-weight:600; font-size:14px; margin:10px 0;">${p.name}</div>
+        <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px;">
             ${sizes.map(s => `<div class="variant-chip" data-size="${s}" onclick="syncVariant('${id}', 'size', '${s}')">${s}</div>`).join("")}
         </div>
         <div class="qty-selector">
-            <button onclick="changeQty(this, -1)" style="border:0; background:0; font-weight:bold; cursor:pointer; width:30px;">-</button>
+            <button class="qty-btn" onclick="changeQty(this, -1)">-</button>
             <span class="qty-val">1</span>
-            <button onclick="changeQty(this, 1)" style="border:0; background:0; font-weight:bold; cursor:pointer; width:30px;">+</button>
+            <button class="qty-btn" onclick="changeQty(this, 1)">+</button>
+            <span style="font-size:10px; color:#94a3b8; margin-left:auto">Estoque: <b class="stk-n">-</b></span>
         </div>
         <button class="btn-add" onclick="addToCart('${id}')">ADICIONAR</button>`;
+    setTimeout(() => syncVariant(id, '', ''), 50); 
     return d;
 }
 
 function syncVariant(id, type, val) {
     const card = document.getElementById(`card-${id}`);
-    card.querySelectorAll(`[data-${type}]`).forEach(el => el.classList.remove('selected'));
-    card.querySelector(`[data-${type}="${val}"]`).classList.add('selected');
+    const product = productsData.find(p => p.name.replace(/\s+/g, '') === id);
+    if(type) {
+        card.querySelectorAll(type === 'color' ? '.color-dot' : '.variant-chip').forEach(el => el.classList.remove('selected'));
+        card.querySelector(`[data-${type}="${val}"]`).classList.add('selected');
+    }
+    const sCol = card.querySelector('.color-dot.selected')?.dataset.color;
+    const sSize = card.querySelector('.variant-chip.selected')?.dataset.size;
+    const sku = product.skus.find(s => (!sCol || s.color === sCol) && (!sSize || s.size === sSize));
+
+    if(sku) {
+        card.querySelector('.current-price').innerText = `R$ ${sku.currentPrice.toFixed(2).replace('.',',')}`;
+        const op = card.querySelector('.old-price'), badge = card.querySelector('.promo-badge');
+        if(sku.oldPrice && sku.oldPrice > sku.currentPrice) {
+            op.innerText = `R$ ${sku.oldPrice.toFixed(2).replace('.',',')}`;
+            badge.style.display = 'block';
+        } else { op.innerText = ''; badge.style.display = 'none'; }
+        card.querySelector('.stk-n').innerText = (sCol && sSize) ? sku.stock : "-";
+    }
 }
 
-function manualMove(id, delta) {
-    const imgs = document.querySelectorAll(`#card-${id} .carousel-img`);
+function manualMove(id, delta, isManual = false) {
+    const wrap = document.querySelector(`#card-${id} .carousel-wrap`);
+    if(isManual) wrap.dataset.manual = "true";
+    const imgs = wrap.querySelectorAll('.carousel-img');
     let act = Array.from(imgs).findIndex(i => i.classList.contains('active'));
     imgs[act].classList.remove('active');
     imgs[(act + delta + imgs.length) % imgs.length].classList.add('active');
@@ -236,44 +233,57 @@ function addToCart(id) {
     const col = card.querySelector('.color-dot.selected')?.dataset.color;
     const siz = card.querySelector('.variant-chip.selected')?.dataset.size;
     if(!col || !siz) return alert("Selecione Cor e Tamanho!");
-    
     const qty = parseInt(card.querySelector('.qty-val').innerText);
-    cart.push({ name: product.name, color: col, size: siz, qty, price: product.skus[0].currentPrice, img: product.images[0] });
-    updateCartUI();
-    toggleCart();
+    const sku = product.skus.find(s => s.color === col && s.size === siz);
+    
+    const existing = cart.find(i => i.name === product.name && i.color === col && i.size === siz);
+    if(existing) existing.qty = Math.min(existing.qty + qty, sku.stock);
+    else cart.push({ name: product.name, color: col, size: siz, qty, price: sku.currentPrice, img: product.images[0], max: sku.stock });
+    updateCartUI(); toggleCart();
 }
 
 function updateCartUI() {
     document.getElementById('cartCount').innerText = cart.length;
-    const cont = document.getElementById('cartItems');
-    cont.innerHTML = cart.map((item, i) => `
-        <div style="display:flex; gap:10px; align-items:center; margin-bottom:15px; border-bottom:1px solid #eee; padding-bottom:10px;">
-            <img src="${item.img}" style="width:50px; height:50px; border-radius:8px; object-fit:cover;">
+    document.getElementById('cartItems').innerHTML = cart.map((item, i) => `
+        <div style="display:flex; gap:12px; padding:15px 0; border-bottom:1px solid #eee; align-items:center;">
+            <img src="${item.img}" style="width:60px; height:60px; object-fit:cover; border-radius:10px;">
             <div style="flex:1">
-                <div style="font-weight:600; font-size:13px;">${item.name}</div>
-                <small>${item.qty}x ${item.color}/${item.size}</small>
+                <b style="font-size:14px;">${item.name}</b><br>
+                <small>${item.color} / ${item.size}</small>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
+                    <div style="display:flex; gap:10px; background:#f1f5f9; padding:2px 8px; border-radius:6px;">
+                        <button onclick="updateCartQty(${i},-1)" style="border:0;background:0;cursor:pointer;">-</button>
+                        <span>${item.qty}</span>
+                        <button onclick="updateCartQty(${i},1)" style="border:0;background:0;cursor:pointer;">+</button>
+                    </div>
+                    <b>R$ ${(item.price*item.qty).toFixed(2)}</b>
+                    <button onclick="removeItem(${i})" style="border:0;background:0;color:red;cursor:pointer;">🗑️</button>
+                </div>
             </div>
-            <b>R$ ${(item.price * item.qty).toFixed(2)}</b>
         </div>`).join("");
-    document.getElementById('totalFinal').innerText = `R$ ${cart.reduce((a, b) => a + (b.price * b.qty), 0).toFixed(2)}`;
+    document.getElementById('totalFinal').innerText = `R$ ${cart.reduce((a, b) => a + (b.price * b.qty), 0).toFixed(2).replace('.',',')}`;
 }
 
-function changeQty(btn, d) {
-    let v = btn.parentElement.querySelector('.qty-val');
-    let n = parseInt(v.innerText) + d;
-    if(n > 0) v.innerText = n;
-}
-
+function updateCartQty(i, d) { if(cart[i].qty+d >= 1 && cart[i].qty+d <= cart[i].max) { cart[i].qty+=d; updateCartUI(); } }
+function removeItem(i) { cart.splice(i, 1); updateCartUI(); }
 function toggleCart() { document.getElementById('cartOverlay').classList.toggle('open'); }
+function changeQty(btn, d) { 
+    let v = btn.parentElement.querySelector('.qty-val'); 
+    let max = parseInt(btn.parentElement.querySelector('.stk-n').innerText) || 99;
+    let n = parseInt(v.innerText) + d; 
+    if(n > 0 && n <= max) v.innerText = n; 
+}
+function filterCat(cat, el) {
+    document.querySelectorAll('.cat-link').forEach(l => l.classList.remove('active')); el.classList.add('active');
+    document.querySelectorAll('.category-section').forEach(sec => sec.style.display = (cat === 'all' || sec.id === `sec-${cat.replace(/\s+/g,'')}`) ? 'block' : 'none');
+}
 
 function finalizeOrder() {
-    const n = document.getElementById('custName').value;
-    const p = document.getElementById('custPhone').value;
-    if(!cart.length || !n || !p) return alert("Preencha os dados e o carrinho!");
-    const msg = `*NOVO PEDIDO ANJJ*\n*Cliente:* ${n}\n\n*Itens:*\n${cart.map(i => `- ${i.qty}x ${i.name} (${i.color}/${i.size})`).join("\n")}\n\n*TOTAL: ${document.getElementById('totalFinal').innerText}*`;
+    const n = document.getElementById('custName').value, p = document.getElementById('custPhone').value;
+    if(!cart.length || !n || !p) return alert("Preencha Nome e WhatsApp!");
+    const msg = `*PEDIDO LOJA ANJJ*\n*Cliente:* ${n}\n*WhatsApp:* ${p}\n\n*Itens:*\n${cart.map(i => `- ${i.qty}x ${i.name} (${i.color}/${i.size})`).join('\n')}\n\n*TOTAL: ${document.getElementById('totalFinal').innerText}*`;
     window.open(`https://wa.me/5581999998888?text=${encodeURIComponent(msg)}`);
 }
-
 init();
 </script>
 </body>
