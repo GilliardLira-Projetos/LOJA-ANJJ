@@ -22,7 +22,7 @@ header{display:flex;justify-content:space-between;align-items:center;padding:16p
 .title{font-weight:600;margin:8px 0}
 .price{margin:6px 0}
 
-button{padding:8px;border:none;border-radius:6px;cursor:pointer}
+select,button{padding:8px;border:none;border-radius:6px;cursor:pointer;width:100%}
 .add-cart{background:#1d4ed8;color:#fff;margin-top:6px}
 
 .cart-overlay{position:fixed;top:0;right:0;width:100%;max-width:420px;height:100%;background:#fff;transform:translateX(100%);transition:.3s;z-index:2000;padding:20px;overflow:auto}
@@ -66,10 +66,8 @@ const SHEET_URL="https://docs.google.com/spreadsheets/d/1BqVAf9A7l7KHKcwpV9HrqBM
 
 let cart=[],currentImages=[],currentIndex=0;
 
-// Função para formatar dinheiro
 function money(v){return Number(v).toFixed(2).replace('.',',')}
 
-// Buscar produtos da planilha
 async function fetchSheet(){
  const r=await fetch(SHEET_URL);
  const t=await r.text();
@@ -82,7 +80,6 @@ async function fetchSheet(){
  })
 }
 
-// Agrupar produtos por nome
 function groupProducts(data){
  const g={};
  data.forEach(p=>{
@@ -101,7 +98,6 @@ function groupProducts(data){
  return Object.values(g);
 }
 
-// Criar cartão do produto
 function createCard(p){
  const v=p.variants[0];
  const hasDiscount=v.discount>0;
@@ -120,10 +116,21 @@ function createCard(p){
  <span style="color:#dc2626;font-size:20px">R$ ${money(v.discount)}</span>
  `:`R$ ${money(v.price)}`}
  </div>
+ <label>Tamanho</label>
+ <select class="variant">
+   <option disabled selected>Selecionar</option>
+   ${p.variants.map(v=>`
+     <option value="${v.price}" data-discount="${v.discount}" data-stock="${v.stock}">
+       ${v.name}
+     </option>`).join("")}
+ </select>
+
+ <label>Qtd</label>
+ <select class="qty">${[...Array(v.stock)].map((_,i)=>`<option>${i+1}</option>`).join("")}</select>
+
  <button class="add-cart">Adicionar</button>
  `;
  
- // Carousel automático das imagens
  let idx=0;
  const imgsEl=d.querySelectorAll(".thumb-container img");
  let interval=setInterval(()=>{
@@ -132,7 +139,6 @@ function createCard(p){
   imgsEl[idx].classList.add("active");
  },3000);
 
- // Abrir modal ao clicar
  d.querySelector(".thumb-container").onclick=()=>{
   currentImages=p.images;
   currentIndex=0;
@@ -140,24 +146,27 @@ function createCard(p){
   imgModal.classList.add("open");
  }
 
- // Adicionar ao carrinho
  d.querySelector(".add-cart").onclick=()=>{
-  addToCart(p.name,hasDiscount?v.discount:v.price);
+   const variant = d.querySelector(".variant");
+   const qty = Number(d.querySelector(".qty").value);
+   const price = Number(variant.selectedOptions[0].dataset.discount || variant.value);
+   const name = p.name;
+   addToCart(name, price, qty);
  }
 
  return d;
 }
 
-// Adicionar produto ao carrinho
-function addToCart(name,price){
-  // Verificar se já existe no carrinho
+function addToCart(name, price, qty){
   const existing = cart.find(i=>i.name===name && i.price===price);
-  if(existing){ existing.qty++; }
-  else{ cart.push({name,price,qty:1}); }
+  if(existing){
+    existing.qty += qty;
+  } else {
+    cart.push({name, price, qty});
+  }
   updateCart();
 }
 
-// Atualizar carrinho
 function updateCart(){
  const cartItems=document.getElementById("cartItems");
  const cartTotal=document.getElementById("cartTotal");
@@ -181,27 +190,19 @@ function updateCart(){
  cartCount.textContent = cart.reduce((a,b)=>a+b.qty,0);
 }
 
-// Alterar quantidade no carrinho
 function changeQty(i,d){
  cart[i].qty = Math.max(1,cart[i].qty+d);
  updateCart();
 }
 
-// Remover item
 function removeItem(i){
  cart.splice(i,1);
  updateCart();
 }
 
-// Abrir/Fechar carrinho
 function toggleCart(){document.getElementById("cartOverlay").classList.toggle("open")}
-
-// Modal de imagem
-const imgModal=document.getElementById("imgModal");
-const modalImg=document.getElementById("modalImg");
 function closeModal(e){if(!e||e.target.id==="imgModal"||e.target.classList.contains("close")) imgModal.classList.remove("open")}
 
-// Inicializar
 async function init(){
  const raw = await fetchSheet();
  const products = groupProducts(raw);
