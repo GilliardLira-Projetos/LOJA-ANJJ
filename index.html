@@ -6,36 +6,37 @@
     <title>LOJA ANJJ</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet" />
     <style>
-        :root { --green: #22c55e; --bg: #ffffff; }
+        :root { --green: #22c55e; --bg: #ffffff; --red: #ef4444; }
         body { font-family: 'Poppins', sans-serif; margin: 0; background: var(--bg); color: #333; overflow-x: hidden; }
         
-        /* HEADER */
         header { padding: 15px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; background: #fff; z-index: 1000; }
         .logo { font-weight: 700; font-size: 14px; text-transform: uppercase; }
-        .cart-icon { cursor: pointer; font-weight: 600; background: #f4f4f4; padding: 8px 12px; border-radius: 20px; transition: 0.3s; }
+        .cart-icon { cursor: pointer; font-weight: 600; background: #f4f4f4; padding: 8px 12px; border-radius: 20px; }
 
-        /* NAV CATEGORIAS */
         .category-nav { display: flex; gap: 10px; padding: 10px; overflow-x: auto; border-bottom: 1px solid #eee; background: #fff; scrollbar-width: none; }
         .cat-link { border: 1px solid #eee; padding: 6px 15px; border-radius: 4px; font-size: 12px; cursor: pointer; color: #666; white-space: nowrap; }
         .cat-link.active { background: var(--green); color: #fff; border-color: var(--green); }
 
-        /* GRID E CARDS */
         .category-section { padding: 20px 0; display: none; }
         .category-section.active { display: block; }
         .category-title { text-align: center; text-transform: uppercase; font-size: 16px; margin-bottom: 20px; font-weight: 700; }
+        
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; padding: 0 15px; }
-        .card { border: 1px solid #eee; border-radius: 8px; padding: 12px; background: #fff; }
+        .card { border: 1px solid #eee; border-radius: 8px; padding: 12px; background: #fff; position: relative; }
 
-        /* CARROSSEL */
+        /* PREÇOS E DESCONTO */
+        .price-container { display: flex; flex-direction: column; margin-bottom: 10px; }
+        .old-price { font-size: 12px; color: #999; text-decoration: line-through; }
+        .current-price { font-size: 18px; font-weight: 700; color: #000; }
+        .discount-badge { position: absolute; top: 10px; left: 10px; background: var(--red); color: #fff; font-size: 10px; padding: 3px 8px; border-radius: 4px; font-weight: 700; z-index: 10; }
+
         .carousel { width: 100%; height: 280px; position: relative; overflow: hidden; border-radius: 6px; cursor: pointer; }
         .carousel img { width: 100%; height: 100%; object-fit: cover; position: absolute; opacity: 0; transition: opacity 0.5s ease; }
         .carousel img.active { opacity: 1; }
 
         .product-name { font-size: 14px; font-weight: 600; margin: 12px 0 5px; text-transform: uppercase; }
-        .product-price { font-size: 16px; font-weight: 700; color: #000; margin-bottom: 10px; }
-
-        /* SELEÇÃO */
         .btn-options { border: 1px solid var(--green); color: var(--green); background: #fff; padding: 10px; border-radius: 4px; cursor: pointer; font-weight: 600; width: 100%; }
+        
         .selection-area { display: none; margin-top: 15px; border-top: 1px dashed #ddd; padding-top: 10px; }
         .variant-grid { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
         .variant-chip { border: 1px solid #ddd; padding: 6px 12px; border-radius: 4px; font-size: 12px; cursor: pointer; }
@@ -46,18 +47,13 @@
         .qty-btn { border: 1px solid #ddd; background: #fff; width: 30px; height: 30px; border-radius: 4px; cursor: pointer; }
         .btn-add { background: var(--green); color: #fff; border: none; padding: 14px; border-radius: 6px; font-weight: 700; width: 100%; cursor: pointer; }
 
-        /* CARRINHO LATERAL */
+        /* CARRINHO */
         .cart-overlay { position: fixed; top: 0; right: 0; width: 100%; max-width: 400px; height: 100%; background: #fff; box-shadow: -5px 0 15px rgba(0,0,0,0.1); z-index: 2000; transform: translateX(100%); transition: 0.3s; padding: 20px; box-sizing: border-box; overflow-y: auto; }
         .cart-overlay.open { transform: translateX(0); }
-        .cart-item { border-bottom: 1px solid #f0f0f0; padding: 10px 0; margin-bottom: 10px; }
-        .cart-item-info { display: flex; justify-content: space-between; font-size: 14px; font-weight: 600; }
-        .cart-item-controls { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
-        
-        /* FORMULÁRIO */
+        .cart-item { border-bottom: 1px solid #f0f0f0; padding: 10px 0; }
         .form-group { margin-top: 15px; }
         .form-group label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 5px; }
         .form-group input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
-        .required { color: red; }
     </style>
 </head>
 <body>
@@ -78,26 +74,15 @@
         <h3 style="margin:0">🛍️ Seu Pedido</h3>
         <span onclick="toggleCart()" style="cursor:pointer; font-size:20px;">✕</span>
     </div>
-
-    <div id="cartItems" class="cart-items" style="margin-top:15px;">
-        </div>
-
+    <div id="cartItems" style="margin-top:15px;"></div>
     <div style="margin-top:20px; padding-top:10px; border-top:2px solid #eee;">
         <div style="display:flex; justify-content:space-between; font-weight:700; font-size:18px;">
             <span>Total:</span>
             <span>R$ <span id="cartTotal">0,00</span></span>
         </div>
     </div>
-
-    <div class="form-group" style="margin-top:25px;">
-        <label>Nome Completo <span class="required">*</span></label>
-        <input type="text" id="custName" placeholder="Ex: João Silva">
-    </div>
-    <div class="form-group">
-        <label>WhatsApp (DDD + Número) <span class="required">*</span></label>
-        <input type="tel" id="custPhone" placeholder="Ex: 11999999999" maxlength="11">
-    </div>
-
+    <div class="form-group"><label>Nome Completo *</label><input type="text" id="custName"></div>
+    <div class="form-group"><label>WhatsApp (DDD + Número) *</label><input type="tel" id="custPhone" maxlength="11"></div>
     <button class="btn-add" style="margin-top:20px;" onclick="finalizeOrder()">Fazer pedido no WhatsApp</button>
 </div>
 
@@ -105,6 +90,8 @@
 const SHEET_URL = "https://docs.google.com/spreadsheets/d/1BqVAf9A7l7KHKcwpV9HrqBMPWTA4s-aPv1EEna7xuHg/gviz/tq?tqx=out:json&sheet=Products";
 let productsData = [];
 let cart = [];
+
+function money(v) { return Number(v).toFixed(2).replace('.', ','); }
 
 async function init() {
     const r = await fetch(SHEET_URL);
@@ -127,7 +114,17 @@ async function init() {
                 variants: [] 
             };
         }
-        grouped[p.Name].variants.push({ name: p["Variant Name"], price: p.Price, stock: parseInt(p.Stock || 0) });
+        // Lógica de Desconto: Se Discounted Price existir, ele é o preço oficial
+        const originalPrice = parseFloat(p.Price || 0);
+        const discPrice = parseFloat(p["Discounted Price"] || 0);
+        const finalPrice = discPrice > 0 ? discPrice : originalPrice;
+
+        grouped[p.Name].variants.push({ 
+            name: p["Variant Name"], 
+            oldPrice: discPrice > 0 ? originalPrice : 0,
+            price: finalPrice, 
+            stock: parseInt(p.Stock || 0) 
+        });
     });
     
     productsData = Object.values(grouped);
@@ -147,9 +144,8 @@ function renderAll() {
         section.innerHTML = `<h2 class="category-title">${cat}</h2><div class="grid" id="grid-${cat}"></div>`;
         catalog.appendChild(section);
 
-        const grid = document.getElementById(`grid-${cat}`);
         productsData.filter(p => p.category === cat).forEach(p => {
-            grid.appendChild(createCard(p));
+            document.getElementById(`grid-${cat}`).appendChild(createCard(p));
         });
     });
     autoCarousel();
@@ -158,15 +154,20 @@ function renderAll() {
 function createCard(p) {
     const d = document.createElement("div");
     d.className = "card";
-    const carouselHtml = p.images.map((img, i) => `<img src="${img}" class="${i === 0 ? 'active' : ''}">`).join("");
-
+    const v = p.variants[0];
+    const hasDiscount = v.oldPrice > 0;
+    
     d.innerHTML = `
-        <div class="carousel" onclick="manualNext(this)">${carouselHtml}</div>
+        ${hasDiscount ? `<div class="discount-badge">OFERTA</div>` : ''}
+        <div class="carousel" onclick="manualNext(this)">${p.images.map((img, i) => `<img src="${img}" class="${i === 0 ? 'active' : ''}">`).join("")}</div>
         <div class="product-name">${p.name}</div>
-        <div class="product-price">R$ ${p.variants[0].price.toFixed(2).replace('.',',')}</div>
+        <div class="price-container">
+            ${hasDiscount ? `<span class="old-price">R$ ${money(v.oldPrice)}</span>` : ''}
+            <span class="current-price">R$ ${money(v.price)}</span>
+        </div>
         <button class="btn-options" onclick="showOptions(this)">Ver opções</button>
         <div class="selection-area">
-            <div class="variant-grid">${p.variants.map(v => `<div class="variant-chip ${v.stock <= 0 ? 'no-stock' : ''}" onclick="${v.stock > 0 ? `selectChip(this, ${v.price}, ${v.stock})` : ''}">${v.name}</div>`).join("")}</div>
+            <div class="variant-grid">${p.variants.map(varnt => `<div class="variant-chip ${varnt.stock <= 0 ? 'no-stock' : ''}" onclick="${varnt.stock > 0 ? `selectChip(this, ${varnt.price}, ${varnt.oldPrice}, ${varnt.stock})` : ''}">${varnt.name}</div>`).join("")}</div>
             <div class="qty-selector">
                 <button class="qty-btn" onclick="changeQty(this, -1)">-</button>
                 <span class="qty-val">1</span>
@@ -198,11 +199,20 @@ function filterCat(cat, el) {
 
 function showOptions(btn) { btn.style.display = 'none'; btn.parentElement.querySelector('.selection-area').style.display = 'block'; }
 
-function selectChip(el, pr, st) {
+function selectChip(el, pr, oldPr, st) {
     el.parentElement.querySelectorAll('.variant-chip').forEach(c => c.classList.remove('selected'));
     el.classList.add('selected');
     const card = el.closest('.card');
-    card.querySelector('.product-price').innerText = "R$ " + pr.toFixed(2).replace('.',',');
+    card.querySelector('.current-price').innerText = "R$ " + money(pr);
+    if(oldPr > 0) {
+        if(!card.querySelector('.old-price')) {
+            const op = document.createElement('span'); op.className = 'old-price';
+            card.querySelector('.price-container').prepend(op);
+        }
+        card.querySelector('.old-price').innerText = "R$ " + money(oldPr);
+    } else if (card.querySelector('.old-price')) {
+        card.querySelector('.old-price').remove();
+    }
     card.querySelector('.stk-n').innerText = st;
 }
 
@@ -213,7 +223,6 @@ function changeQty(btn, d) {
     if (n >= 1 && n <= max) val.innerText = n;
 }
 
-// LÓGICA DO CARRINHO
 function toggleCart() { document.getElementById('cartOverlay').classList.toggle('open'); }
 
 function addToCart(name, btn) {
@@ -221,18 +230,15 @@ function addToCart(name, btn) {
     const sel = card.querySelector('.variant-chip.selected');
     if (!sel) return alert("Selecione um tamanho!");
     const qty = parseInt(card.querySelector('.qty-val').innerText);
-    const price = parseFloat(card.querySelector('.product-price').innerText.replace('R$ ', '').replace(',', '.'));
+    const pr = parseFloat(card.querySelector('.current-price').innerText.replace('R$ ', '').replace(',', '.'));
     const max = parseInt(card.querySelector('.stk-n').innerText);
 
-    // Verifica se já existe no carrinho para somar
     const index = cart.findIndex(i => i.name === name && i.variant === sel.innerText);
     if(index > -1) {
-        if(cart[index].qty + qty > max) cart[index].qty = max;
-        else cart[index].qty += qty;
+        cart[index].qty = Math.min(cart[index].qty + qty, max);
     } else {
-        cart.push({ name, variant: sel.innerText, qty, price, maxStock: max });
+        cart.push({ name, variant: sel.innerText, qty, price: pr, maxStock: max });
     }
-    
     updateCartUI();
     toggleCart();
 }
@@ -240,31 +246,28 @@ function addToCart(name, btn) {
 function updateCartUI() {
     document.getElementById('cartCount').innerText = cart.length;
     const itemsCont = document.getElementById('cartItems');
-    
     itemsCont.innerHTML = cart.map((item, i) => `
         <div class="cart-item">
-            <div class="cart-item-info">
-                <span>${item.name} (${item.variant})</span>
-                <span>R$ ${(item.price * item.qty).toFixed(2).replace('.',',')}</span>
+            <div style="display:flex; justify-content:space-between; font-size:14px;">
+                <b>${item.name} (${item.variant})</b>
+                <span>R$ ${money(item.price * item.qty)}</span>
             </div>
-            <div class="cart-item-controls">
+            <div style="display:flex; align-items:center; gap:10px; margin-top:5px;">
                 <button class="qty-btn" onclick="updateItemQty(${i}, -1)">-</button>
                 <span>${item.qty}</span>
                 <button class="qty-btn" onclick="updateItemQty(${i}, 1)">+</button>
-                <button onclick="removeFromCart(${i})" style="margin-left:auto; border:none; background:none; color:red; cursor:pointer; font-size:18px;">🗑️</button>
+                <button onclick="removeFromCart(${i})" style="margin-left:auto; border:none; color:red; cursor:pointer;">🗑️</button>
             </div>
         </div>
     `).join("");
-
     const total = cart.reduce((a, b) => a + (b.price * b.qty), 0);
-    document.getElementById('cartTotal').innerText = total.toFixed(2).replace('.',',');
+    document.getElementById('cartTotal').innerText = money(total);
 }
 
-function updateItemQty(index, delta) {
-    const item = cart[index];
-    let newQty = item.qty + delta;
-    if(newQty >= 1 && newQty <= item.maxStock) {
-        item.qty = newQty;
+function updateItemQty(idx, d) {
+    const it = cart[idx];
+    if(it.qty + d >= 1 && it.qty + d <= it.maxStock) {
+        it.qty += d;
         updateCartUI();
     }
 }
@@ -272,21 +275,12 @@ function updateItemQty(index, delta) {
 function removeFromCart(i) { cart.splice(i, 1); updateCartUI(); }
 
 function finalizeOrder() {
-    const name = document.getElementById('custName').value.trim();
-    const phone = document.getElementById('custPhone').value.trim();
-
-    if (!cart.length) return alert("Adicione produtos ao carrinho!");
-    if (!name || !phone) return alert("Por favor, preencha o Nome e o WhatsApp corretamente!");
-    if (phone.length < 10) return alert("Número de WhatsApp inválido!");
-
-    const total = document.getElementById('cartTotal').innerText;
-    const text = `*NOVO PEDIDO - LOJA ANJJ*\n\n` +
-                 `*Cliente:* ${name}\n` +
-                 `*Contato:* ${phone}\n\n` +
-                 `*Itens:*\n${cart.map(i => `- ${i.qty}x ${i.name} (${i.variant})`).join('\n')}\n\n` +
-                 `*TOTAL: R$ ${total}*`;
-
-    window.open(`https://wa.me/55${phone.replace(/\D/g,'')}?text=${encodeURIComponent(text)}`);
+    const name = document.getElementById('custName').value;
+    const phone = document.getElementById('custPhone').value;
+    if (!cart.length || !name || !phone) return alert("Preencha todos os campos!");
+    
+    const text = `*NOVO PEDIDO - LOJA ANJJ*\n\n*Cliente:* ${name}\n*Fone:* ${phone}\n\n*Itens:*\n${cart.map(i => `- ${i.qty}x ${i.name} (${i.variant})`).join('\n')}\n\n*TOTAL: R$ ${document.getElementById('cartTotal').innerText}*`;
+    window.open(`https://wa.me/55SEUNUMERO?text=${encodeURIComponent(text)}`);
 }
 
 init();
