@@ -25,35 +25,37 @@
         @media (max-width: 480px) { .grid { grid-template-columns: repeat(2, 1fr); gap: 10px; } .carousel-wrap { height: 180px !important; } }
 
         .card { border: 1px solid #eee; border-radius: 15px; padding: 12px; background: #fff; display: flex; flex-direction: column; height: 100%; box-sizing: border-box; position: relative; }
-        
         .discount-badge { position: absolute; top: 10px; left: 10px; background: var(--red); color: white; padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: 700; z-index: 20; display: none; }
 
+        /* CARROSSEL CORRIGIDO */
         .carousel-wrap { position: relative; width: 100%; height: 250px; border-radius: 12px; overflow: hidden; background: #f1f5f9; margin-bottom: 10px; }
-        .carousel-img { width: 100%; height: 100%; object-fit: cover; position: absolute; opacity: 0; transition: 0.4s; cursor: zoom-in; left:0; top:0; }
-        .carousel-img.active { opacity: 1; }
+        .imgs-container { width: 100%; height: 100%; position: relative; }
+        .carousel-img { width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0; opacity: 0; transition: opacity 0.4s ease; cursor: zoom-in; }
+        .carousel-img.active { opacity: 1; z-index: 5; }
         
-        .car-arrow { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.9); border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; z-index: 10; font-weight: bold; }
+        .car-arrow { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.8); border: none; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; z-index: 15; font-weight: bold; display: flex; align-items: center; justify-content: center; }
         .arrow-l { left: 5px; } .arrow-r { right: 5px; }
 
         .price-container { display: flex; flex-direction: column; margin-bottom: 5px; }
         .old-price { font-size: 12px; color: #94a3b8; text-decoration: line-through; display: none; }
-        .current-price { font-size: 18px; font-weight: 700; color: #000; }
+        .current-price { font-size: 17px; font-weight: 700; color: #000; }
 
-        .color-dot { width: 22px; height: 22px; border-radius: 50%; border: 2px solid #eee; cursor: pointer; }
-        .color-dot.selected { border-color: #000; outline: 2px solid #fff; }
-        .variant-chip { border: 1px solid #ddd; padding: 4px 10px; border-radius: 6px; font-size: 11px; cursor: pointer; }
-        .variant-chip.selected { background: #000; color: #fff; }
+        /* BOLINHAS DE CORES CORRIGIDAS */
+        .color-dot { width: 22px; height: 22px; border-radius: 50%; border: 2px solid #ddd; cursor: pointer; transition: 0.2s; position: relative; }
+        .color-dot.selected { border-color: #000; transform: scale(1.1); box-shadow: 0 0 5px rgba(0,0,0,0.2); }
+        
+        .variant-chip { border: 1px solid #ddd; padding: 4px 10px; border-radius: 6px; font-size: 11px; cursor: pointer; background: #fff; }
+        .variant-chip.selected { background: #000; color: #fff; border-color: #000; }
         
         .btn-add { background: var(--green); color: #fff; border: none; padding: 12px; border-radius: 10px; font-weight: 700; width: 100%; cursor: pointer; margin-top: auto; }
 
+        /* CARRINHO */
         .cart-overlay { position: fixed; top: 0; right: 0; width: 100%; max-width: 400px; height: 100dvh; background: #fff; z-index: 2500; transform: translateX(100%); transition: 0.4s; display: flex; flex-direction: column; }
         .cart-overlay.open { transform: translateX(0); box-shadow: -10px 0 30px rgba(0,0,0,0.2); }
         .cart-body { flex: 1; overflow-y: auto; padding: 15px; }
         .cart-footer { padding: 20px; border-top: 1px solid #eee; background: #fff; }
         .form-input { width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #ddd; font-size: 16px; box-sizing: border-box; }
         .btn-finalize { background: var(--wpp); color: #fff; border: none; padding: 16px; border-radius: 12px; font-weight: 700; width: 100%; cursor: pointer; }
-        .pulse-anim { animation: pulseBtn 2s infinite; }
-        @keyframes pulseBtn { 0% { transform: scale(1); } 70% { transform: scale(1.03); } 100% { transform: scale(1); } }
 
         #lightbox { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.95); display: none; z-index: 3000; justify-content: center; align-items: center; }
         #lbImg { max-width: 95%; max-height: 80%; object-fit: contain; }
@@ -103,9 +105,8 @@
 </div>
 
 <script>
-// --- CONFIGURAÇÕES ---
 const SHEET_URL = "https://docs.google.com/spreadsheets/d/1uCx_JB4xZnU0vBIQjlrwBgsTRia_wSlUWPJlaN0EbhE/gviz/tq?tqx=out:json&sheet=Products";
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzjjtXHt9UkYeUhC3A2uh7vjN42-yUYdgfjJRhQFFhtIeqqc2BLsQrJmXSIOQ_3S2Abxg/exec"; // Coloque aqui seu link do Apps Script
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzjjtXHt9UkYeUhC3A2uh7vjN42-yUYdgfjJRhQFFhtIeqqc2BLsQrJmXSIOQ_3S2Abxg/exec"; 
 const WHATSAPP_NUMBER = '+5581997512217';
 
 let productsData = [];
@@ -167,15 +168,19 @@ function renderAll() {
 }
 
 function createCard(p) {
-    const d = document.createElement("div"); const id = p.name.replace(/\s+/g, '');
+    const d = document.createElement("div"); 
+    const id = p.name.replace(/\s+/g, '');
     const colors = [...new Set(p.skus.map(s => s.color))];
     const sizes = [...new Set(p.skus.map(s => s.size))];
+    
     d.className = "card"; d.id = `card-${id}`;
     d.innerHTML = `
         <div class="discount-badge">OFERTA</div>
         <div class="carousel-wrap">
             <button class="car-arrow arrow-l" onclick="manualMove('${id}', -1)">&#10094;</button>
-            ${p.images.map((img, i) => `<img src="${img}" class="carousel-img ${i===0?'active':''}" onclick="openLightbox('${id}', ${i})">`).join("")}
+            <div class="imgs-container">
+                ${p.images.map((img, i) => `<img src="${img}" class="carousel-img ${i===0?'active':''}" onclick="openLightbox('${id}', ${i})">`).join("")}
+            </div>
             <button class="car-arrow arrow-r" onclick="manualMove('${id}', 1)">&#10095;</button>
         </div>
         <div style="display:flex; justify-content:space-between; align-items:flex-start;">
@@ -183,26 +188,41 @@ function createCard(p) {
                 <span class="old-price"></span>
                 <span class="current-price"></span>
             </div>
-            <div style="display:flex; gap:4px; margin-top:5px;">${colors.map(c => `<div class="color-dot" data-color="${c}" onclick="syncVariant('${id}', 'color', '${c}')" style="background:${c.toLowerCase()}"></div>`).join("")}</div>
+            <div style="display:flex; gap:6px; margin-top:5px;">
+                ${colors.map(c => `<div class="color-dot" data-color="${c}" onclick="syncVariant('${id}', 'color', '${c}')" style="background:${c.toLowerCase()}"></div>`).join("")}
+            </div>
         </div>
-        <div style="font-weight:600; font-size:13px; margin:5px 0; min-height:38px;">${p.name}</div>
-        <div style="display:flex; flex-wrap:wrap; gap:4px; margin-bottom:10px;">${sizes.map(s => `<div class="variant-chip" data-size="${s}" onclick="syncVariant('${id}', 'size', '${s}')">${s}</div>`).join("")}</div>
+        <div style="font-weight:600; font-size:13px; margin:8px 0; min-height:38px; line-height:1.2;">${p.name}</div>
+        <div style="display:flex; flex-wrap:wrap; gap:4px; margin-bottom:10px;">
+            ${sizes.map(s => `<div class="variant-chip" data-size="${s}" onclick="syncVariant('${id}', 'size', '${s}')">${s}</div>`).join("")}
+        </div>
         <div class="qty-selector" style="display:flex; justify-content:space-between; background:#f1f5f9; padding:5px 10px; border-radius:8px; margin-bottom:10px; font-size:13px;">
             <div><button onclick="changeQty(this, -1)">-</button> <span class="qty-val">1</span> <button onclick="changeQty(this, 1)">+</button></div>
             <span style="font-size:9px; color:#666;">Estoque: <b class="stk-n">0</b></span>
         </div>
         <button class="btn-add" onclick="addToCart('${id}')">ADICIONAR</button>`;
-    setTimeout(() => { syncVariant(id, 'color', colors[0]); syncVariant(id, 'size', sizes[0]); }, 100);
+
+    // Ativa a primeira cor e tamanho automaticamente
+    setTimeout(() => { 
+        syncVariant(id, 'color', colors[0]); 
+        syncVariant(id, 'size', sizes[0]); 
+    }, 50);
+
     return d;
 }
 
 function syncVariant(id, type, val) {
     const card = document.getElementById(`card-${id}`);
     const product = productsData.find(p => p.name.replace(/\s+/g, '') === id);
-    if(type) {
-        card.querySelectorAll(type === 'color' ? '.color-dot' : '.variant-chip').forEach(el => el.classList.remove('selected'));
-        card.querySelector(`[data-${type}="${val}"]`)?.classList.add('selected');
+    
+    if(type === 'color') {
+        card.querySelectorAll('.color-dot').forEach(el => el.classList.remove('selected'));
+        card.querySelector(`.color-dot[data-color="${val}"]`)?.classList.add('selected');
+    } else if(type === 'size') {
+        card.querySelectorAll('.variant-chip').forEach(el => el.classList.remove('selected'));
+        card.querySelector(`.variant-chip[data-size="${val}"]`)?.classList.add('selected');
     }
+
     const sCol = card.querySelector('.color-dot.selected')?.dataset.color;
     const sSize = card.querySelector('.variant-chip.selected')?.dataset.size;
     const sku = product.skus.find(s => s.color === sCol && s.size === sSize);
@@ -224,6 +244,15 @@ function syncVariant(id, type, val) {
     }
 }
 
+function manualMove(id, d) {
+    const card = document.getElementById(`card-${id}`);
+    const imgs = card.querySelectorAll('.carousel-img');
+    let activeIdx = Array.from(imgs).findIndex(img => img.classList.contains('active'));
+    imgs[activeIdx].classList.remove('active');
+    let nextIdx = (activeIdx + d + imgs.length) % imgs.length;
+    imgs[nextIdx].classList.add('active');
+}
+
 function changeQty(btn, d) {
     const v = btn.parentElement.querySelector('.qty-val');
     const max = parseInt(btn.closest('.qty-selector').querySelector('.stk-n').innerText);
@@ -239,7 +268,7 @@ function addToCart(id) {
     const qty = parseInt(card.querySelector('.qty-val').innerText);
     const sku = product.skus.find(s => s.color === col && s.size === siz);
 
-    if(!sku || sku.stock <= 0) return alert("Sem estoque.");
+    if(!sku || sku.stock <= 0) return alert("Sem estoque para essa variação.");
     const price = (sku.discountPrice > 0 && sku.discountPrice < sku.originalPrice) ? sku.discountPrice : sku.originalPrice;
 
     const existing = cart.find(i => i.name === product.name && i.color === col && i.size === siz);
@@ -253,30 +282,25 @@ function addToCart(id) {
 }
 
 function updateCartUI() {
-    cart = cart.map(item => {
-        const freshProd = productsData.find(p => p.name === item.name);
-        const freshSku = freshProd?.skus.find(s => s.color === item.color && s.size === item.size);
-        if(freshSku) {
-            item.price = (freshSku.discountPrice > 0 && freshSku.discountPrice < freshSku.originalPrice) ? freshSku.discountPrice : freshSku.originalPrice;
-            if(item.qty > freshSku.stock) item.qty = freshSku.stock;
-        }
-        return item;
-    });
-
     localStorage.setItem('anjj_cart', JSON.stringify(cart));
     document.getElementById('cartCount').innerText = cart.length;
     const container = document.getElementById('cartItems');
     container.innerHTML = cart.map((item, i) => `
-        <div style="display:flex; gap:12px; margin-bottom:15px; border-bottom:1px solid #eee; padding-bottom:10px;">
+        <div style="display:flex; gap:12px; margin-bottom:15px; border-bottom:1px solid #eee; padding-bottom:10px; align-items:center;">
             <img src="${item.img}" style="width:50px; height:50px; border-radius:8px; object-fit:cover;">
             <div style="flex:1;">
-                <b style="font-size:12px;">${item.name}</b><br><small>${item.color} | ${item.size}</small>
+                <b style="font-size:12px; display:block;">${item.name}</b>
+                <small style="color:#666;">${item.color} | ${item.size}</small>
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-top:5px;">
-                    <span style="font-weight:700;">R$ ${(item.price * item.qty).toFixed(2).replace('.',',')}</span>
-                    <div><button onclick="updateCartQty(${i}, -1)">-</button> ${item.qty} <button onclick="updateCartQty(${i}, 1)">+</button></div>
+                    <span style="font-weight:700; font-size:14px;">R$ ${(item.price * item.qty).toFixed(2).replace('.',',')}</span>
+                    <div style="background:#f1f5f9; padding:2px 8px; border-radius:5px; font-size:12px;">
+                        <button onclick="updateCartQty(${i}, -1)" style="border:none; background:none; cursor:pointer;">-</button> 
+                        <span style="margin:0 5px;">${item.qty}</span> 
+                        <button onclick="updateCartQty(${i}, 1)" style="border:none; background:none; cursor:pointer;">+</button>
+                    </div>
                 </div>
             </div>
-            <button onclick="removeItem(${i})" style="color:red; background:none; border:none;">✕</button>
+            <button onclick="removeItem(${i})" style="color:#ef4444; background:none; border:none; font-size:18px; cursor:pointer; padding:5px;">🗑️</button>
         </div>`).join("");
     
     const total = cart.reduce((a, b) => a + (b.price * b.qty), 0);
@@ -284,48 +308,16 @@ function updateCartUI() {
 }
 
 function updateCartQty(idx, d) {
-    const item = cart[idx];
-    const prod = productsData.find(p => p.name === item.name);
-    const sku = prod?.skus.find(s => s.color === item.color && s.size === item.size);
-    if(item.qty + d > 0 && item.qty + d <= (sku?.stock || 999)) {
-        item.qty += d;
+    if(cart[idx].qty + d > 0) {
+        cart[idx].qty += d;
         updateCartUI();
     }
 }
 
-// --- FUNÇÃO FINALIZAR (GRAVAÇÃO + WHATSAPP) ---
-async function finalizeOrder() {
-    const n = document.getElementById('custName').value;
-    const p = document.getElementById('custPhone').value;
-    if(!cart.length || !n || !p) return alert("Preencha Nome e WhatsApp!");
-    
-    const total = document.getElementById('totalFinal').innerText;
-    const itemsText = cart.map(i => `${i.qty}x ${i.name} (${i.color}/${i.size})`).join(", ");
-
-    // Grava na Planilha
-    try {
-        fetch(APPS_SCRIPT_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            body: JSON.stringify({ name: n, phone: p, total: total, items: itemsText })
-        });
-    } catch(e) { console.error("Erro planilha:", e); }
-
-    // Abre WhatsApp
-    const msg = `*NOVO PEDIDO - ANJJ*\n*Cliente:* ${n}\n*WhatsApp:* ${p}\n\n*Itens:*\n${cart.map(i => `- ${i.qty}x ${i.name} (${i.color}/${i.size})`).join("\n")}\n\n*TOTAL: ${total}*`;
-    window.open(`https://wa.me/${WHATSAPP_NUMBER.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`);
-}
-
-function clearCart() { if(confirm("Limpar carrinho?")) { cart = []; updateCartUI(); } }
 function removeItem(i) { cart.splice(i, 1); updateCartUI(); }
+function clearCart() { if(confirm("Esvaziar carrinho?")) { cart = []; updateCartUI(); } }
 function toggleCart() { document.getElementById('cartOverlay').classList.toggle('open'); }
-function manualMove(id, d) {
-    const card = document.getElementById(`card-${id}`);
-    const imgs = card.querySelectorAll('.carousel-img');
-    let act = Array.from(imgs).findIndex(i => i.classList.contains('active'));
-    imgs[act].classList.remove('active');
-    imgs[(act + d + imgs.length) % imgs.length].classList.add('active');
-}
+
 function openLightbox(id, idx) {
     const product = productsData.find(p => p.name.replace(/\s+/g, '') === id);
     lbCurrentImages = product.images; lbIndex = idx;
@@ -334,6 +326,7 @@ function openLightbox(id, idx) {
 function updateLB() { document.getElementById('lbImg').src = lbCurrentImages[lbIndex]; }
 function changeLB(d) { lbIndex = (lbIndex + d + lbCurrentImages.length) % lbCurrentImages.length; updateLB(); }
 function closeLightbox() { document.getElementById('lightbox').style.display = 'none'; }
+
 function filterCat(cat, el) {
     document.querySelectorAll('.cat-link').forEach(l => l.classList.remove('active'));
     el.classList.add('active');
@@ -341,6 +334,26 @@ function filterCat(cat, el) {
         sec.style.display = (cat === 'all' || sec.id === `sec-${cat.replace(/\s+/g,'')}`) ? 'block' : 'none';
     });
 }
+
+async function finalizeOrder() {
+    const n = document.getElementById('custName').value;
+    const p = document.getElementById('custPhone').value;
+    if(!cart.length || !n || !p) return alert("Preencha Nome e WhatsApp!");
+    const total = document.getElementById('totalFinal').innerText;
+    const itemsText = cart.map(i => `${i.qty}x ${i.name} (${i.color}/${i.size})`).join(", ");
+
+    try {
+        fetch(APPS_SCRIPT_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            body: JSON.stringify({ name: n, phone: p, total: total, items: itemsText })
+        });
+    } catch(e) {}
+
+    const msg = `*NOVO PEDIDO - ANJJ*\n*Cliente:* ${n}\n*Tel:* ${p}\n\n*Itens:*\n${cart.map(i => `- ${i.qty}x ${i.name} (${i.color}/${i.size})`).join("\n")}\n\n*TOTAL: ${total}*`;
+    window.open(`https://wa.me/${WHATSAPP_NUMBER.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`);
+}
+
 init();
 </script>
 </body>
