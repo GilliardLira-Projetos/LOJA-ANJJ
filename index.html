@@ -44,7 +44,6 @@
         .current-price { font-size: 18px; font-weight: 700; color: #1e293b; }
         .price-promo { color: var(--red) !important; }
 
-        /* AJUSTE: Cores escondidas por padrão, aparecem via JS */
         .color-dot { width: 22px; height: 22px; border-radius: 50%; border: 1px solid #ddd; cursor: pointer; transition: 0.2s; position: relative; display: none; }
         .color-dot.selected { border: 2px solid #000; transform: scale(1.1); }
         .color-dot.visible { display: block; }
@@ -100,7 +99,7 @@
         <input type="text" id="custName" class="form-input" placeholder="Nome (mín. 3 letras)">
         <input type="email" id="custEmail" class="form-input" placeholder="E-mail (opcional)">
         <input type="tel" id="custPhone" class="form-input" placeholder="WhatsApp (DDD + Número)">
-        <button class="btn-add" style="background:var(--wpp); padding:16px;" onclick="finalizeOrder()">FINALIZAR NO WHATSAPP</button>
+        <button id="btnFinalize" class="btn-add" style="background:var(--wpp); padding:16px;" onclick="finalizeOrder()">FINALIZAR NO WHATSAPP</button>
     </div>
 </div>
 
@@ -108,7 +107,7 @@
 
 <script>
 const SHEET_URL = "https://docs.google.com/spreadsheets/d/1uCx_JB4xZnU0vBIQjlrwBgsTRia_wSlUWPJlaN0EbhE/gviz/tq?tqx=out:json&sheet=Products";
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzjjtXHt9UkYeUhC3A2uh7vjN42-yUYdgfjJRhQFFhtIeqqc2BLsQrJmXSIOQ_3S2Abxg/exec"; 
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxXGmpg27tgST2yGf5mpqDRwCkgTO0gXzlzlt5XGzL8mHChwlJWYHv0eYUZj3UgtV3HQA/exec"; 
 const WHATSAPP_NUMBER = '+5581997512217';
 
 const colorMap = {
@@ -232,7 +231,6 @@ function createCard(p) {
         </div>
         <button class="btn-add" onclick="addToCart('${id}')">ADICIONAR</button>`;
     
-    // Inicialização silenciosa para carregar estoque sem mostrar as cores ainda
     setTimeout(() => { 
         const firstWithStock = p.skus.find(s => s.stock > 0) || p.skus[0];
         syncVariant(id, 'size', firstWithStock.size);
@@ -240,22 +238,18 @@ function createCard(p) {
     return d;
 }
 
-// LOGICA ALTERADA: Cores aparecem filtradas após selecionar tamanho
 function syncVariant(id, type, val) {
     const card = document.getElementById(`card-${id}`);
     const product = productsData.find(p => p.name.replace(/\s+/g, '') === id);
     
     if(type === 'size') {
-        // 1. Marcar chip do tamanho
         card.querySelectorAll('.variant-chip').forEach(c => c.classList.remove('selected'));
         card.querySelector(`[data-size="${val}"]`)?.classList.add('selected');
 
-        // 2. Filtrar cores: Mostra apenas as que existem para este tamanho
         let firstAvailableColor = null;
         card.querySelectorAll('.color-dot').forEach(dot => {
             const colorName = dot.dataset.color;
             const match = product.skus.find(s => s.size === val && s.color === colorName && s.stock > 0);
-            
             if(match) {
                 dot.classList.add('visible');
                 if(!firstAvailableColor) firstAvailableColor = colorName;
@@ -264,7 +258,6 @@ function syncVariant(id, type, val) {
             }
         });
 
-        // 3. Auto-selecionar a primeira cor disponível se a atual sumiu
         const currentSelectedColor = card.querySelector('.color-dot.selected')?.dataset.color;
         if(!currentSelectedColor || !card.querySelector(`[data-color="${currentSelectedColor}"].visible`)) {
             if(firstAvailableColor) syncVariant(id, 'color', firstAvailableColor);
@@ -276,7 +269,6 @@ function syncVariant(id, type, val) {
         card.querySelector(`[data-color="${val}"]`)?.classList.add('selected');
     }
 
-    // Atualizar Preço/Estoque
     const sCol = card.querySelector('.color-dot.selected')?.dataset.color;
     const sSize = card.querySelector('.variant-chip.selected')?.dataset.size;
     const sku = product.skus.find(s => s.color === sCol && s.size === sSize);
@@ -326,18 +318,67 @@ function updateCartUI() {
     document.getElementById('totalFinal').innerText = `R$ ${total.toFixed(2).replace('.',',')}`;
 }
 
-function finalizeOrder() {
+// NOVA FUNÇÃO ATUALIZADA COM BAIXA DE ESTOQUE
+async function finalizeOrder() {
     const n = document.getElementById('custName').value.trim();
     const e = document.getElementById('custEmail').value.trim();
     const p = document.getElementById('custPhone').value.trim();
+    const btn = document.getElementById('btnFinalize');
+    
     if(n.length < 3) return alert("Por favor, digite seu nome completo.");
-    if(e !== "" && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)) return alert("E-mail inválido.");
     const phoneClean = p.replace(/\D/g,'');
     if(phoneClean.length < 10) return alert("Digite um WhatsApp válido.");
     if(!cart.length) return alert("Seu carrinho está vazio!");
-    const total = document.getElementById('totalFinal').innerText;
-    const msg = `*PEDIDO - ANJJ*\n*Cliente:* ${n}\n*WhatsApp:* ${p}\n\n*Itens:* ${cart.map(i => `\n- ${i.qty}x ${i.name} (${i.color}/${i.size})`).join("")}\n\n*TOTAL: ${total}*`;
-    window.open(`https://wa.me/${WHATSAPP_NUMBER.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`);
+
+    const totalStr = document.getElementById('totalFinal').innerText;
+    
+    // Organiza os dados para o Google Script
+    const orderData = {
+        name: n,
+        email: e,
+        phone: p,
+        total: totalStr,
+        items: cart.map(item => ({
+            name: item.name,
+            color: item.color,
+            size: item.size,
+            qty: item.qty,
+            price: item.price
+        }))
+    };
+
+    try {
+        const originalText = btn.innerText;
+        btn.innerText = "RESERVANDO ESTOQUE...";
+        btn.disabled = true;
+
+        // 1. Envia para a planilha para gravar e baixar estoque
+        await fetch(APPS_SCRIPT_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(orderData)
+        });
+
+        // 2. Abre o WhatsApp
+        const msg = `*PEDIDO - ANJJ*\n*Cliente:* ${n}\n*WhatsApp:* ${p}\n\n*Itens:* ${cart.map(i => `\n- ${i.qty}x ${i.name} (${i.color}/${i.size})`).join("")}\n\n*TOTAL: ${totalStr}*`;
+        window.open(`https://wa.me/${WHATSAPP_NUMBER.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`);
+
+        // 3. Limpa tudo
+        alert("Pedido registrado com sucesso!");
+        cart = [];
+        localStorage.removeItem('anjj_cart');
+        updateCartUI();
+        toggleCart();
+        btn.innerText = originalText;
+        btn.disabled = false;
+
+    } catch (err) {
+        console.error(err);
+        alert("Erro ao conectar com a planilha, mas você ainda pode finalizar pelo WhatsApp.");
+        btn.innerText = "FINALIZAR NO WHATSAPP";
+        btn.disabled = false;
+    }
 }
 
 function addToCart(id) {
