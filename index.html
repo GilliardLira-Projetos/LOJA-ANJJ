@@ -51,7 +51,11 @@
         .variant-chip { border: 1px solid #ddd; padding: 4px 8px; border-radius: 6px; font-size: 11px; cursor: pointer; background: #fff; transition: 0.2s; }
         .variant-chip.selected { background: #000; color: #fff; border-color: #000; }
         
+        /* ESTILO PARA TAMANHO SEM ESTOQUE */
+        .variant-chip.no-stock { opacity: 0.3; text-decoration: line-through; cursor: not-allowed; pointer-events: none; background: #f1f5f9; }
+
         .btn-add { background: var(--green); color: #fff; border: none; padding: 12px; border-radius: 10px; font-weight: 700; width: 100%; cursor: pointer; margin-top: auto; }
+        .btn-add:disabled { background: #cbd5e1; cursor: not-allowed; }
 
         .cart-overlay { position: fixed; top: 0; right: 0; width: 100%; max-width: 400px; height: 100dvh; background: #fff; z-index: 2500; transform: translateX(100%); transition: 0.4s; display: flex; flex-direction: column; }
         .cart-overlay.open { transform: translateX(0); box-shadow: -10px 0 30px rgba(0,0,0,0.2); }
@@ -125,17 +129,12 @@ async function init() {
         const r = await fetch(SHEET_URL);
         const t = await r.text();
         const j = JSON.parse(t.substring(t.indexOf("{"), t.lastIndexOf("}") + 1));
-        
-        // MAPEAMENTO DINÂMICO: Identifica as colunas pelo nome na primeira linha
         const cols = j.table.cols.map(c => (c.label ? c.label.trim() : ""));
-        
         const rows = j.table.rows.map(row => {
             const o = {}; 
             row.c.forEach((cell, i) => { 
                 const colName = cols[i];
-                if (colName) {
-                    o[colName] = cell ? (cell.v ?? cell.f ?? "") : ""; 
-                }
+                if (colName) { o[colName] = cell ? (cell.v ?? cell.f ?? "") : ""; }
             });
             return o;
         });
@@ -143,13 +142,10 @@ async function init() {
         const grouped = {};
         rows.forEach(p => {
             if (!p.Name || !p.Availability || String(p.Availability).toLowerCase() !== "show") return;
-            
             const groupKey = `${p.Name}_${p.Category}`;
-
             if (!grouped[groupKey]) {
                 grouped[groupKey] = { 
-                    name: p.Name, 
-                    category: p.Category, 
+                    name: p.Name, category: p.Category, 
                     images: [p.Thumbnail, p.Image1, p.Image2, p.Image3].filter(i => i && i !== ""), 
                     skus: [] 
                 };
@@ -166,9 +162,7 @@ async function init() {
         productsData = Object.values(grouped);
         renderAll();
         updateCartUI();
-    } catch (err) { 
-        console.error("Erro ao carregar dados:", err); 
-    }
+    } catch (err) { console.error("Erro ao carregar dados:", err); }
 }
 
 function searchProducts() {
@@ -248,6 +242,13 @@ function createCard(p) {
         <button class="btn-add" onclick="addToCart('${id}')">ADICIONAR</button>`;
     
     setTimeout(() => { 
+        // APLICA OPACIDADE NOS TAMANHOS SEM ESTOQUE GERAL
+        p.skus.forEach(sku => {
+            if(sku.stock <= 0) {
+                const totalStockForSize = p.skus.filter(s => s.size === sku.size).reduce((acc, curr) => acc + curr.stock, 0);
+                if(totalStockForSize <= 0) d.querySelector(`[data-size="${sku.size}"]`)?.classList.add('no-stock');
+            }
+        });
         const firstWithStock = p.skus.find(s => s.stock > 0) || p.skus[0];
         syncVariant(id, 'size', firstWithStock.size);
     }, 150);
@@ -293,6 +294,8 @@ function syncVariant(id, type, val) {
         const oldP = card.querySelector('.old-price');
         const curP = card.querySelector('.current-price');
         const badge = card.querySelector('.discount-badge');
+        const btnAdd = card.querySelector('.btn-add');
+
         if(sku.discountPrice > 0 && sku.discountPrice < sku.originalPrice) {
             oldP.innerText = `R$ ${sku.originalPrice.toFixed(2).replace('.',',')}`;
             oldP.style.display = 'block';
@@ -305,7 +308,17 @@ function syncVariant(id, type, val) {
             curP.classList.remove('price-promo');
             badge.style.display = 'none';
         }
-        card.querySelector('.stk-n').innerText = sku.stock;
+
+        // MOSTRA "SEM ESTOQUE" NO SALDO E DESABILITA BOTÃO
+        if(sku.stock <= 0) {
+            card.querySelector('.stk-n').innerText = "SEM ESTOQUE";
+            btnAdd.disabled = true;
+            btnAdd.innerText = "ESGOTADO";
+        } else {
+            card.querySelector('.stk-n').innerText = sku.stock;
+            btnAdd.disabled = false;
+            btnAdd.innerText = "ADICIONAR";
+        }
     }
 }
 
@@ -345,19 +358,9 @@ async function finalizeOrder() {
     if(!cart.length) return alert("Seu carrinho está vazio!");
 
     const totalStr = document.getElementById('totalFinal').innerText;
-    
     const orderData = {
-        name: n,
-        email: e,
-        phone: p,
-        total: totalStr,
-        items: cart.map(item => ({
-            name: item.name,
-            color: item.color,
-            size: item.size,
-            qty: item.qty,
-            price: item.price
-        }))
+        name: n, email: e, phone: p, total: totalStr,
+        items: cart.map(item => ({ name: item.name, color: item.color, size: item.size, qty: item.qty, price: item.price }))
     };
 
     const itemsMsg = cart.map(i => `\n- ${i.qty}x ${i.name} (${i.color}/${i.size})`).join("");
@@ -368,33 +371,16 @@ async function finalizeOrder() {
         const originalText = btn.innerText;
         btn.innerText = "RESERVANDO ESTOQUE...";
         btn.disabled = true;
-
-        fetch(APPS_SCRIPT_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(orderData)
-        });
-
+        fetch(APPS_SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(orderData) });
         window.open(whatsappUrl, '_blank');
         alert("Pedido registrado com sucesso!");
-        
-        cart = [];
-        localStorage.removeItem('anjj_cart');
-        document.getElementById('custName').value = "";
-        document.getElementById('custEmail').value = "";
-        document.getElementById('custPhone').value = "";
-        
-        updateCartUI();
-        toggleCart();
-        btn.innerText = originalText;
-        btn.disabled = false;
-
+        cart = []; localStorage.removeItem('anjj_cart');
+        document.getElementById('custName').value = ""; document.getElementById('custEmail').value = ""; document.getElementById('custPhone').value = "";
+        updateCartUI(); toggleCart();
+        btn.innerText = originalText; btn.disabled = false;
     } catch (err) {
-        console.error(err);
-        window.open(whatsappUrl, '_blank');
-        btn.innerText = "FINALIZAR NO WHATSAPP";
-        btn.disabled = false;
+        console.error(err); window.open(whatsappUrl, '_blank');
+        btn.innerText = "FINALIZAR NO WHATSAPP"; btn.disabled = false;
     }
 }
 
@@ -405,16 +391,11 @@ function addToCart(id) {
     const siz = card.querySelector('.variant-chip.selected')?.dataset.size;
     const qty = parseInt(card.querySelector('.qty-val').innerText);
     const sku = product.skus.find(s => s.color === col && s.size === siz);
-    if(!sku || sku.stock <= 0) return alert("Por favor, selecione o tamanho e a cor desejada.");
+    if(!sku || sku.stock <= 0) return alert("Este item não está disponível no momento.");
     const price = (sku.discountPrice > 0 && sku.discountPrice < sku.originalPrice) ? sku.discountPrice : sku.originalPrice;
-    
     const existing = cart.find(i => i.name === product.name && i.category === product.category && i.color === col && i.size === siz);
-    
-    if(existing) { 
-        existing.qty = Math.min(sku.stock, existing.qty + qty); 
-    } else { 
-        cart.push({ name: product.name, category: product.category, color: col, size: siz, qty, price, img: product.images[0] }); 
-    }
+    if(existing) { existing.qty = Math.min(sku.stock, existing.qty + qty); } 
+    else { cart.push({ name: product.name, category: product.category, color: col, size: siz, qty, price, img: product.images[0] }); }
     updateCartUI(); toggleCart();
 }
 
@@ -434,21 +415,12 @@ function manualMove(id, d) {
 }
 
 function removeItem(i) { cart.splice(i, 1); updateCartUI(); }
-
-function clearCart() { 
-    if(confirm("Esvaziar carrinho e limpar seus dados?")) { 
-        cart = []; 
-        document.getElementById('custName').value = "";
-        document.getElementById('custEmail').value = "";
-        document.getElementById('custPhone').value = "";
-        updateCartUI(); 
-    } 
-}
-
+function clearCart() { if(confirm("Esvaziar carrinho?")) { cart = []; updateCartUI(); } }
 function toggleCart() { document.getElementById('cartOverlay').classList.toggle('open'); }
 function changeQty(btn, d) {
     const v = btn.parentElement.querySelector('.qty-val');
-    const max = parseInt(btn.closest('.card').querySelector('.stk-n').innerText);
+    const stkText = btn.closest('.card').querySelector('.stk-n').innerText;
+    const max = stkText === "SEM ESTOQUE" ? 0 : parseInt(stkText);
     let n = parseInt(v.innerText) + d;
     if(n > 0 && n <= max) v.innerText = n;
 }
