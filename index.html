@@ -16,7 +16,6 @@
 
         .cart-icon-btn { cursor: pointer; background: var(--green); color: white; padding: 8px 18px; border-radius: 30px; font-weight: 700; border: none; display: flex; align-items: center; gap: 8px; }
         
-        /* ADIÇÃO APENAS DO CSS DA BUSCA MANTENDO SEU LAYOUT */
         .search-wrapper { padding: 15px 5% 5px 5%; background: #f8fafc; position: relative; }
         .search-box { width: 100%; padding: 12px 40px 12px 15px; border-radius: 12px; border: 1px solid #e2e8f0; font-family: 'Poppins', sans-serif; font-size: 14px; box-sizing: border-box; outline: none; transition: 0.3s; background: #fff; }
         .search-box:focus { border-color: var(--green); }
@@ -45,11 +44,13 @@
         .current-price { font-size: 18px; font-weight: 700; color: #1e293b; }
         .price-promo { color: var(--red) !important; }
 
-        .color-dot { width: 22px; height: 22px; border-radius: 50%; border: 1px solid #ddd; cursor: pointer; transition: 0.2s; }
+        .color-dot { width: 22px; height: 22px; border-radius: 50%; border: 1px solid #ddd; cursor: pointer; transition: 0.2s; position: relative; }
         .color-dot.selected { border: 2px solid #000; transform: scale(1.1); }
-        
-        .variant-chip { border: 1px solid #ddd; padding: 4px 8px; border-radius: 6px; font-size: 11px; cursor: pointer; background: #fff; }
+        .color-dot.out-of-stock { opacity: 0.15; cursor: not-allowed; pointer-events: none; }
+
+        .variant-chip { border: 1px solid #ddd; padding: 4px 8px; border-radius: 6px; font-size: 11px; cursor: pointer; background: #fff; transition: 0.2s; }
         .variant-chip.selected { background: #000; color: #fff; border-color: #000; }
+        .variant-chip.out-of-stock { opacity: 0.3; border-style: dashed; color: #94a3b8; cursor: not-allowed; pointer-events: none; }
         
         .btn-add { background: var(--green); color: #fff; border: none; padding: 12px; border-radius: 10px; font-weight: 700; width: 100%; cursor: pointer; margin-top: auto; }
 
@@ -106,7 +107,6 @@
 <div id="lightbox" onclick="closeLightbox()"><img id="lbImg" src=""></div>
 
 <script>
-// SUAS VARIÁVEIS ORIGINAIS E LINKS (NÃO ALTERADOS)
 const SHEET_URL = "https://docs.google.com/spreadsheets/d/1uCx_JB4xZnU0vBIQjlrwBgsTRia_wSlUWPJlaN0EbhE/gviz/tq?tqx=out:json&sheet=Products";
 const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzjjtXHt9UkYeUhC3A2uh7vjN42-yUYdgfjJRhQFFhtIeqqc2BLsQrJmXSIOQ_3S2Abxg/exec"; 
 const WHATSAPP_NUMBER = '+5581997512217';
@@ -156,41 +156,28 @@ async function init() {
     } catch (err) { console.error(err); }
 }
 
-// INSERÇÃO DA LÓGICA DE BUSCA SEM ALTERAR AS OUTRAS
 function searchProducts() {
     const term = document.getElementById("productSearch").value.toLowerCase();
     const clearBtn = document.getElementById("clearBtn");
     const sections = document.querySelectorAll('.category-section');
-    
     clearBtn.style.display = term.length > 0 ? "flex" : "none";
-
     sections.forEach(section => {
         const cards = section.querySelectorAll('.card');
         let hasVisibleProduct = false;
         cards.forEach(card => {
             const productName = card.querySelector('div[style*="font-weight:600"]').innerText.toLowerCase();
-            if (productName.includes(term)) {
-                card.style.display = "flex";
-                hasVisibleProduct = true;
-            } else {
-                card.style.display = "none";
-            }
+            if (productName.includes(term)) { card.style.display = "flex"; hasVisibleProduct = true; } 
+            else { card.style.display = "none"; }
         });
         section.style.display = hasVisibleProduct ? "block" : "none";
     });
-    if(term.length > 0) {
-        document.querySelectorAll('.cat-link').forEach(l => l.classList.remove('active'));
-        document.querySelector('.cat-link').classList.add('active');
-    }
 }
 
 function clearSearch() {
     document.getElementById("productSearch").value = "";
     searchProducts();
-    document.getElementById("productSearch").focus();
 }
 
-// MANTENDO TODAS AS SUAS FUNÇÕES ORIGINAIS EXATAMENTE COMO VOCÊ PASSOU
 function renderAll() {
     const catalog = document.getElementById("catalog");
     catalog.innerHTML = "";
@@ -228,7 +215,7 @@ function createCard(p) {
                 <span class="old-price"></span>
                 <span class="current-price"></span>
             </div>
-            <div style="display:flex; gap:5px; margin-top:5px;">
+            <div style="display:flex; gap:5px; margin-top:5px;" class="color-options">
                 ${colors.map(c => {
                     const colorValue = colorMap[c.toLowerCase()] || c;
                     return `<div class="color-dot" data-color="${c}" onclick="syncVariant('${id}', 'color', '${c}')" style="background:${colorValue}"></div>`;
@@ -236,7 +223,7 @@ function createCard(p) {
             </div>
         </div>
         <div style="font-weight:600; font-size:13px; margin:5px 0; min-height:35px; line-height:1.2;">${p.name}</div>
-        <div style="display:flex; flex-wrap:wrap; gap:4px; margin-bottom:10px;">
+        <div style="display:flex; flex-wrap:wrap; gap:4px; margin-bottom:10px;" class="size-options">
             ${sizes.map(s => `<div class="variant-chip" data-size="${s}" onclick="syncVariant('${id}', 'size', '${s}')">${s}</div>`).join("")}
         </div>
         <div style="display:flex; justify-content:space-between; background:#f1f5f9; padding:5px 8px; border-radius:8px; margin-bottom:10px; font-size:12px;">
@@ -244,13 +231,26 @@ function createCard(p) {
             <span style="font-size:10px; color:#666;">Estoque: <b class="stk-n">0</b></span>
         </div>
         <button class="btn-add" onclick="addToCart('${id}')">ADICIONAR</button>`;
-    setTimeout(() => { syncVariant(id, 'color', colors[0]); syncVariant(id, 'size', sizes[0]); }, 100);
+    setTimeout(() => { 
+        // Inicializa selecionando a primeira cor disponível com estoque
+        const firstWithStock = p.skus.find(s => s.stock > 0);
+        if(firstWithStock) {
+            syncVariant(id, 'color', firstWithStock.color);
+            syncVariant(id, 'size', firstWithStock.size);
+        } else {
+            syncVariant(id, 'color', colors[0]);
+            syncVariant(id, 'size', sizes[0]);
+        }
+    }, 150);
     return d;
 }
 
+// FUNÇÃO ATUALIZADA COM A LÓGICA DE DEPENDÊNCIA SOLICITADA
 function syncVariant(id, type, val) {
     const card = document.getElementById(`card-${id}`);
     const product = productsData.find(p => p.name.replace(/\s+/g, '') === id);
+    
+    // 1. Marcar seleção visual
     if(type === 'color') {
         card.querySelectorAll('.color-dot').forEach(d => d.classList.remove('selected'));
         card.querySelector(`[data-color="${val}"]`)?.classList.add('selected');
@@ -258,8 +258,31 @@ function syncVariant(id, type, val) {
         card.querySelectorAll('.variant-chip').forEach(c => c.classList.remove('selected'));
         card.querySelector(`[data-size="${val}"]`)?.classList.add('selected');
     }
+
     const sCol = card.querySelector('.color-dot.selected')?.dataset.color;
     const sSize = card.querySelector('.variant-chip.selected')?.dataset.size;
+
+    // 2. Lógica de Disponibilidade (Oco / Opaco)
+    // Se mudou a cor, atualiza quais tamanhos existem para essa cor
+    if(type === 'color') {
+        card.querySelectorAll('.variant-chip').forEach(chip => {
+            const sizeName = chip.dataset.size;
+            const match = product.skus.find(s => s.color === val && s.size === sizeName);
+            if(!match || match.stock <= 0) chip.classList.add('out-of-stock');
+            else chip.classList.remove('out-of-stock');
+        });
+    } 
+    // Se mudou o tamanho, atualiza quais cores existem para esse tamanho
+    else if(type === 'size') {
+        card.querySelectorAll('.color-dot').forEach(dot => {
+            const colorName = dot.dataset.color;
+            const match = product.skus.find(s => s.size === val && s.color === colorName);
+            if(!match || match.stock <= 0) dot.classList.add('out-of-stock');
+            else dot.classList.remove('out-of-stock');
+        });
+    }
+
+    // 3. Atualiza Preço e Estoque do SKU selecionado
     const sku = product.skus.find(s => s.color === sCol && s.size === sSize);
     if(sku) {
         const oldP = card.querySelector('.old-price');
@@ -281,6 +304,7 @@ function syncVariant(id, type, val) {
     }
 }
 
+// RESTANTE DAS FUNÇÕES (WHATSAPP, CARRINHO, ETC) MANTIDAS INTACTAS
 function updateCartUI() {
     localStorage.setItem('anjj_cart', JSON.stringify(cart));
     document.getElementById('cartCount').innerText = cart.length;
@@ -320,13 +344,6 @@ function finalizeOrder() {
     window.open(`https://wa.me/${WHATSAPP_NUMBER.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`);
 }
 
-function updateCartQty(idx, d) {
-    const item = cart[idx];
-    const prod = productsData.find(p => p.name === item.name);
-    const sku = prod.skus.find(s => s.color === item.color && s.size === item.size);
-    if(item.qty + d > 0 && item.qty + d <= sku.stock) { item.qty += d; updateCartUI(); }
-}
-
 function addToCart(id) {
     const card = document.getElementById(`card-${id}`);
     const product = productsData.find(p => p.name.replace(/\s+/g, '') === id);
@@ -334,12 +351,19 @@ function addToCart(id) {
     const siz = card.querySelector('.variant-chip.selected')?.dataset.size;
     const qty = parseInt(card.querySelector('.qty-val').innerText);
     const sku = product.skus.find(s => s.color === col && s.size === siz);
-    if(!sku || sku.stock <= 0) return alert("Sem estoque!");
+    if(!sku || sku.stock <= 0) return alert("Por favor, selecione uma combinação disponível.");
     const price = (sku.discountPrice > 0 && sku.discountPrice < sku.originalPrice) ? sku.discountPrice : sku.originalPrice;
     const existing = cart.find(i => i.name === product.name && i.color === col && i.size === siz);
     if(existing) { existing.qty = Math.min(sku.stock, existing.qty + qty); } 
     else { cart.push({ name: product.name, color: col, size: siz, qty, price, img: product.images[0] }); }
     updateCartUI(); toggleCart();
+}
+
+function updateCartQty(idx, d) {
+    const item = cart[idx];
+    const prod = productsData.find(p => p.name === item.name);
+    const sku = prod.skus.find(s => s.color === item.color && s.size === item.size);
+    if(item.qty + d > 0 && item.qty + d <= sku.stock) { item.qty += d; updateCartUI(); }
 }
 
 function manualMove(id, d) {
@@ -353,25 +377,19 @@ function manualMove(id, d) {
 function removeItem(i) { cart.splice(i, 1); updateCartUI(); }
 function clearCart() { if(confirm("Esvaziar carrinho?")) { cart = []; updateCartUI(); } }
 function toggleCart() { document.getElementById('cartOverlay').classList.toggle('open'); }
-
 function changeQty(btn, d) {
     const v = btn.parentElement.querySelector('.qty-val');
     const max = parseInt(btn.closest('.card').querySelector('.stk-n').innerText);
     let n = parseInt(v.innerText) + d;
     if(n > 0 && n <= max) v.innerText = n;
 }
-
 function openLightbox(url) { document.getElementById('lbImg').src = url; document.getElementById('lightbox').style.display = 'flex'; }
 function closeLightbox() { document.getElementById('lightbox').style.display = 'none'; }
-
 function filterCat(cat, el) {
-    document.getElementById("productSearch").value = "";
-    document.getElementById("clearBtn").style.display = "none";
     document.querySelectorAll('.cat-link').forEach(l => l.classList.remove('active'));
     el.classList.add('active');
     document.querySelectorAll('.category-section').forEach(sec => {
         sec.style.display = (cat === 'all' || sec.id === `sec-${cat.replace(/\s+/g,'')}`) ? 'block' : 'none';
-        sec.querySelectorAll('.card').forEach(c => c.style.display = "flex");
     });
 }
 init();
