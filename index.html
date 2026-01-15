@@ -349,35 +349,45 @@ async function finalizeOrder() {
     const p = document.getElementById('custPhone').value.trim();
     const btn = document.getElementById('btnFinalize');
     
-    // Validação de Nome: Apenas se está preenchido
     if(n === "") return alert("Por favor, digite seu Nome e Sobrenome.");
-    
-    // Validação de E-mail (Opcional, mas valida formato se preenchido)
     if(e !== "" && (!e.includes('@') || !e.includes('.'))) return alert("Por favor, digite um e-mail válido ou deixe em branco.");
 
-    // Validação de WhatsApp (Apenas números, mínimo 10 dígitos)
     const phoneDigits = p.replace(/\D/g,'');
     if(phoneDigits.length < 10) return alert("Por favor, digite um número de WhatsApp válido (com DDD).");
     
     if(!cart.length) return alert("Seu carrinho está vazio!");
 
     const totalStr = document.getElementById('totalFinal').innerText;
+    
+    // Preparação dos dados para a planilha (Garante a ordem das colunas)
     const orderData = {
-        name: n, email: e, phone: p, total: totalStr,
-        items: cart.map(item => ({ name: item.name, color: item.color, size: item.size, qty: item.qty, price: item.price }))
+        name: n,
+        email: e || "Não informado",
+        phone: p,
+        total: totalStr,
+        items: cart.map(item => `${item.qty}x ${item.name} (${item.color}/${item.size})`).join(", ")
     };
 
     const itemsMsg = cart.map(i => `\n- ${i.qty}x ${i.name} (${i.color}/${i.size})`).join("");
-    const msg = `*PEDIDO REALIZADO NO SITE - ANJJ*\n*Cliente:* ${n}\n*WhatsApp:* ${p}\n\n*Itens:*${itemsMsg}\n\n*TOTAL: ${totalStr}*`;
+    const msg = `*PEDIDO REALIZADO NO SITE - ANJJ*\n*Cliente:* ${n}\n*WhatsApp:* ${p}\n*E-mail:* ${e || 'Não informado'}\n\n*Itens:*${itemsMsg}\n\n*TOTAL: ${totalStr}*`;
     const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`;
 
     try {
         const originalText = btn.innerText;
         btn.innerText = "RESERVANDO ESTOQUE...";
         btn.disabled = true;
-        fetch(APPS_SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(orderData) });
+
+        // Envia para o Google Sheets via POST
+        await fetch(APPS_SCRIPT_URL, { 
+            method: 'POST', 
+            mode: 'no-cors', 
+            headers: { 'Content-Type': 'application/json' }, 
+            body: JSON.stringify(orderData) 
+        });
+
         window.open(whatsappUrl, '_blank');
         alert("Pedido registrado com sucesso!");
+        
         cart = []; localStorage.removeItem('anjj_cart');
         document.getElementById('custName').value = ""; document.getElementById('custEmail').value = ""; document.getElementById('custPhone').value = "";
         updateCartUI(); toggleCart();
