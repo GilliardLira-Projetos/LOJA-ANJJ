@@ -125,17 +125,25 @@ async function init() {
         const r = await fetch(SHEET_URL);
         const t = await r.text();
         const j = JSON.parse(t.substring(t.indexOf("{"), t.lastIndexOf("}") + 1));
-        const cols = j.table.cols.map(c => c.label.trim());
+        
+        // MAPEAMENTO DINÂMICO: Identifica as colunas pelo nome na primeira linha
+        const cols = j.table.cols.map(c => (c.label ? c.label.trim() : ""));
+        
         const rows = j.table.rows.map(row => {
-            const o = {}; row.c.forEach((c, i) => { o[cols[i]] = c ? (c.v ?? c.f ?? "") : ""; });
+            const o = {}; 
+            row.c.forEach((cell, i) => { 
+                const colName = cols[i];
+                if (colName) {
+                    o[colName] = cell ? (cell.v ?? cell.f ?? "") : ""; 
+                }
+            });
             return o;
         });
 
         const grouped = {};
         rows.forEach(p => {
-            if (String(p.Availability).toLowerCase() !== "show") return;
+            if (!p.Name || !p.Availability || String(p.Availability).toLowerCase() !== "show") return;
             
-            // CHAVE ÚNICA: Nome + Categoria para separar produtos homônimos
             const groupKey = `${p.Name}_${p.Category}`;
 
             if (!grouped[groupKey]) {
@@ -147,17 +155,20 @@ async function init() {
                 };
             }
             grouped[groupKey].skus.push({
-                color: String(p["Tag"]).trim(),
-                size: String(p["Variant Name"]).trim(),
-                originalPrice: parseFloat(String(p.Price).replace(',','.') || 0),
-                discountPrice: parseFloat(String(p["Discounted Price"]).replace(',','.') || 0),
+                color: String(p["Tag"] || "").trim(),
+                size: String(p["Variant Name"] || "").trim(),
+                originalPrice: parseFloat(String(p.Price || 0).replace(',','.')),
+                discountPrice: parseFloat(String(p["Discounted Price"] || 0).replace(',','.')),
                 stock: parseInt(p.Stock || 0)
             });
         });
+
         productsData = Object.values(grouped);
         renderAll();
         updateCartUI();
-    } catch (err) { console.error(err); }
+    } catch (err) { 
+        console.error("Erro ao carregar dados:", err); 
+    }
 }
 
 function searchProducts() {
@@ -201,7 +212,6 @@ function renderAll() {
 
 function createCard(p) {
     const d = document.createElement("div"); 
-    // ID ÚNICO baseado em nome + categoria
     const id = (p.name + p.category).replace(/\s+/g, '');
     const colors = [...new Set(p.skus.map(s => s.color))];
     const sizes = [...new Set(p.skus.map(s => s.size))];
@@ -246,7 +256,6 @@ function createCard(p) {
 
 function syncVariant(id, type, val) {
     const card = document.getElementById(`card-${id}`);
-    // Localiza o produto exato comparando o ID gerado
     const product = productsData.find(p => (p.name + p.category).replace(/\s+/g, '') === id);
     
     if(type === 'size') {
@@ -391,7 +400,6 @@ async function finalizeOrder() {
 
 function addToCart(id) {
     const card = document.getElementById(`card-${id}`);
-    // Busca pelo ID composto (nome+categoria)
     const product = productsData.find(p => (p.name + p.category).replace(/\s+/g, '') === id);
     const col = card.querySelector('.color-dot.selected')?.dataset.color;
     const siz = card.querySelector('.variant-chip.selected')?.dataset.size;
@@ -400,7 +408,6 @@ function addToCart(id) {
     if(!sku || sku.stock <= 0) return alert("Por favor, selecione o tamanho e a cor desejada.");
     const price = (sku.discountPrice > 0 && sku.discountPrice < sku.originalPrice) ? sku.discountPrice : sku.originalPrice;
     
-    // Na verificação do carrinho, usamos nome e categoria para evitar somar produtos errados
     const existing = cart.find(i => i.name === product.name && i.category === product.category && i.color === col && i.size === siz);
     
     if(existing) { 
