@@ -44,13 +44,13 @@
         .current-price { font-size: 18px; font-weight: 700; color: #1e293b; }
         .price-promo { color: var(--red) !important; }
 
-        .color-dot { width: 22px; height: 22px; border-radius: 50%; border: 1px solid #ddd; cursor: pointer; transition: 0.2s; position: relative; }
+        /* AJUSTE: Cores escondidas por padrão, aparecem via JS */
+        .color-dot { width: 22px; height: 22px; border-radius: 50%; border: 1px solid #ddd; cursor: pointer; transition: 0.2s; position: relative; display: none; }
         .color-dot.selected { border: 2px solid #000; transform: scale(1.1); }
-        .color-dot.out-of-stock { opacity: 0.15; cursor: not-allowed; pointer-events: none; }
+        .color-dot.visible { display: block; }
 
         .variant-chip { border: 1px solid #ddd; padding: 4px 8px; border-radius: 6px; font-size: 11px; cursor: pointer; background: #fff; transition: 0.2s; }
         .variant-chip.selected { background: #000; color: #fff; border-color: #000; }
-        .variant-chip.out-of-stock { opacity: 0.3; border-style: dashed; color: #94a3b8; cursor: not-allowed; pointer-events: none; }
         
         .btn-add { background: var(--green); color: #fff; border: none; padding: 12px; border-radius: 10px; font-weight: 700; width: 100%; cursor: pointer; margin-top: auto; }
 
@@ -231,59 +231,56 @@ function createCard(p) {
             <span style="font-size:10px; color:#666;">Estoque: <b class="stk-n">0</b></span>
         </div>
         <button class="btn-add" onclick="addToCart('${id}')">ADICIONAR</button>`;
+    
+    // Inicialização silenciosa para carregar estoque sem mostrar as cores ainda
     setTimeout(() => { 
-        // Inicializa selecionando a primeira cor disponível com estoque
-        const firstWithStock = p.skus.find(s => s.stock > 0);
-        if(firstWithStock) {
-            syncVariant(id, 'color', firstWithStock.color);
-            syncVariant(id, 'size', firstWithStock.size);
-        } else {
-            syncVariant(id, 'color', colors[0]);
-            syncVariant(id, 'size', sizes[0]);
-        }
+        const firstWithStock = p.skus.find(s => s.stock > 0) || p.skus[0];
+        syncVariant(id, 'size', firstWithStock.size);
     }, 150);
     return d;
 }
 
-// FUNÇÃO ATUALIZADA COM A LÓGICA DE DEPENDÊNCIA SOLICITADA
+// LOGICA ALTERADA: Cores aparecem filtradas após selecionar tamanho
 function syncVariant(id, type, val) {
     const card = document.getElementById(`card-${id}`);
     const product = productsData.find(p => p.name.replace(/\s+/g, '') === id);
     
-    // 1. Marcar seleção visual
+    if(type === 'size') {
+        // 1. Marcar chip do tamanho
+        card.querySelectorAll('.variant-chip').forEach(c => c.classList.remove('selected'));
+        card.querySelector(`[data-size="${val}"]`)?.classList.add('selected');
+
+        // 2. Filtrar cores: Mostra apenas as que existem para este tamanho
+        let firstAvailableColor = null;
+        card.querySelectorAll('.color-dot').forEach(dot => {
+            const colorName = dot.dataset.color;
+            const match = product.skus.find(s => s.size === val && s.color === colorName && s.stock > 0);
+            
+            if(match) {
+                dot.classList.add('visible');
+                if(!firstAvailableColor) firstAvailableColor = colorName;
+            } else {
+                dot.classList.remove('visible', 'selected');
+            }
+        });
+
+        // 3. Auto-selecionar a primeira cor disponível se a atual sumiu
+        const currentSelectedColor = card.querySelector('.color-dot.selected')?.dataset.color;
+        if(!currentSelectedColor || !card.querySelector(`[data-color="${currentSelectedColor}"].visible`)) {
+            if(firstAvailableColor) syncVariant(id, 'color', firstAvailableColor);
+        }
+    } 
+    
     if(type === 'color') {
         card.querySelectorAll('.color-dot').forEach(d => d.classList.remove('selected'));
         card.querySelector(`[data-color="${val}"]`)?.classList.add('selected');
-    } else {
-        card.querySelectorAll('.variant-chip').forEach(c => c.classList.remove('selected'));
-        card.querySelector(`[data-size="${val}"]`)?.classList.add('selected');
     }
 
+    // Atualizar Preço/Estoque
     const sCol = card.querySelector('.color-dot.selected')?.dataset.color;
     const sSize = card.querySelector('.variant-chip.selected')?.dataset.size;
-
-    // 2. Lógica de Disponibilidade (Oco / Opaco)
-    // Se mudou a cor, atualiza quais tamanhos existem para essa cor
-    if(type === 'color') {
-        card.querySelectorAll('.variant-chip').forEach(chip => {
-            const sizeName = chip.dataset.size;
-            const match = product.skus.find(s => s.color === val && s.size === sizeName);
-            if(!match || match.stock <= 0) chip.classList.add('out-of-stock');
-            else chip.classList.remove('out-of-stock');
-        });
-    } 
-    // Se mudou o tamanho, atualiza quais cores existem para esse tamanho
-    else if(type === 'size') {
-        card.querySelectorAll('.color-dot').forEach(dot => {
-            const colorName = dot.dataset.color;
-            const match = product.skus.find(s => s.size === val && s.color === colorName);
-            if(!match || match.stock <= 0) dot.classList.add('out-of-stock');
-            else dot.classList.remove('out-of-stock');
-        });
-    }
-
-    // 3. Atualiza Preço e Estoque do SKU selecionado
     const sku = product.skus.find(s => s.color === sCol && s.size === sSize);
+    
     if(sku) {
         const oldP = card.querySelector('.old-price');
         const curP = card.querySelector('.current-price');
@@ -304,7 +301,6 @@ function syncVariant(id, type, val) {
     }
 }
 
-// RESTANTE DAS FUNÇÕES (WHATSAPP, CARRINHO, ETC) MANTIDAS INTACTAS
 function updateCartUI() {
     localStorage.setItem('anjj_cart', JSON.stringify(cart));
     document.getElementById('cartCount').innerText = cart.length;
@@ -351,7 +347,7 @@ function addToCart(id) {
     const siz = card.querySelector('.variant-chip.selected')?.dataset.size;
     const qty = parseInt(card.querySelector('.qty-val').innerText);
     const sku = product.skus.find(s => s.color === col && s.size === siz);
-    if(!sku || sku.stock <= 0) return alert("Por favor, selecione uma combinação disponível.");
+    if(!sku || sku.stock <= 0) return alert("Por favor, selecione o tamanho e a cor desejada.");
     const price = (sku.discountPrice > 0 && sku.discountPrice < sku.originalPrice) ? sku.discountPrice : sku.originalPrice;
     const existing = cart.find(i => i.name === product.name && i.color === col && i.size === siz);
     if(existing) { existing.qty = Math.min(sku.stock, existing.qty + qty); } 
