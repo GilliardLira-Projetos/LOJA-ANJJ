@@ -89,7 +89,7 @@
         <input type="text" id="custName" class="form-input" placeholder="Nome (mín. 3 letras)">
         <input type="email" id="custEmail" class="form-input" placeholder="E-mail (opcional)">
         <input type="tel" id="custPhone" class="form-input" placeholder="WhatsApp (DDD + Número)">
-        <button id="btnFinalizar" class="btn-add" style="background:var(--wpp); padding:16px;" onclick="finalizeOrder()">FINALIZAR NO WHATSAPP</button>
+        <button class="btn-add" style="background:var(--wpp); padding:16px;" onclick="finalizeOrder()">FINALIZAR NO WHATSAPP</button>
     </div>
 </div>
 
@@ -260,43 +260,36 @@ function updateCartUI() {
     document.getElementById('totalFinal').innerText = `R$ ${total.toFixed(2).replace('.',',')}`;
 }
 
-async function finalizeOrder() {
+function finalizeOrder() {
     const n = document.getElementById('custName').value.trim();
     const e = document.getElementById('custEmail').value.trim();
     const p = document.getElementById('custPhone').value.trim();
-    const btn = document.getElementById('btnFinalizar');
     
-    if(n.length < 3) return alert("Por favor, digite seu nome completo.");
-    if(e !== "" && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)) return alert("E-mail inválido.");
+    // VALIDAÇÃO DE NOME
+    if(n.length < 3) return alert("Por favor, digite seu nome completo (mínimo Nome e Sobre nome).");
+    
+    // VALIDAÇÃO DE E-MAIL (OPCIONAL MAS PRECISA DE FORMATO SE PREENCHIDO)
+    if(e !== "" && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)) {
+        return alert("O formato do e-mail digitado é inválido.");
+    }
+    
+    // VALIDAÇÃO DE WHATSAPP (MÍNIMO 10 DÍGITOS)
     const phoneClean = p.replace(/\D/g,'');
     if(phoneClean.length < 10) return alert("Digite um WhatsApp válido com DDD.");
+
     if(!cart.length) return alert("Seu carrinho está vazio!");
     
-    btn.disabled = true;
-    btn.innerText = "ENVIANDO...";
-
-    const totalStr = document.getElementById('totalFinal').innerText;
-    const itemsStr = cart.map(i => `${i.qty}x ${i.name} (${i.color}/${i.size})`).join(", ");
+    const total = document.getElementById('totalFinal').innerText;
     
-    // ENVIO PARA O GOOGLE SHEETS (Orders)
     try {
-        await fetch(APPS_SCRIPT_URL, {
+        fetch(APPS_SCRIPT_URL, {
             method: 'POST', mode: 'no-cors',
-            body: JSON.stringify({ 
-                name: n, 
-                email: e || "Não informado", 
-                phone: p, 
-                total: totalStr, 
-                items: itemsStr 
-            })
+            body: JSON.stringify({ name: n, email: e || "Não informado", phone: p, total: total, items: cart.map(i => `${i.qty}x ${i.name} (${i.color}/${i.size})`).join(", ") })
         });
-    } catch(err){ console.log("Erro planilha"); }
+    } catch(err){}
 
-    const msg = `*PEDIDO - ANJJ*\n*Cliente:* ${n}\n*WhatsApp:* ${p}\n*E-mail:* ${e || 'Não informado'}\n\n*Itens:* ${cart.map(i => `\n- ${i.qty}x ${i.name} (${i.color}/${i.size})`).join("")}\n\n*TOTAL: ${totalStr}*`;
+    const msg = `*PEDIDO - ANJJ*\n*Cliente:* ${n}\n*WhatsApp:* ${p}\n*E-mail:* ${e || 'Não informado'}\n\n*Itens:* ${cart.map(i => `\n- ${i.qty}x ${i.name} (${i.color}/${i.size})`).join("")}\n\n*TOTAL: ${total}*`;
     window.open(`https://wa.me/${WHATSAPP_NUMBER.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`);
-    
-    btn.disabled = false;
-    btn.innerText = "FINALIZAR NO WHATSAPP";
 }
 
 function updateCartQty(idx, d) {
@@ -331,235 +324,8 @@ function clearCart() { if(confirm("Esvaziar carrinho?")) { cart = []; updateCart
 function toggleCart() { document.getElementById('cartOverlay').classList.toggle('open'); }
 function changeQty(btn, d) {
     const v = btn.parentElement.querySelector('.qty-val');
-    const stk = btn.closest('.card').querySelector('.st    productsData.forEach(p => {
-        let grid = document.getElementById(`grid-${p.cat.replace(/\s/g,'')}`);
-        if(!grid) {
-            const sec = document.createElement('section');
-            sec.id = `sec-${p.cat.replace(/\s/g,'')}`;
-            sec.innerHTML = `<h2 style="padding:0 5%; font-size:16px; margin-top:20px;">${p.cat}</h2><div class="grid" id="grid-${p.cat.replace(/\s/g,'')}"></div>`;
-            catalog.appendChild(sec);
-            grid = document.getElementById(`grid-${p.cat.replace(/\s+/g,'')}`);
-            
-            const btn = document.createElement('div');
-            btn.className = 'cat-link'; btn.innerText = p.cat;
-            btn.onclick = (e) => filterCat(p.cat, e.target);
-            document.getElementById('categoryNav').appendChild(btn);
-        }
-        grid.appendChild(createCard(p));
-    });
+    const max = parseInt(btn.closest('.card').querySelector('.stk-n').innerText);
+    let n = parseInt(v.innerText) + d;
+    if(n > 0 && n <= max) v.innerText = n;
 }
-
-function createCard(p) {
-    const id = btoa(unescape(encodeURIComponent(p.name))).substring(0,10);
-    const colors = [...new Set(p.skus.map(s => s.tag))];
-    const sizes = [...new Set(p.skus.map(s => s.size))];
-    const div = document.createElement('div');
-    div.className = 'card';
-    div.id = `card-${id}`;
-    div.innerHTML = `
-        <div class="carousel-wrap"><img src="${p.imgs[0]}" class="carousel-img"></div>
-        <div class="price-container"><span class="old-price"></span><span class="current-price"></span></div>
-        <div style="font-size:12px; font-weight:600; margin-bottom:8px; height:32px;">${p.name}</div>
-        <div>${colors.map(c => `<div class="color-dot" data-val="${c}" onclick="sync('${id}','c','${c}')" style="background:${colorMap[c.toLowerCase()] || c}"></div>`).join('')}</div>
-        <div style="margin:8px 0;">${sizes.map(s => `<div class="variant-chip" data-val="${s}" onclick="sync('${id}','s','${s}')">${s}</div>`).join('')}</div>
-        <div style="font-size:10px; margin-bottom:8px;">Estoque: <b class="stk">0</b></div>
-        <button class="btn-add" onclick="add('${id}')">ADICIONAR</button>
-    `;
-    setTimeout(() => { sync(id, 'c', colors[0]); sync(id, 's', sizes[0]); }, 100);
-    return div;
-}
-
-function sync(id, type, val) {
-    const card = document.getElementById(`card-${id}`);
-    if(type === 'c') {
-        card.querySelectorAll('.color-dot').forEach(d => d.classList.remove('selected'));
-        card.querySelector(`[data-val="${val}"]`).classList.add('selected');
-    } else {
-        card.querySelectorAll('.variant-chip').forEach(d => d.classList.remove('selected'));
-        card.querySelector(`[data-val="${val}"]`).classList.add('selected');
-    }
-    const color = card.querySelector('.color-dot.selected').dataset.val;
-    const size = card.querySelector('.variant-chip.selected').dataset.val;
-    const product = productsData.find(p => btoa(unescape(encodeURIComponent(p.name))).substring(0,10) === id);
-    const sku = product.skus.find(s => s.tag === color && s.size === size);
-
-    if(sku) {
-        card.querySelector('.current-price').innerText = `R$ ${sku.price.toFixed(2).replace('.',',')}`;
-        card.querySelector('.stk').innerText = sku.stock;
-        card.querySelector('.btn-add').disabled = sku.stock <= 0;
-        card.querySelector('.btn-add').innerText = sku.stock <= 0 ? "ESGOTADO" : "ADICIONAR";
-    }
-}
-
-function add(id) {
-    const card = document.getElementById(`card-${id}`);
-    const name = productsData.find(p => btoa(unescape(encodeURIComponent(p.name))).substring(0,10) === id).name;
-    const color = card.querySelector('.color-dot.selected').dataset.val;
-    const size = card.querySelector('.variant-chip.selected').dataset.val;
-    const priceText = card.querySelector('.current-price').innerText.replace('R$ ','').replace(',','.');
-    
-    cart.push({ name, color, size, price: parseFloat(priceText) });
-    updateCart();
-    showToast("Adicionado!");
-}
-
-function updateCart() {
-    document.getElementById('cartCount').innerText = cart.length;
-    const itemsDiv = document.getElementById('cartItems');
-    itemsDiv.innerHTML = cart.map((item, i) => `
-        <div style="display:flex; justify-content:space-between; margin-bottom:10px; font-size:13px; border-bottom:1px solid #eee; padding-bottom:5px;">
-            <div><b>${item.name}</b><br><small>${item.color} | ${item.size}</small></div>
-            <div>R$ ${item.price.toFixed(2)} <button onclick="remove(${i})" style="border:none; background:none;">🗑️</button></div>
-        </div>
-    `).join('');
-    const total = cart.reduce((a, b) => a + b.price, 0);
-    document.getElementById('totalFinal').innerText = `R$ ${total.toFixed(2).replace('.',',')}`;
-}
-
-async function finalizeOrder() {
-    const name = document.getElementById('custName').value;
-    const phone = document.getElementById('custPhone').value;
-    if(!name || !phone || cart.length === 0) return alert("Preencha os dados corretamente.");
-
-    const btn = document.getElementById('btnFinalizar');
-    btn.innerText = "SALVANDO PEDIDO...";
-    btn.disabled = true;
-
-    const itemsStr = cart.map(i => `${i.name} (${i.color}/${i.size})`).join(", ");
-    const total = document.getElementById('totalFinal').innerText;
-
-    // Envio para a Planilha (Orders)
-    try {
-        await fetch(APPS_SCRIPT_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            body: JSON.stringify({ name, phone, items: itemsStr, total })
-        });
-    } catch (e) { console.log("Erro ao salvar planilha"); }
-
-    // Envio para WhatsApp
-    const msg = `*PEDIDO LOJA ANJJ*%0A*Cliente:* ${name}%0A*Whats:* ${phone}%0A*Itens:* ${itemsStr.replace(/,/g, '%0A')}%0A*TOTAL:* ${total}`;
-    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${msg}`);
-    
-    btn.innerText = "PEDIDO ENVIADO!";
-}
-
-function remove(i) { cart.splice(i, 1); updateCart(); }
-function toggleCart() { document.getElementById('cartOverlay').classList.toggle('open'); }
-function showToast(m) { const t = document.getElementById('toast'); t.innerText = m; t.style.display='block'; setTimeout(()=>t.style.display='none', 2000); }
-function filterCat(c, el) {
-    document.querySelectorAll('.cat-link').forEach(l => l.classList.remove('active'));
-    el.classList.add('active');
-    document.querySelectorAll('section').forEach(s => s.style.display = (c==='all' || s.id===`sec-${c.replace(/\s/g,'')}`) ? 'block' : 'none');
-}
-
-init();
-</script>
-</body>
-</html>
-            btn.innerText = p.category;
-            btn.onclick = (e) => filterCat(p.category, e.target);
-            document.getElementById('categoryNav').appendChild(btn);
-        }
-        grid.appendChild(createCard(p));
-    });
-}
-
-function createCard(p) {
-    const id = btoa(p.name).replace(/=/g,'');
-    const colors = [...new Set(p.skus.map(s => s.color))];
-    const sizes = [...new Set(p.skus.map(s => s.size))];
-    const div = document.createElement('div');
-    div.className = 'card';
-    div.id = `card-${id}`;
-    div.innerHTML = `
-        <div class="carousel-wrap"><img src="${p.imgs[0]}" class="carousel-img active"></div>
-        <div class="price-container"><span class="old-price"></span><span class="current-price"></span></div>
-        <div style="font-size:12px; font-weight:600; margin-bottom:5px;">${p.name}</div>
-        <div>${colors.map(c => `<div class="color-dot" onclick="sync('${id}','c','${c}')" style="background:${colorMap[c.toLowerCase()] || c}"></div>`).join('')}</div>
-        <div style="margin:5px 0;">${sizes.map(s => `<div class="variant-chip" onclick="sync('${id}','s','${s}')">${s}</div>`).join('')}</div>
-        <div style="font-size:10px;">Estoque: <b class="stk">0</b></div>
-        <button class="btn-add" onclick="add('${id}')">ADICIONAR</button>
-    `;
-    setTimeout(() => { sync(id, 'c', colors[0]); sync(id, 's', sizes[0]); }, 50);
-    return div;
-}
-
-function sync(id, type, val) {
-    const card = document.getElementById(`card-${id}`);
-    const name = atob(id);
-    const p = productsData.find(x => x.name === name);
-    
-    if(type === 'c') {
-        card.querySelectorAll('.color-dot').forEach(d => d.classList.remove('selected'));
-        card.querySelector(`[onclick*="'c','${val}'"]`)?.classList.add('selected');
-    } else {
-        card.querySelectorAll('.variant-chip').forEach(d => d.classList.remove('selected'));
-        card.querySelector(`[onclick*="'s','${val}'"]`)?.classList.add('selected');
-    }
-
-    const c = card.querySelector('.color-dot.selected')?.getAttribute('onclick').split("'")[5];
-    const s = card.querySelector('.variant-chip.selected')?.innerText;
-    const sku = p.skus.find(x => x.color === c && x.size === s);
-
-    if(sku) {
-        card.querySelector('.current-price').innerText = `R$ ${sku.price.toFixed(2)}`;
-        card.querySelector('.stk').innerText = sku.stock;
-        card.querySelector('.btn-add').disabled = sku.stock <= 0;
-    }
-}
-
-function add(id) {
-    const card = document.getElementById(`card-${id}`);
-    const name = atob(id);
-    const color = card.querySelector('.color-dot.selected').getAttribute('onclick').split("'")[5];
-    const size = card.querySelector('.variant-chip.selected').innerText;
-    const p = productsData.find(x => x.name === name);
-    const sku = p.skus.find(x => x.color === color && x.size === size);
-
-    cart.push({ name, color, size, price: sku.price, img: p.imgs[0] });
-    updateCart();
-    showToast("Adicionado!");
-}
-
-function updateCart() {
-    document.getElementById('cartCount').innerText = cart.length;
-    const container = document.getElementById('cartItems');
-    container.innerHTML = cart.map((item, i) => `
-        <div style="display:flex; gap:10px; margin-bottom:10px; font-size:12px; border-bottom:1px solid #eee; padding-bottom:5px;">
-            <img src="${item.img}" style="width:40px; height:40px; object-fit:cover;">
-            <div style="flex:1;"><b>${item.name}</b><br>${item.color} | ${item.size}</div>
-            <div>R$ ${item.price.toFixed(2)} <button onclick="removeItem(${i})">🗑️</button></div>
-        </div>
-    `).join('');
-    const total = cart.reduce((a, b) => a + b.price, 0);
-    document.getElementById('totalFinal').innerText = `R$ ${total.toFixed(2)}`;
-}
-
-function removeItem(i) { cart.splice(i, 1); updateCart(); }
-
-function finalizeOrder() {
-    const n = document.getElementById('custName').value;
-    const p = document.getElementById('custPhone').value;
-    if(!n || !p) return alert("Preencha seus dados.");
-    const items = cart.map(i => `- ${i.name} (${i.color}/${i.size})`).join('\n');
-    const msg = `*NOVO PEDIDO*\nCliente: ${n}\n\nItens:\n${items}\n\n*Total: ${document.getElementById('totalFinal').innerText}*`;
-    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`);
-}
-
-function toggleCart() { document.getElementById('cartOverlay').classList.toggle('open'); }
-function showToast(m) { 
-    const t = document.getElementById('toast'); t.innerText = m; t.style.display = 'block';
-    setTimeout(() => t.style.display = 'none', 2000);
-}
-function filterCat(c, el) {
-    document.querySelectorAll('.cat-link').forEach(l => l.classList.remove('active'));
-    el.classList.add('active');
-    document.querySelectorAll('.category-section').forEach(s => s.style.display = (c === 'all' || s.id === `sec-${c}`) ? 'block' : 'none');
-}
-
-init();
-</script>
-</body>
-</html>
-
+function openLightbox(url) { document.getElementById('lbImg').src = url; document.getElementById('
