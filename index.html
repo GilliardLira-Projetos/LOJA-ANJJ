@@ -90,8 +90,10 @@
 </div>
 
 <script>
+// CONFIGURAÇÕES GERAIS
 const SHEET_URL = "https://docs.google.com/spreadsheets/d/1uCx_JB4xZnU0vBIQjlrwBgsTRia_wSlUWPJlaN0EbhE/gviz/tq?tqx=out:json&sheet=Products";
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxfMDIOjHdKUbpQuIo1oE-lmZPgvyoH_RKwinsD65Jo7iCMOUMaXlwzZz0mwdIxXFL2Kw/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzFKRrxdhd0XXlnUsKFLCWixXqy6PuXjeXxmFG_j-Q6i9j_XOgWE8k8EAhcNfV49D6-hA/exec';
+const WHATSAPP_NUMBER = '+5581997512217';
 
 let productsData = [];
 let cart = [];
@@ -99,6 +101,7 @@ let lbImages = [];
 let lbIndex = 0;
 const colorMap = { 'preto': '#000', 'branco': '#fff', 'vermelho': '#f00', 'azul': '#00f', 'verde': '#080', 'amarelo': '#ff0', 'rosa': '#ff69b4', 'cinza': '#808080', 'bege': '#f5f5dc' };
 
+// INICIALIZAÇÃO E BUSCA DE DADOS
 async function init() {
     const r = await fetch(SHEET_URL);
     const t = await r.text();
@@ -141,6 +144,7 @@ function renderAll() {
         catalog.appendChild(section);
         productsData.filter(p => p.category === cat).forEach(p => { document.getElementById(`grid-${cat.replace(/\s+/g,'')}`).appendChild(createCard(p)); });
     });
+    // Carrossel Automático (5 segundos)
     setInterval(() => { document.querySelectorAll('.carousel-wrap').forEach(w => { if(!w.dataset.manual) manualMove(w.parentElement.id.replace('card-',''), 1); }); }, 5000);
 }
 
@@ -174,6 +178,7 @@ function createCard(p) {
     return d;
 }
 
+// SINCRONIZAÇÃO DE VARIANTES E ESTOQUE
 function syncVariant(id, type, val) {
     const card = document.getElementById(`card-${id}`);
     const product = productsData.find(p => p.name.replace(/\s+/g, '') === id);
@@ -195,6 +200,7 @@ function syncVariant(id, type, val) {
     }
 }
 
+// LIGHTBOX E CARROSSEL
 function openLightbox(id, idx) {
     const product = productsData.find(p => p.name.replace(/\s+/g, '') === id);
     lbImages = product.images; lbIndex = idx;
@@ -203,7 +209,6 @@ function openLightbox(id, idx) {
 }
 function changeLB(d) { lbIndex = (lbIndex + d + lbImages.length) % lbImages.length; document.getElementById('lbImg').src = lbImages[lbIndex]; }
 function closeLightbox() { document.getElementById('lightbox').style.display = 'none'; }
-
 function manualMove(id, delta, isManual = false) {
     const wrap = document.querySelector(`#card-${id} .carousel-wrap`);
     if(isManual) wrap.dataset.manual = "true";
@@ -214,6 +219,7 @@ function manualMove(id, delta, isManual = false) {
     imgs[(act + delta + imgs.length) % imgs.length].classList.add('active');
 }
 
+// LÓGICA DO CARRINHO
 function addToCart(id) {
     const card = document.getElementById(`card-${id}`);
     const product = productsData.find(p => p.name.replace(/\s+/g, '') === id);
@@ -257,31 +263,26 @@ function updateCartUI() {
 function updateCartQty(index, delta) {
     const item = cart[index];
     const newQty = item.qty + delta;
-    if (newQty > 0 && newQty <= item.max) {
-        item.qty = newQty;
-        updateCartUI();
-    } else if (newQty > item.max) {
-        alert("Limite de estoque atingido.");
-    }
+    if (newQty > 0 && newQty <= item.max) { item.qty = newQty; updateCartUI(); }
 }
 
 function removeItem(i) { cart.splice(i, 1); updateCartUI(); }
 function toggleCart() { document.getElementById('cartOverlay').classList.toggle('open'); }
-function changeQty(btn, d) { let v = btn.parentElement.querySelector('.qty-val'); let max = parseInt(btn.parentElement.querySelector('.stk-n').innerText) || 99; let n = parseInt(v.innerText) + d; if(n > 0 && n <= max) v.innerText = n; }
+function changeQty(btn, d) { let v = btn.parentElement.querySelector('.qty-val'); let n = parseInt(v.innerText) + d; if(n > 0) v.innerText = n; }
 function filterCat(cat, el) {
     document.querySelectorAll('.cat-link').forEach(l => l.classList.remove('active')); el.classList.add('active');
     document.querySelectorAll('.category-section').forEach(sec => sec.style.display = (cat === 'all' || sec.id === `sec-${cat.replace(/\s+/g,'')}`) ? 'block' : 'none');
 }
 
+// FINALIZAÇÃO: GRAVAÇÃO + WHATSAPP
 async function finalizeOrder() {
     const n = document.getElementById('custName').value;
     const p = document.getElementById('custPhone').value;
     const total = document.getElementById('totalFinal').innerText;
 
-    if(!cart.length || !n || !p) return alert("Preencha os dados e o carrinho!");
+    if(!cart.length || !n || !p) return alert("Preencha todos os campos!");
 
     const orderNo = "#" + new Date().getTime();
-
     const orderData = {
         name: n,
         phone: p,
@@ -290,7 +291,7 @@ async function finalizeOrder() {
     };
 
     try {
-        // Envia para a planilha
+        // Grava na Planilha
         fetch(APPS_SCRIPT_URL, {
             method: 'POST',
             mode: 'no-cors',
@@ -298,18 +299,21 @@ async function finalizeOrder() {
             body: JSON.stringify(orderData)
         });
 
-        // WhatsApp
-        const msg = `*PEDIDO: ${orderNo}*\n----------------------------\n*Cliente:* ${n}\n*WhatsApp:* ${p}\n\n*Itens:*\n${cart.map(i => `- ${i.qty}x ${i.name} (${i.color}/${i.size})`).join("\n")}\n\n*TOTAL: ${total}*\n----------------------------\n_Enviado via Loja Online_`;
+        // Abre WhatsApp
+        const msg = `*PEDIDO: ${orderNo}*\n----------------------------\n*Status:* Pendente\n*Cliente:* ${n}\n*WhatsApp:* ${p}\n\n*Itens:*\n${cart.map(i => `- ${i.qty}x ${i.name} (${i.color}/${i.size})`).join("\n")}\n\n*TOTAL: ${total}*\n----------------------------\n_Enviado via Catálogo Online_`;
         
-        setTimeout(() => {
-            window.open(`https://wa.me/+5581997512215?text=${encodeURIComponent(msg)}`);
-            cart = [];
-            updateCartUI();
-            toggleCart();
-        }, 500);
+        window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`, '_blank');
 
-    } catch (error) {
-        alert("Erro ao salvar. Tente novamente.");
+        // Limpa Loja
+        cart = [];
+        updateCartUI();
+        toggleCart();
+        document.getElementById('custName').value = "";
+        document.getElementById('custPhone').value = "";
+        alert("Pedido registrado e enviado para o WhatsApp!");
+
+    } catch (e) {
+        alert("Erro ao salvar, finalize pelo WhatsApp.");
     }
 }
 
