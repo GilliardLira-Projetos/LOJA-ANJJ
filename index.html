@@ -325,8 +325,7 @@ async function finalizeOrder() {
     const btn = document.getElementById('btnFinalize');
     
     if(n.length < 3) return alert("Por favor, digite seu nome completo.");
-    const phoneClean = p.replace(/\D/g,'');
-    if(phoneClean.length < 10) return alert("Digite um WhatsApp válido.");
+    if(p.replace(/\D/g,'').length < 10) return alert("Digite um WhatsApp válido.");
     if(!cart.length) return alert("Seu carrinho está vazio!");
 
     const totalStr = document.getElementById('totalFinal').innerText;
@@ -345,31 +344,29 @@ async function finalizeOrder() {
         }))
     };
 
+    const itemsMsg = cart.map(i => `\n- ${i.qty}x ${i.name} (${i.color}/${i.size})`).join("");
+    const msg = `*PEDIDO - ANJJ*\n*Cliente:* ${n}\n*WhatsApp:* ${p}\n\n*Itens:*${itemsMsg}\n\n*TOTAL: ${totalStr}*`;
+    const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`;
+
     try {
         const originalText = btn.innerText;
         btn.innerText = "RESERVANDO ESTOQUE...";
         btn.disabled = true;
 
-        await fetch(APPS_SCRIPT_URL, {
+        // Envia para a planilha
+        fetch(APPS_SCRIPT_URL, {
             method: 'POST',
             mode: 'no-cors',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(orderData)
         });
 
-        const itemsMsg = cart.map(i => {
-            const subtotal = (i.price * i.qty).toFixed(2).replace('.',',');
-            const unitPrice = i.price.toFixed(2).replace('.',',');
-            return `\n- ${i.qty}x ${i.name} (${i.color}/${i.size})\n  Unit: R$ ${unitPrice} | Sub: R$ ${subtotal}`;
-        }).join("\n");
-
-        const msg = `*PEDIDO - ANJJ*\n*Cliente:* ${n}\n*WhatsApp:* ${p}\n\n*Itens:*${itemsMsg}\n\n*TOTAL FINAL: ${totalStr}*`;
-        
-        window.open(`https://wa.me/${WHATSAPP_NUMBER.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`);
+        // Abre o WhatsApp imediatamente após disparar a requisição
+        window.open(whatsappUrl, '_blank');
 
         alert("Pedido registrado com sucesso!");
         
-        // LIMPA CARRINHO E CAMPOS APÓS O SUCESSO
+        // LIMPA CARRINHO E CAMPOS
         cart = [];
         localStorage.removeItem('anjj_cart');
         document.getElementById('custName').value = "";
@@ -383,7 +380,7 @@ async function finalizeOrder() {
 
     } catch (err) {
         console.error(err);
-        alert("Erro ao conectar com a planilha, mas você ainda pode finalizar pelo WhatsApp.");
+        window.open(whatsappUrl, '_blank');
         btn.innerText = "FINALIZAR NO WHATSAPP";
         btn.disabled = false;
     }
@@ -424,7 +421,6 @@ function removeItem(i) { cart.splice(i, 1); updateCartUI(); }
 function clearCart() { 
     if(confirm("Esvaziar carrinho e limpar seus dados?")) { 
         cart = []; 
-        // LIMPA CAMPOS DE INPUT
         document.getElementById('custName').value = "";
         document.getElementById('custEmail').value = "";
         document.getElementById('custPhone').value = "";
@@ -452,4 +448,3 @@ init();
 </script>
 </body>
 </html>
-
