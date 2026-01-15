@@ -16,6 +16,11 @@
 
         .cart-icon-btn { cursor: pointer; background: var(--green); color: white; padding: 8px 18px; border-radius: 30px; font-weight: 700; border: none; display: flex; align-items: center; gap: 8px; }
         
+        /* Estilo da Busca */
+        .search-wrapper { padding: 15px 5% 5px 5%; background: #f8fafc; }
+        .search-box { width: 100%; padding: 12px 40px 12px 15px; border-radius: 12px; border: 1px solid #e2e8f0; font-family: 'Poppins', sans-serif; font-size: 14px; box-sizing: border-box; outline: none; transition: 0.3s; background: #fff url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="%2394a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>') no-repeat right 15px center; }
+        .search-box:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1); }
+
         .category-nav { display: flex; gap: 10px; padding: 10px 5%; overflow-x: auto; background: #fff; position: sticky; top: 65px; z-index: 999; border-bottom: 1px solid #eee; scrollbar-width: none; }
         .cat-link { border: 1px solid #eee; padding: 6px 18px; border-radius: 20px; font-size: 13px; cursor: pointer; white-space: nowrap; background: #f8f9fa; }
         .cat-link.active { background: var(--green); color: #fff; border-color: var(--green); }
@@ -52,7 +57,6 @@
         .cart-body { flex: 1; overflow-y: auto; padding: 15px; }
         .cart-footer { padding: 20px; border-top: 1px solid #eee; background: #fff; }
         .form-input { width: 100%; padding: 10px; margin-bottom: 8px; border-radius: 8px; border: 1px solid #ddd; font-size: 14px; box-sizing: border-box; }
-        .form-input:focus { border-color: var(--green); outline: none; }
         
         #lightbox { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.9); display: none; z-index: 3000; justify-content: center; align-items: center; }
         #lbImg { max-width: 90%; max-height: 80%; object-fit: contain; }
@@ -69,6 +73,10 @@
     </div>
     <button class="cart-icon-btn" onclick="toggleCart()">🛒 <span id="cartCount">0</span></button>
 </header>
+
+<div class="search-wrapper">
+    <input type="text" id="productSearch" class="search-box" placeholder="O que você está procurando?" onkeyup="searchProducts()">
+</div>
 
 <div class="category-nav" id="categoryNav"><div class="cat-link active" onclick="filterCat('all', this)">Tudo</div></div>
 <div id="catalog"></div>
@@ -143,6 +151,33 @@ async function init() {
         renderAll();
         updateCartUI();
     } catch (err) { console.error(err); }
+}
+
+// FUNÇÃO DE BUSCA ATUALIZADA
+function searchProducts() {
+    const term = document.getElementById("productSearch").value.toLowerCase();
+    const sections = document.querySelectorAll('.category-section');
+    
+    sections.forEach(section => {
+        const cards = section.querySelectorAll('.card');
+        let hasVisibleProduct = false;
+
+        cards.forEach(card => {
+            const productName = card.querySelector('div[style*="font-weight:600"]').innerText.toLowerCase();
+            if (productName.includes(term)) {
+                card.style.display = "flex";
+                hasVisibleProduct = true;
+            } else {
+                card.style.display = "none";
+            }
+        });
+        section.style.display = hasVisibleProduct ? "block" : "none";
+    });
+
+    if(term.length > 0) {
+        document.querySelectorAll('.cat-link').forEach(l => l.classList.remove('active'));
+        document.querySelector('.cat-link').classList.add('active');
+    }
 }
 
 function renderAll() {
@@ -264,31 +299,13 @@ function finalizeOrder() {
     const n = document.getElementById('custName').value.trim();
     const e = document.getElementById('custEmail').value.trim();
     const p = document.getElementById('custPhone').value.trim();
-    
-    // VALIDAÇÃO DE NOME
-    if(n.length < 3) return alert("Por favor, digite seu nome completo (mínimo Nome e Sobre nome).");
-    
-    // VALIDAÇÃO DE E-MAIL (OPCIONAL MAS PRECISA DE FORMATO SE PREENCHIDO)
-    if(e !== "" && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)) {
-        return alert("O formato do e-mail digitado é inválido.");
-    }
-    
-    // VALIDAÇÃO DE WHATSAPP (MÍNIMO 10 DÍGITOS)
+    if(n.length < 3) return alert("Por favor, digite seu nome completo.");
+    if(e !== "" && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)) return alert("E-mail inválido.");
     const phoneClean = p.replace(/\D/g,'');
-    if(phoneClean.length < 10) return alert("Digite um WhatsApp válido com DDD.");
-
+    if(phoneClean.length < 10) return alert("Digite um WhatsApp válido.");
     if(!cart.length) return alert("Seu carrinho está vazio!");
-    
     const total = document.getElementById('totalFinal').innerText;
-    
-    try {
-        fetch(APPS_SCRIPT_URL, {
-            method: 'POST', mode: 'no-cors',
-            body: JSON.stringify({ name: n, email: e || "Não informado", phone: p, total: total, items: cart.map(i => `${i.qty}x ${i.name} (${i.color}/${i.size})`).join(", ") })
-        });
-    } catch(err){}
-
-    const msg = `*PEDIDO - ANJJ*\n*Cliente:* ${n}\n*WhatsApp:* ${p}\n*E-mail:* ${e || 'Não informado'}\n\n*Itens:* ${cart.map(i => `\n- ${i.qty}x ${i.name} (${i.color}/${i.size})`).join("")}\n\n*TOTAL: ${total}*`;
+    const msg = `*PEDIDO - ANJJ*\n*Cliente:* ${n}\n*WhatsApp:* ${p}\n\n*Itens:* ${cart.map(i => `\n- ${i.qty}x ${i.name} (${i.color}/${i.size})`).join("")}\n\n*TOTAL: ${total}*`;
     window.open(`https://wa.me/${WHATSAPP_NUMBER.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`);
 }
 
@@ -331,10 +348,14 @@ function changeQty(btn, d) {
 function openLightbox(url) { document.getElementById('lbImg').src = url; document.getElementById('lightbox').style.display = 'flex'; }
 function closeLightbox() { document.getElementById('lightbox').style.display = 'none'; }
 function filterCat(cat, el) {
+    // Limpa a busca ao trocar de categoria
+    document.getElementById("productSearch").value = "";
     document.querySelectorAll('.cat-link').forEach(l => l.classList.remove('active'));
     el.classList.add('active');
     document.querySelectorAll('.category-section').forEach(sec => {
         sec.style.display = (cat === 'all' || sec.id === `sec-${cat.replace(/\s+/g,'')}`) ? 'block' : 'none';
+        // Garante que todos os cards voltem a aparecer ao trocar categoria
+        sec.querySelectorAll('.card').forEach(c => c.style.display = "flex");
     });
 }
 init();
