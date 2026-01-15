@@ -318,7 +318,6 @@ function updateCartUI() {
     document.getElementById('totalFinal').innerText = `R$ ${total.toFixed(2).replace('.',',')}`;
 }
 
-// NOVA FUNÇÃO ATUALIZADA COM BAIXA DE ESTOQUE
 async function finalizeOrder() {
     const n = document.getElementById('custName').value.trim();
     const e = document.getElementById('custEmail').value.trim();
@@ -332,7 +331,6 @@ async function finalizeOrder() {
 
     const totalStr = document.getElementById('totalFinal').innerText;
     
-    // Organiza os dados para o Google Script
     const orderData = {
         name: n,
         email: e,
@@ -352,7 +350,6 @@ async function finalizeOrder() {
         btn.innerText = "RESERVANDO ESTOQUE...";
         btn.disabled = true;
 
-        // 1. Envia para a planilha para gravar e baixar estoque
         await fetch(APPS_SCRIPT_URL, {
             method: 'POST',
             mode: 'no-cors',
@@ -360,14 +357,25 @@ async function finalizeOrder() {
             body: JSON.stringify(orderData)
         });
 
-        // 2. Abre o WhatsApp
-        const msg = `*PEDIDO - ANJJ*\n*Cliente:* ${n}\n*WhatsApp:* ${p}\n\n*Itens:* ${cart.map(i => `\n- ${i.qty}x ${i.name} (${i.color}/${i.size})`).join("")}\n\n*TOTAL: ${totalStr}*`;
+        const itemsMsg = cart.map(i => {
+            const subtotal = (i.price * i.qty).toFixed(2).replace('.',',');
+            const unitPrice = i.price.toFixed(2).replace('.',',');
+            return `\n- ${i.qty}x ${i.name} (${i.color}/${i.size})\n  Unit: R$ ${unitPrice} | Sub: R$ ${subtotal}`;
+        }).join("\n");
+
+        const msg = `*PEDIDO - ANJJ*\n*Cliente:* ${n}\n*WhatsApp:* ${p}\n\n*Itens:*${itemsMsg}\n\n*TOTAL FINAL: ${totalStr}*`;
+        
         window.open(`https://wa.me/${WHATSAPP_NUMBER.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`);
 
-        // 3. Limpa tudo
         alert("Pedido registrado com sucesso!");
+        
+        // LIMPA CARRINHO E CAMPOS APÓS O SUCESSO
         cart = [];
         localStorage.removeItem('anjj_cart');
+        document.getElementById('custName').value = "";
+        document.getElementById('custEmail').value = "";
+        document.getElementById('custPhone').value = "";
+        
         updateCartUI();
         toggleCart();
         btn.innerText = originalText;
@@ -412,7 +420,18 @@ function manualMove(id, d) {
 }
 
 function removeItem(i) { cart.splice(i, 1); updateCartUI(); }
-function clearCart() { if(confirm("Esvaziar carrinho?")) { cart = []; updateCartUI(); } }
+
+function clearCart() { 
+    if(confirm("Esvaziar carrinho e limpar seus dados?")) { 
+        cart = []; 
+        // LIMPA CAMPOS DE INPUT
+        document.getElementById('custName').value = "";
+        document.getElementById('custEmail').value = "";
+        document.getElementById('custPhone').value = "";
+        updateCartUI(); 
+    } 
+}
+
 function toggleCart() { document.getElementById('cartOverlay').classList.toggle('open'); }
 function changeQty(btn, d) {
     const v = btn.parentElement.querySelector('.qty-val');
