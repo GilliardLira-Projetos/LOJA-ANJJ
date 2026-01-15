@@ -328,4 +328,16 @@ function changeQty(btn, d) {
     let n = parseInt(v.innerText) + d;
     if(n > 0 && n <= max) v.innerText = n;
 }
-function openLightbox(url) { document.getElementById('lbImg').src = url; document.getElementById('
+function openLightbox(url) { document.getElementById('lbImg').src = url; document.getElementById('lightbox').style.display = 'flex'; }
+function closeLightbox() { document.getElementById('lightbox').style.display = 'none'; }
+function filterCat(cat, el) {
+    document.querySelectorAll('.cat-link').forEach(l => l.classList.remove('active'));
+    el.classList.add('active');
+    document.querySelectorAll('.category-section').forEach(sec => {
+        sec.style.display = (cat === 'all' || sec.id === `sec-${cat.replace(/\s+/g,'')}`) ? 'block' : 'none';
+    });
+}
+init();
+</script>
+</body>
+</html>
