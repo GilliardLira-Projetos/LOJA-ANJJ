@@ -50,8 +50,6 @@
 
         .variant-chip { border: 1px solid #ddd; padding: 4px 8px; border-radius: 6px; font-size: 11px; cursor: pointer; background: #fff; transition: 0.2s; }
         .variant-chip.selected { background: #000; color: #fff; border-color: #000; }
-        
-        /* ESTILO PARA TAMANHO SEM ESTOQUE */
         .variant-chip.no-stock { opacity: 0.3; text-decoration: line-through; cursor: not-allowed; pointer-events: none; background: #f1f5f9; }
 
         .btn-add { background: var(--green); color: #fff; border: none; padding: 12px; border-radius: 10px; font-weight: 700; width: 100%; cursor: pointer; margin-top: auto; }
@@ -100,7 +98,7 @@
         <div style="display:flex; justify-content:space-between; font-weight:700; margin-bottom:15px; font-size: 1.1rem;">
             <span>Total:</span><span id="totalFinal">R$ 0,00</span>
         </div>
-        <input type="text" id="custName" class="form-input" placeholder="Nome (mín. 3 letras)">
+        <input type="text" id="custName" class="form-input" placeholder="Digite seu Nome e Sobrenome">
         <input type="email" id="custEmail" class="form-input" placeholder="E-mail (opcional)">
         <input type="tel" id="custPhone" class="form-input" placeholder="WhatsApp (DDD + Número)">
         <button id="btnFinalize" class="btn-add" style="background:var(--wpp); padding:16px;" onclick="finalizeOrder()">FINALIZAR NO WHATSAPP</button>
@@ -242,7 +240,6 @@ function createCard(p) {
         <button class="btn-add" onclick="addToCart('${id}')">ADICIONAR</button>`;
     
     setTimeout(() => { 
-        // APLICA OPACIDADE NOS TAMANHOS SEM ESTOQUE GERAL
         p.skus.forEach(sku => {
             if(sku.stock <= 0) {
                 const totalStockForSize = p.skus.filter(s => s.size === sku.size).reduce((acc, curr) => acc + curr.stock, 0);
@@ -309,7 +306,6 @@ function syncVariant(id, type, val) {
             badge.style.display = 'none';
         }
 
-        // MOSTRA "SEM ESTOQUE" NO SALDO E DESABILITA BOTÃO
         if(sku.stock <= 0) {
             card.querySelector('.stk-n').innerText = "SEM ESTOQUE";
             btnAdd.disabled = true;
@@ -353,8 +349,16 @@ async function finalizeOrder() {
     const p = document.getElementById('custPhone').value.trim();
     const btn = document.getElementById('btnFinalize');
     
-    if(n.length < 3) return alert("Por favor, digite seu nome completo.");
-    if(p.replace(/\D/g,'').length < 10) return alert("Digite um WhatsApp válido.");
+    // Validação de Nome: Apenas se está preenchido
+    if(n === "") return alert("Por favor, digite seu Nome e Sobrenome.");
+    
+    // Validação de E-mail (Opcional, mas valida formato se preenchido)
+    if(e !== "" && (!e.includes('@') || !e.includes('.'))) return alert("Por favor, digite um e-mail válido ou deixe em branco.");
+
+    // Validação de WhatsApp (Apenas números, mínimo 10 dígitos)
+    const phoneDigits = p.replace(/\D/g,'');
+    if(phoneDigits.length < 10) return alert("Por favor, digite um número de WhatsApp válido (com DDD).");
+    
     if(!cart.length) return alert("Seu carrinho está vazio!");
 
     const totalStr = document.getElementById('totalFinal').innerText;
@@ -364,7 +368,7 @@ async function finalizeOrder() {
     };
 
     const itemsMsg = cart.map(i => `\n- ${i.qty}x ${i.name} (${i.color}/${i.size})`).join("");
-    const msg = `*PEDIDO - ANJJ*\n*Cliente:* ${n}\n*WhatsApp:* ${p}\n\n*Itens:*${itemsMsg}\n\n*TOTAL: ${totalStr}*`;
+    const msg = `*PEDIDO REALIZADO NO SITE - ANJJ*\n*Cliente:* ${n}\n*WhatsApp:* ${p}\n\n*Itens:*${itemsMsg}\n\n*TOTAL: ${totalStr}*`;
     const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`;
 
     try {
