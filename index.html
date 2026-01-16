@@ -108,8 +108,9 @@
 <div id="lightbox" onclick="closeLightbox()"><img id="lbImg" src=""></div>
 
 <script>
-const SHEET_URL = "https://docs.google.com/spreadsheets/d/1uCx_JB4xZnU0vBIQjlrwBgsTRia_wSlUWPJlaN0EbhE/gviz/tq?tqx=out:json&sheet=Products";
+// URL DO GOOGLE APPS SCRIPT (Certifique-se de usar a URL da sua última implantação)
 const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxXGmpg27tgST2yGf5mpqDRwCkgTO0gXzlzlt5XGzL8mHChwlJWYHv0eYUZj3UgtV3HQA/exec"; 
+const SHEET_URL = "https://docs.google.com/spreadsheets/d/1uCx_JB4xZnU0vBIQjlrwBgsTRia_wSlUWPJlaN0EbhE/gviz/tq?tqx=out:json&sheet=Products";
 const WHATSAPP_NUMBER = '+5581997512217';
 
 const colorMap = {
@@ -343,6 +344,9 @@ function updateCartUI() {
     document.getElementById('totalFinal').innerText = `R$ ${total.toFixed(2).replace('.',',')}`;
 }
 
+// ==========================================
+// FUNÇÃO AJUSTADA PARA A NOVA PLANILHA
+// ==========================================
 async function finalizeOrder() {
     const n = document.getElementById('custName').value.trim();
     const e = document.getElementById('custEmail').value.trim();
@@ -358,16 +362,9 @@ async function finalizeOrder() {
     if(!cart.length) return alert("Seu carrinho está vazio!");
 
     const totalStr = document.getElementById('totalFinal').innerText;
-    
-    // CORREÇÃO: Enviando chave 'products' para o Apps Script
-    const orderData = {
-        name: n,
-        email: e || "Não informado",
-        phone: p,
-        products: cart.map(item => `${item.qty}x ${item.name} (${item.color}/${item.size})`).join(", "),
-        total: totalStr
-    };
+    const itemsList = cart.map(item => `${item.qty}x ${item.name} (${item.color}/${item.size})`).join(", ");
 
+    // Texto para o WhatsApp
     const itemsMsg = cart.map(i => `\n- ${i.qty}x ${i.name} (${i.color}/${i.size})`).join("");
     const msg = `*PEDIDO REALIZADO NO SITE - ANJJ*\n*Cliente:* ${n}\n*WhatsApp:* ${p}\n*E-mail:* ${e || 'Não informado'}\n\n*Itens:*${itemsMsg}\n\n*TOTAL: ${totalStr}*`;
     const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`;
@@ -377,23 +374,41 @@ async function finalizeOrder() {
         btn.innerText = "RESERVANDO ESTOQUE...";
         btn.disabled = true;
 
+        // AJUSTE DE ENVIO: URLSearchParams é o mais estável para o Apps Script
+        const formData = new URLSearchParams();
+        formData.append('name', n);
+        formData.append('email', e || "Não informado");
+        formData.append('phone', p);
+        formData.append('products', itemsList);
+        formData.append('total', totalStr);
+
+        // Envio para o Google Apps Script
         await fetch(APPS_SCRIPT_URL, { 
             method: 'POST', 
             mode: 'no-cors', 
-            headers: { 'Content-Type': 'application/json' }, 
-            body: JSON.stringify(orderData) 
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, 
+            body: formData.toString() 
         });
 
+        // Abre o WhatsApp
         window.open(whatsappUrl, '_blank');
         alert("Pedido registrado com sucesso!");
         
-        cart = []; localStorage.removeItem('anjj_cart');
-        document.getElementById('custName').value = ""; document.getElementById('custEmail').value = ""; document.getElementById('custPhone').value = "";
-        updateCartUI(); toggleCart();
-        btn.innerText = originalText; btn.disabled = false;
+        // Limpa o Carrinho
+        cart = []; 
+        localStorage.removeItem('anjj_cart');
+        document.getElementById('custName').value = ""; 
+        document.getElementById('custEmail').value = ""; 
+        document.getElementById('custPhone').value = "";
+        updateCartUI(); 
+        toggleCart();
+        btn.innerText = originalText; 
+        btn.disabled = false;
     } catch (err) {
-        console.error(err); window.open(whatsappUrl, '_blank');
-        btn.innerText = "FINALIZAR NO WHATSAPP"; btn.disabled = false;
+        console.error(err); 
+        window.open(whatsappUrl, '_blank'); // Se o script falhar, ainda envia para o WhatsApp
+        btn.innerText = "FINALIZAR NO WHATSAPP"; 
+        btn.disabled = false;
     }
 }
 
@@ -450,4 +465,3 @@ init();
 </script>
 </body>
 </html>
-
