@@ -358,7 +358,8 @@ async function finalizeOrder() {
     if(!cart.length) return alert("Seu carrinho está vazio!");
 
     const totalStr = document.getElementById('totalFinal').innerText;
-    const itemsList = cart.map(item => `${item.qty}x ${item.name} (${item.color}/${item.size})`).join(", ");
+    // Formata a lista de produtos de forma legível para a planilha
+    const itemsList = cart.map(item => `${item.qty}x ${item.name} (${item.color}/${item.size})`).join(" | ");
 
     const itemsMsg = cart.map(i => `\n- ${i.qty}x ${i.name} (${i.color}/${i.size})`).join("");
     const msg = `*PEDIDO REALIZADO NO SITE - ANJJ*\n*Cliente:* ${n}\n*WhatsApp:* ${p}\n*E-mail:* ${e || 'Não informado'}\n\n*Itens:*${itemsMsg}\n\n*TOTAL: ${totalStr}*`;
@@ -369,7 +370,7 @@ async function finalizeOrder() {
         btn.innerText = "ENVIANDO PEDIDO...";
         btn.disabled = true;
 
-        // Monta os parâmetros para o script do Google
+        // Monta os parâmetros exatamente como o Google Apps Script espera (e.parameter)
         const formData = new URLSearchParams();
         formData.append('name', n);
         formData.append('email', e || "Não informado");
@@ -377,7 +378,7 @@ async function finalizeOrder() {
         formData.append('products', itemsList);
         formData.append('total', totalStr);
 
-        // Envia para o Google Apps Script
+        // Envio para o Google Apps Script
         await fetch(APPS_SCRIPT_URL, { 
             method: 'POST', 
             mode: 'no-cors', 
@@ -385,9 +386,9 @@ async function finalizeOrder() {
             body: formData.toString() 
         });
 
+        // Limpa o carrinho e abre o WhatsApp
         window.open(whatsappUrl, '_blank');
         
-        // Limpa tudo após o sucesso
         cart = []; 
         localStorage.removeItem('anjj_cart');
         document.getElementById('custName').value = ""; 
@@ -397,10 +398,11 @@ async function finalizeOrder() {
         toggleCart();
         btn.innerText = originalText; 
         btn.disabled = false;
-        alert("Pedido registrado com sucesso!");
+        alert("Pedido registrado na planilha e enviado para o WhatsApp!");
 
     } catch (err) {
-        console.error(err); 
+        console.error("Erro no script:", err); 
+        // Abre o WhatsApp mesmo se o script da planilha falhar
         window.open(whatsappUrl, '_blank');
         btn.innerText = "FINALIZAR NO WHATSAPP"; 
         btn.disabled = false;
