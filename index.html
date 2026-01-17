@@ -16,29 +16,11 @@
         .insta-sub { color: #ccc; font-size: 11px; text-decoration: none; display: flex; align-items: center; gap: 4px; margin-top: 2px; }
         .cart-icon-btn { cursor: pointer; background: var(--green); color: white; padding: 8px 18px; border-radius: 30px; font-weight: 700; border: none; display: flex; align-items: center; gap: 8px; }
 
-        /* BUSCA 50% CENTRALIZADA */
-.search-wrapper { padding: 12px 5%; background: #f8fafc; display: flex; justify-content: center; }
-.search-container { position: relative; width: 50%; min-width: 180px; }
-.search-box { width: 100%; padding: 8px 35px 8px 15px; border-radius: 20px; border: 1px solid #e2e8f0; outline: none; box-sizing: border-box; font-family: 'Poppins'; font-size: 12px; }
-
-.clear-search { 
-    position: absolute; 
-    right: 10px; 
-    top: 50%; 
-    transform: translateY(-50%); 
-    background: #dc2626; /* <--- ALTERADO PARA VERMELHO */
-    border: none; 
-    border-radius: 50%; 
-    width: 18px; /* Aumentei um pouquinho para destacar */
-    height: 18px; 
-    cursor: pointer; 
-    display: none; 
-    align-items: center; 
-    justify-content: center; 
-    font-size: 12px; 
-    color: #fff; 
-    font-weight: bold;
-}
+        /* BUSCA */
+        .search-wrapper { padding: 12px 5%; background: #f8fafc; display: flex; justify-content: center; }
+        .search-container { position: relative; width: 50%; min-width: 180px; }
+        .search-box { width: 100%; padding: 8px 35px 8px 15px; border-radius: 20px; border: 1px solid #e2e8f0; outline: none; box-sizing: border-box; font-family: 'Poppins'; font-size: 12px; }
+        .clear-search { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: #dc2626; border: none; border-radius: 50%; width: 18px; height: 18px; cursor: pointer; display: none; align-items: center; justify-content: center; font-size: 12px; color: #fff; font-weight: bold; }
 
         /* GRID E CARDS */
         .category-nav { display: flex; gap: 8px; padding: 8px 5%; overflow-x: auto; background: #fff; position: sticky; top: 62px; z-index: 999; border-bottom: 1px solid #eee; scrollbar-width: none; }
@@ -57,12 +39,11 @@
         .carousel-img { width: 100%; height: 100%; object-fit: cover; position: absolute; opacity: 0; transition: 0.3s; }
         .carousel-img.active { opacity: 1; }
 
-        /* CARRINHO COM OVERLAY */
+        /* CARRINHO */
         .cart-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100dvh; background: rgba(0,0,0,0.6); z-index: 2500; display: none; justify-content: flex-end; }
         .cart-overlay.open { display: flex; }
         .cart-content { width: 100%; max-width: 400px; height: 100%; background: #fff; display: flex; flex-direction: column; animation: slideIn 0.3s ease; }
         @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
-
         .cart-body { flex: 1; overflow-y: auto; padding: 15px; }
         .cart-footer { padding: 15px; border-top: 1px solid #eee; background: #fff; }
         .form-input { width: 100%; padding: 10px; margin-bottom: 8px; border-radius: 6px; border: 1px solid #ddd; box-sizing: border-box; font-family: 'Poppins'; font-size: 13px; }
@@ -74,6 +55,7 @@
         .btn-confirm { background: var(--wpp) !important; transform: scale(1.02); }
         
         .current-price { font-weight: 700; color: #1e293b; font-size: 15px; }
+        .old-price { font-size: 11px; color: var(--gray); text-decoration: line-through; margin-bottom: -4px; display: block; }
         .color-dot { width: 18px; height: 18px; border-radius: 50%; border: 1px solid #ddd; cursor: pointer; display: none; }
         .color-dot.visible { display: block; }
         .color-dot.selected { border: 2px solid #000; }
@@ -86,7 +68,7 @@
 <header>
     <div class="brand-area">
         <a href="#" class="logo">LOJA ANJJ</a>
-        <a href="https://instagram.com/anjj_noronha" target="_blank" class="insta-sub">📸 @anjj_noronha</a>
+        <a href="https://instagram.com/anjj_noronha" target="_blank" class="insta-sub">Siga nosso Intagram 📸 @anjj_noronha</a>
     </div>
     <button class="cart-icon-btn" onclick="toggleCart(true)">🛒 <span id="cartCount">0</span></button>
 </header>
@@ -126,11 +108,16 @@
 <script>
 const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyw7f7CwowhQKK8-ap-1tcLFTwy926X_d9dOGXNla_iBYNrWm5ah1Mc3X5-b8RdbD0jwA/exec"; 
 const SHEET_URL = "https://docs.google.com/spreadsheets/d/1uCx_JB4xZnU0vBIQjlrwBgsTRia_wSlUWPJlaN0EbhE/gviz/tq?tqx=out:json&sheet=Products";
-const WHATSAPP_NUMBER = '5581997512217';
+const WHATSAPP_NUMBER = '+5581997512217';
 
 let productsData = [];
 let cart = JSON.parse(localStorage.getItem('anjj_cart')) || [];
 let isConfirmed = false;
+
+// Função para formatar preço com vírgula (R$ 0,00)
+function formatBR(val) {
+    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
+}
 
 async function fetchData() {
     const r = await fetch(SHEET_URL + "&t=" + new Date().getTime());
@@ -149,12 +136,30 @@ function processData(rows) {
         if (!p.Name || String(p.Availability).toLowerCase() !== "show") return;
         const key = `${p.Name}_${p.Category}`;
         if (!grouped[key]) grouped[key] = { name: p.Name, category: p.Category, images: [p.Thumbnail, p.Image1, p.Image2, p.Image3].filter(i => i), skus: [] };
-        grouped[key].skus.push({ color: String(p["Tag"] || "").trim(), size: String(p["Variant Name"] || "").trim(), price: parseFloat(String(p.Price).replace(',','.')), stock: parseInt(p.Stock || 0) });
+        
+        // Lógica de Desconto
+        let rawPrice = parseFloat(String(p.Price).replace(',','.'));
+        let rawDisc = parseFloat(String(p["Discounted Price"]).replace(',','.'));
+        
+        let finalPrice = rawPrice;
+        let oldPrice = null;
+
+        if (!isNaN(rawDisc) && rawDisc > 0 && rawDisc < rawPrice) {
+            finalPrice = rawDisc;
+            oldPrice = rawPrice;
+        }
+
+        grouped[key].skus.push({ 
+            color: String(p["Tag"] || "").trim(), 
+            size: String(p["Variant Name"] || "").trim(), 
+            price: finalPrice, 
+            oldPrice: oldPrice,
+            stock: parseInt(p.Stock || 0) 
+        });
     });
     return Object.values(grouped);
 }
 
-// FECHAR AO CLICAR FORA
 function closeCart(e) { if(e.target.id === 'cartOverlay') toggleCart(false); }
 
 async function processOrderFlow() {
@@ -268,9 +273,12 @@ function createCard(p, idx) {
     d.innerHTML = `
         <div class="sold-out-badge">ESGOTADO</div>
         <div class="carousel-wrap">${p.images.map((img, i) => `<img src="${img}" class="carousel-img ${i===0?'active':''}">`).join("")}</div>
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-            <div class="current-price"></div>
-            <div style="display:flex; gap:3px;">${[...new Set(p.skus.map(s=>s.color))].map(c => `<div class="color-dot" data-color="${c}" onclick="syncVariant('${id}', 'color', '${c}')" style="background:${c}"></div>`).join("")}</div>
+        <div style="display:flex; justify-content:space-between; align-items:flex-end;">
+            <div>
+               <span class="old-price"></span>
+               <div class="current-price"></div>
+            </div>
+            <div style="display:flex; gap:3px; margin-bottom:5px;">${[...new Set(p.skus.map(s=>s.color))].map(c => `<div class="color-dot" data-color="${c}" onclick="syncVariant('${id}', 'color', '${c}')" style="background:${c}"></div>`).join("")}</div>
         </div>
         <div style="font-size:12px; font-weight:600; margin:4px 0;">${p.name}</div>
         <div style="display:flex; flex-wrap:wrap; gap:3px; margin-bottom:8px;">${[...new Set(p.skus.map(s=>s.size))].map(s => `<div class="variant-chip" data-size="${s}" onclick="syncVariant('${id}', 'size', '${s}')">${s}</div>`).join("")}</div>
@@ -280,7 +288,6 @@ function createCard(p, idx) {
         </div>
         <button class="btn-add" onclick="addToCart('${id}')">ADICIONAR</button>`;
     
-    // Auto-seleciona a primeira variante com estoque ou a primeira disponível
     setTimeout(() => syncVariant(id, 'size', (p.skus.find(s=>s.stock>0)||p.skus[0]).size), 50);
     return d;
 }
@@ -300,7 +307,6 @@ function syncVariant(id, type, val) {
         });
         if(first) syncVariant(id, 'color', first);
         else {
-            // Se o tamanho não tiver cores com estoque, pega a primeira cor desse tamanho
             const anyColor = p.skus.find(s => s.size === val);
             if(anyColor) syncVariant(id, 'color', anyColor.color);
         }
@@ -310,10 +316,17 @@ function syncVariant(id, type, val) {
     const sku = p.skus.find(s => s.color === card.querySelector('.color-dot.selected')?.dataset.color && s.size === card.querySelector('.variant-chip.selected')?.dataset.size);
     
     if(sku) { 
-        card.querySelector('.current-price').innerText = `R$ ${sku.price.toFixed(2)}`; 
+        card.querySelector('.current-price').innerText = formatBR(sku.price); 
+        const oldPriceEl = card.querySelector('.old-price');
+        if(sku.oldPrice) {
+            oldPriceEl.innerText = formatBR(sku.oldPrice);
+            oldPriceEl.style.display = 'block';
+        } else {
+            oldPriceEl.style.display = 'none';
+        }
+
         card.querySelector('.stk-n').innerText = sku.stock;
         
-        // AJUSTE DO BOTÃO CONFORME ESTOQUE DA VARIANTE
         if(sku.stock <= 0) {
             btn.disabled = true;
             btn.innerText = "ESGOTADO";
@@ -347,7 +360,7 @@ function updateCartUI(validate = true) {
     const container = document.getElementById('cartItems');
     container.innerHTML = cart.map((item, i) => `
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; border-bottom:1px solid #f1f1f1; padding-bottom:8px;">
-            <div style="font-size:11px;"><b>${item.name}</b><br>${item.color} | ${item.size}</div>
+            <div style="font-size:11px;"><b>${item.name}</b><br>${item.color} | ${item.size} <br> ${formatBR(item.price)}</div>
             <div style="display:flex; align-items:center; gap:5px;">
                 <button class="qty-btn" onclick="updateCartQty(${i},-1)">-</button>
                 <span style="min-width:15px; text-align:center;">${item.qty}</span>
@@ -356,7 +369,7 @@ function updateCartUI(validate = true) {
             </div>
         </div>`).join("");
     const t = cart.reduce((a, b) => a + (b.price * b.qty), 0);
-    document.getElementById('totalFinal').innerText = `R$ ${t.toFixed(2)}`;
+    document.getElementById('totalFinal').innerText = formatBR(t);
     if(validate) processOrderFlow();
 }
 
@@ -401,4 +414,3 @@ init();
 </script>
 </body>
 </html>
-
