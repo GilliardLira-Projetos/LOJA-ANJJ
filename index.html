@@ -6,49 +6,75 @@
     <title>LOJA ANJJ - Premium</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet" />
     <style>
-        :root { --green: #16a34a; --bg: #ffffff; --red: #dc2626; --gray: #94a3b8; --wpp: #25d366; }
+        :root { --green: #16a34a; --bg: #ffffff; --red: #dc2626; --gray: #94a3b8; --wpp: #25d366; --insta: #e1306c; }
         body { font-family: 'Poppins', sans-serif; margin: 0; background: #f8fafc; color: #1e293b; overflow-x: hidden; }
+        
+        /* HEADER */
         header { padding: 15px 5%; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; background: linear-gradient(135deg, #1a1a1a 0%, #333333 100%); z-index: 1000; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
-        .logo { font-weight: 700; font-size: 20px; text-transform: uppercase; letter-spacing: 2px; color: #fff; }
+        .logo { font-weight: 700; font-size: 20px; text-transform: uppercase; letter-spacing: 2px; color: #fff; text-decoration: none; }
+        .header-actions { display: flex; gap: 10px; align-items: center; }
+        .insta-btn { background: var(--insta); color: white; padding: 8px; border-radius: 50%; display: flex; align-items: center; justify-content: center; text-decoration: none; font-size: 18px; width: 35px; height: 35px; }
         .cart-icon-btn { cursor: pointer; background: var(--green); color: white; padding: 8px 18px; border-radius: 30px; font-weight: 700; border: none; display: flex; align-items: center; gap: 8px; }
-        .search-wrapper { padding: 15px 5% 5px 5%; background: #f8fafc; }
-        .search-box { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #e2e8f0; outline: none; box-sizing: border-box; }
+
+        /* BUSCA */
+        .search-wrapper { padding: 15px 5% 5px 5%; background: #f8fafc; position: relative; display: flex; gap: 8px; }
+        .search-container { position: relative; flex: 1; }
+        .search-box { width: 100%; padding: 12px 40px 12px 15px; border-radius: 12px; border: 1px solid #e2e8f0; outline: none; box-sizing: border-box; font-family: 'Poppins'; }
+        .clear-search { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: #e2e8f0; border: none; border-radius: 50%; width: 22px; height: 22px; cursor: pointer; display: none; align-items: center; justify-content: center; font-size: 12px; }
+
+        /* CATEGORIAS */
         .category-nav { display: flex; gap: 10px; padding: 10px 5%; overflow-x: auto; background: #fff; position: sticky; top: 65px; z-index: 999; border-bottom: 1px solid #eee; scrollbar-width: none; }
-        .cat-link { border: 1px solid #eee; padding: 6px 18px; border-radius: 20px; font-size: 13px; cursor: pointer; white-space: nowrap; background: #f8f9fa; }
+        .cat-link { border: 1px solid #eee; padding: 6px 18px; border-radius: 20px; font-size: 13px; cursor: pointer; white-space: nowrap; background: #f8f9fa; transition: 0.2s; }
         .cat-link.active { background: var(--green); color: #fff; border-color: var(--green); }
+
+        /* GRID E CARDS */
         .category-section { padding: 20px 5%; }
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
         @media (max-width: 480px) { .grid { grid-template-columns: repeat(2, 1fr); gap: 10px; } }
-        .card { border: 1px solid #eee; border-radius: 15px; padding: 12px; background: #fff; display: flex; flex-direction: column; height: 100%; box-sizing: border-box; position: relative; }
+        
+        .card { border: 1px solid #eee; border-radius: 15px; padding: 12px; background: #fff; display: flex; flex-direction: column; height: 100%; box-sizing: border-box; position: relative; transition: 0.3s; }
+        .card.sold-out { opacity: 0.6; filter: grayscale(0.8); }
+        .card.sold-out .btn-add { background: #94a3b8; cursor: not-allowed; }
+        .sold-out-badge { position: absolute; top: 10px; left: 10px; background: var(--red); color: white; padding: 4px 10px; border-radius: 6px; font-size: 10px; font-weight: 700; z-index: 10; }
+
         .carousel-wrap { position: relative; width: 100%; height: 200px; border-radius: 12px; overflow: hidden; background: #f1f5f9; margin-bottom: 10px; }
         .carousel-img { width: 100%; height: 100%; object-fit: cover; position: absolute; opacity: 0; transition: 0.4s; }
         .carousel-img.active { opacity: 1; }
-        .price-container { display: flex; flex-direction: column; margin-bottom: 8px; }
+        
         .current-price { font-size: 18px; font-weight: 700; color: #1e293b; }
-        .color-dot { width: 20px; height: 20px; border-radius: 50%; border: 1px solid #ddd; cursor: pointer; display: none; }
+        .color-dot { width: 22px; height: 22px; border-radius: 50%; border: 1px solid #ddd; cursor: pointer; display: none; }
         .color-dot.visible { display: block; }
         .color-dot.selected { border: 2px solid #000; transform: scale(1.1); }
-        .variant-chip { border: 1px solid #ddd; padding: 4px 8px; border-radius: 6px; font-size: 11px; cursor: pointer; }
-        .variant-chip.selected { background: #000; color: #fff; }
+        
+        .variant-chip { border: 1px solid #ddd; padding: 4px 8px; border-radius: 6px; font-size: 11px; cursor: pointer; background: #fff; }
+        .variant-chip.selected { background: #000; color: #fff; border-color: #000; }
         .btn-add { background: var(--green); color: #fff; border: none; padding: 12px; border-radius: 10px; font-weight: 700; width: 100%; cursor: pointer; margin-top: auto; }
+
+        /* CARRINHO OVERLAY */
         .cart-overlay { position: fixed; top: 0; right: 0; width: 100%; max-width: 400px; height: 100dvh; background: #fff; z-index: 2500; transform: translateX(100%); transition: 0.4s; display: flex; flex-direction: column; }
         .cart-overlay.open { transform: translateX(0); box-shadow: -10px 0 30px rgba(0,0,0,0.2); }
         .cart-body { flex: 1; overflow-y: auto; padding: 15px; }
-        .cart-footer { padding: 20px; border-top: 1px solid #eee; }
-        .form-input { width: 100%; padding: 10px; margin-bottom: 8px; border-radius: 8px; border: 1px solid #ddd; box-sizing: border-box; font-family: 'Poppins'; }
-        .qty-btn { border: 1px solid #ddd; background: #fff; width: 28px; height: 28px; cursor: pointer; border-radius: 4px; font-weight: bold; }
+        .cart-footer { padding: 20px; border-top: 1px solid #eee; background: #fff; }
+        .form-input { width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #ddd; box-sizing: border-box; font-family: 'Poppins'; font-size: 14px; }
+        .qty-btn { border: 1px solid #ddd; background: #fff; width: 30px; height: 30px; cursor: pointer; border-radius: 6px; font-weight: bold; }
         .stock-alert { background: #fff7ed; color: #9a3412; padding: 12px; border-radius: 8px; font-size: 13px; margin-bottom: 15px; border: 1px solid #fdba74; display: none; line-height: 1.4; }
     </style>
 </head>
 <body>
 
 <header>
-    <div class="logo">LOJA ANJJ</div>
-    <button class="cart-icon-btn" onclick="toggleCart()">🛒 <span id="cartCount">0</span></button>
+    <a href="#" class="logo">LOJA ANJJ</a>
+    <div class="header-actions">
+        <a href="https://instagram.com/anjj_premium" target="_blank" class="insta-btn">📸</a>
+        <button class="cart-icon-btn" onclick="toggleCart()">🛒 <span id="cartCount">0</span></button>
+    </div>
 </header>
 
 <div class="search-wrapper">
-    <input type="text" id="productSearch" class="search-box" placeholder="Procurar produto..." onkeyup="searchProducts()">
+    <div class="search-container">
+        <input type="text" id="productSearch" class="search-box" placeholder="Procurar produto..." onkeyup="handleSearch(this.value)">
+        <button id="clearSearchBtn" class="clear-search" onclick="clearSearch()">&times;</button>
+    </div>
 </div>
 
 <div class="category-nav" id="categoryNav"><div class="cat-link active" onclick="filterCat('all', this)">Tudo</div></div>
@@ -57,7 +83,7 @@
 <div class="cart-overlay" id="cartOverlay">
     <div style="padding: 20px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
         <h2 style="margin:0; font-size: 1.2rem;">Meu Carrinho</h2>
-        <button onclick="toggleCart()" style="background:none; border:none; font-size:24px;">&times;</button>
+        <button onclick="toggleCart()" style="background:none; border:none; font-size:28px; cursor:pointer;">&times;</button>
     </div>
     <div class="cart-body">
         <div id="stockAlertBox" class="stock-alert"></div>
@@ -68,8 +94,8 @@
             <span>Total:</span><span id="totalFinal">R$ 0,00</span>
         </div>
         <input type="text" id="custName" class="form-input" placeholder="Nome Completo">
-        <input type="email" id="custEmail" class="form-input" placeholder="E-mail (obrigatório)">
-        <input type="tel" id="custPhone" class="form-input" placeholder="WhatsApp (DDD + Número)">
+        <input type="email" id="custEmail" class="form-input" placeholder="E-mail">
+        <input type="tel" id="custPhone" class="form-input" placeholder="WhatsApp (Ex: 81999999999)">
         <button id="btnFinalize" class="btn-add" style="background:var(--wpp); padding: 15px;" onclick="finalizeOrder()">FINALIZAR PEDIDO</button>
     </div>
 </div>
@@ -113,9 +139,19 @@ async function init() {
     try {
         const data = await fetchData();
         productsData = data.list;
+        renderCategories();
         renderAll();
         updateCartUI();
     } catch (e) { console.error("Erro no Init:", e); }
+}
+
+function renderCategories() {
+    const nav = document.getElementById("categoryNav");
+    const cats = [...new Set(productsData.map(p => p.category))];
+    nav.innerHTML = `<div class="cat-link active" onclick="filterCat('all', this)">Tudo</div>`;
+    cats.forEach(c => {
+        nav.innerHTML += `<div class="cat-link" onclick="filterCat('${c}', this)">${c}</div>`;
+    });
 }
 
 function renderAll() {
@@ -135,8 +171,13 @@ function createCard(p, idx) {
     const d = document.createElement("div"); const id = "p-"+idx;
     const colors = [...new Set(p.skus.map(s => s.color))];
     const sizes = [...new Set(p.skus.map(s => s.size))];
-    d.className = "card"; d.id = id;
+    const totalStock = p.skus.reduce((sum, s) => sum + s.stock, 0);
+    const isSoldOut = totalStock <= 0;
+
+    d.className = `card ${isSoldOut ? 'sold-out' : ''}`; 
+    d.id = id;
     d.innerHTML = `
+        ${isSoldOut ? '<div class="sold-out-badge">ESGOTADO</div>' : ''}
         <div class="carousel-wrap">
             <div class="imgs-container">${p.images.map((img, i) => `<img src="${img}" class="carousel-img ${i===0?'active':''}">`).join("")}</div>
         </div>
@@ -150,8 +191,14 @@ function createCard(p, idx) {
             <div><button class="qty-btn" onclick="changeQty(this, -1)">-</button> <span class="qty-val">1</span> <button class="qty-btn" onclick="changeQty(this, 1)">+</button></div>
             <span>Estoque: <b class="stk-n">0</b></span>
         </div>
-        <button class="btn-add" onclick="addToCart('${id}')">ADICIONAR</button>`;
-    setTimeout(() => syncVariant(id, 'size', (p.skus.find(s => s.stock > 0) || p.skus[0]).size), 50);
+        <button class="btn-add" onclick="addToCart('${id}')" ${isSoldOut ? 'disabled' : ''}>${isSoldOut ? 'ESGOTADO' : 'ADICIONAR'}</button>`;
+    
+    if(!isSoldOut) {
+        setTimeout(() => syncVariant(id, 'size', (p.skus.find(s => s.stock > 0) || p.skus[0]).size), 50);
+    } else {
+        const first = p.skus[0];
+        d.querySelector('.current-price').innerText = `R$ ${first.price.toFixed(2)}`;
+    }
     return d;
 }
 
@@ -159,23 +206,23 @@ function syncVariant(id, type, val) {
     const card = document.getElementById(id);
     const pIdx = parseInt(id.split('-')[1]);
     const product = productsData[pIdx];
-    if(!product) return;
+    if(!product || card.classList.contains('sold-out')) return;
     
     if(type === 'size') {
         card.querySelectorAll('.variant-chip').forEach(c => c.classList.toggle('selected', c.dataset.size === val));
-        let firstVisible = null;
+        let foundCol = null;
         card.querySelectorAll('.color-dot').forEach(dot => {
             const has = product.skus.find(s => s.size === val && s.color === dot.dataset.color && s.stock > 0);
-            dot.classList.toggle('visible', !!has); if(has && !firstVisible) firstVisible = dot.dataset.color;
+            dot.classList.toggle('visible', !!has); if(has && !foundCol) foundCol = dot.dataset.color;
         });
-        if(firstVisible) syncVariant(id, 'color', firstVisible);
+        if(foundCol) syncVariant(id, 'color', foundCol);
     }
     if(type === 'color') card.querySelectorAll('.color-dot').forEach(d => d.classList.toggle('selected', d.dataset.color === val));
     
     const sku = product.skus.find(s => s.color === card.querySelector('.color-dot.selected')?.dataset.color && s.size === card.querySelector('.variant-chip.selected')?.dataset.size);
     if(sku) {
         card.querySelector('.current-price').innerText = `R$ ${sku.price.toFixed(2)}`;
-        card.querySelector('.stk-n').innerText = sku.stock <= 0 ? "Esgotado" : sku.stock;
+        card.querySelector('.stk-n').innerText = sku.stock;
         card.querySelector('.btn-add').disabled = sku.stock <= 0;
         card.querySelector('.btn-add').innerText = sku.stock <= 0 ? "ESGOTADO" : "ADICIONAR";
     }
@@ -189,16 +236,16 @@ async function finalizeOrder() {
     const alertBox = document.getElementById('stockAlertBox');
     
     alertBox.style.display = "none";
-    if(!n || !p || !e) return alert("Por favor, preencha Nome, E-mail e WhatsApp.");
+    if(!n || !p) return alert("Por favor, preencha pelo menos Nome e WhatsApp.");
+    if(p.length < 10) return alert("Por favor, insira um número de WhatsApp válido.");
     if(!cart.length) return alert("Seu carrinho está vazio.");
 
     btn.disabled = true; btn.innerText = "VERIFICANDO ESTOQUE...";
 
-    // BAIXA DADOS NOVOS E ATUALIZA A VITRINE AO FUNDO
     const newData = await fetchData();
     productsData = newData.list;
     const rows = newData.raw;
-    renderAll(); // Atualiza a página principal sem fechar o carrinho
+    renderAll(); 
 
     let changes = [];
     for (let i = cart.length - 1; i >= 0; i--) {
@@ -217,7 +264,7 @@ async function finalizeOrder() {
 
     if (changes.length > 0) {
         updateCartUI();
-        alertBox.innerHTML = `<b>Ajustes no Pedido:</b><br>${changes.join('<br>')}`;
+        alertBox.innerHTML = `<b>Ajustes de Estoque:</b><br>${changes.join('<br>')}`;
         alertBox.style.display = "block";
         btn.disabled = false; btn.innerText = "FINALIZAR PEDIDO";
         return;
@@ -236,7 +283,7 @@ async function finalizeOrder() {
             cart = []; updateCartUI(); toggleCart();
             btn.disabled = false; btn.innerText = "FINALIZAR PEDIDO";
         }, 1200);
-    } catch(err) { alert("Erro ao salvar pedido."); btn.disabled = false; }
+    } catch(err) { alert("Erro ao processar."); btn.disabled = false; }
 }
 
 function updateCartUI() {
@@ -267,50 +314,56 @@ function updateCartQty(idx, d) {
     if(!product) return;
     const sku = product.skus.find(s => s.color === item.color && s.size === item.size);
     if(item.qty + d > 0 && item.qty + d <= sku.stock) {
-        item.qty += d;
-        updateCartUI();
+        item.qty += d; updateCartUI();
     } else if (item.qty + d > sku.stock) {
-        alert("Limite do estoque atingido.");
+        alert("Limite de estoque disponível.");
     }
 }
 
 function changeQty(btn, d) {
     const v = btn.parentElement.querySelector('.qty-val');
-    const stkText = btn.closest('.card').querySelector('.stk-n').innerText;
-    const max = stkText === "Esgotado" ? 0 : parseInt(stkText);
+    const stk = parseInt(btn.closest('.card').querySelector('.stk-n').innerText) || 0;
     let n = parseInt(v.innerText) + d;
-    if(n > 0 && n <= max) v.innerText = n;
+    if(n > 0 && n <= stk) v.innerText = n;
 }
 
 function addToCart(id) {
     const card = document.getElementById(id);
+    if(card.classList.contains('sold-out')) return;
     const pIdx = parseInt(id.split('-')[1]);
     const product = productsData[pIdx];
     const col = card.querySelector('.color-dot.selected')?.dataset.color;
     const siz = card.querySelector('.variant-chip.selected')?.dataset.size;
     const qty = parseInt(card.querySelector('.qty-val').innerText);
     const sku = product.skus.find(s => s.color === col && s.size === siz);
+    
     if(!sku || sku.stock <= 0) return;
+    
     const existing = cart.find(i => i.name === product.name && i.color === col && i.size === siz);
     if(existing) {
         if(existing.qty + qty <= sku.stock) existing.qty += qty;
-        else { alert("Limite de estoque atingido."); return; }
+        else { alert("Estoque insuficiente."); return; }
     } else {
         cart.push({ name: product.name, color: col, size: siz, qty, price: sku.price });
     }
-    updateCartUI();
-    toggleCart();
+    updateCartUI(); toggleCart();
 }
 
-function removeItem(i) { cart.splice(i, 1); updateCartUI(); }
-function toggleCart() { document.getElementById('cartOverlay').classList.toggle('open'); document.getElementById('stockAlertBox').style.display = "none"; }
-function searchProducts() {
-    const term = document.getElementById("productSearch").value.toLowerCase();
+function handleSearch(val) {
+    const term = val.toLowerCase();
+    document.getElementById('clearSearchBtn').style.display = term ? 'flex' : 'none';
     document.querySelectorAll('.card').forEach(card => {
-        const name = card.querySelector('div[style*="font-weight:600"]').innerText.toLowerCase();
+        const name = card.querySelector('div[style*="600"]').innerText.toLowerCase();
         card.style.display = name.includes(term) ? "flex" : "none";
     });
 }
+
+function clearSearch() {
+    const input = document.getElementById('productSearch');
+    input.value = '';
+    handleSearch('');
+}
+
 function filterCat(cat, el) {
     document.querySelectorAll('.cat-link').forEach(l => l.classList.remove('active'));
     el.classList.add('active');
@@ -318,6 +371,10 @@ function filterCat(cat, el) {
         sec.style.display = (cat === 'all' || sec.id === `sec-${cat.replace(/\s+/g,'')}`) ? 'block' : 'none';
     });
 }
+
+function removeItem(i) { cart.splice(i, 1); updateCartUI(); }
+function toggleCart() { document.getElementById('cartOverlay').classList.toggle('open'); }
+
 init();
 </script>
 </body>
