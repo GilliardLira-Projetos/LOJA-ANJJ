@@ -29,8 +29,10 @@
         .category-section { padding: 20px 5%; }
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px; }
         @media (max-width: 480px) { .grid { grid-template-columns: repeat(2, 1fr); gap: 10px; } }
+        
         .card { border: 1px solid #eee; border-radius: 12px; padding: 10px; background: #fff; display: flex; flex-direction: column; position: relative; }
         .card.sold-out { opacity: 0.6; filter: grayscale(1); }
+        .sold-out-badge { position: absolute; top: 5px; left: 5px; background: var(--red); color: white; padding: 3px 8px; border-radius: 4px; font-size: 9px; font-weight: 700; z-index: 10; }
         .carousel-wrap { width: 100%; height: 160px; border-radius: 8px; overflow: hidden; background: #f1f5f9; margin-bottom: 8px; position: relative; }
         .carousel-img { width: 100%; height: 100%; object-fit: cover; position: absolute; opacity: 0; transition: 0.3s; }
         .carousel-img.active { opacity: 1; }
@@ -39,14 +41,13 @@
         .cart-overlay { position: fixed; top: 0; right: 0; width: 100%; max-width: 400px; height: 100dvh; background: #fff; z-index: 2500; transform: translateX(100%); transition: 0.4s; display: flex; flex-direction: column; }
         .cart-overlay.open { transform: translateX(0); box-shadow: -10px 0 30px rgba(0,0,0,0.2); }
         .cart-body { flex: 1; overflow-y: auto; padding: 15px; }
-        .cart-footer { padding: 20px; border-top: 1px solid #eee; background: #fff; }
-        .form-input { width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #ddd; box-sizing: border-box; }
+        .cart-footer { padding: 15px; border-top: 1px solid #eee; background: #fff; }
+        .form-input { width: 100%; padding: 10px; margin-bottom: 8px; border-radius: 6px; border: 1px solid #ddd; box-sizing: border-box; font-family: 'Poppins'; font-size: 13px; }
         .qty-btn { border: 1px solid #ddd; background: #fff; width: 28px; height: 28px; cursor: pointer; border-radius: 4px; }
-        .stock-alert { background: #fff1f2; color: #991b1b; padding: 12px; border-radius: 8px; font-size: 12px; margin-bottom: 15px; border: 1px solid #fecaca; display: none; }
+        .stock-alert { background: #fff1f2; color: #991b1b; padding: 10px; border-radius: 6px; font-size: 12px; margin-bottom: 12px; border: 1px solid #fecaca; display: none; }
         
         .btn-add { background: var(--green); color: #fff; border: none; padding: 12px; border-radius: 8px; font-weight: 700; width: 100%; cursor: pointer; }
-        .btn-confirm { background: var(--wpp) !important; animation: pulse 1.5s infinite; }
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.02); } 100% { transform: scale(1); } }
+        .btn-confirm { background: var(--wpp) !important; transform: scale(1.02); box-shadow: 0 4px 15px rgba(37, 211, 102, 0.3); }
         
         .current-price { font-weight: 700; color: #1e293b; font-size: 15px; }
         .color-dot { width: 18px; height: 18px; border-radius: 50%; border: 1px solid #ddd; cursor: pointer; display: none; }
@@ -78,7 +79,7 @@
 
 <div class="cart-overlay" id="cartOverlay">
     <div style="padding: 15px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
-        <h3 style="margin:0;">Meu Carrinho</h3>
+        <h3 style="margin:0; font-size: 1.1rem;">Carrinho</h3>
         <button onclick="toggleCart()" style="background:none; border:none; font-size:24px;">&times;</button>
     </div>
     <div class="cart-body">
@@ -90,7 +91,8 @@
             <span>Total:</span><span id="totalFinal">R$ 0,00</span>
         </div>
         <input type="text" id="custName" class="form-input" placeholder="Nome Completo">
-        <input type="tel" id="custPhone" class="form-input" placeholder="WhatsApp">
+        <input type="email" id="custEmail" class="form-input" placeholder="Seu E-mail">
+        <input type="tel" id="custPhone" class="form-input" placeholder="WhatsApp (DDD + Número)">
         <button id="btnFinalize" class="btn-add" onclick="processOrderFlow()">FINALIZAR PEDIDO</button>
     </div>
 </div>
@@ -102,21 +104,20 @@ const WHATSAPP_NUMBER = '5581997512217';
 
 let productsData = [];
 let cart = JSON.parse(localStorage.getItem('anjj_cart')) || [];
-let isConfirmed = false; // Controle da dupla confirmação
+let isConfirmed = false;
 
 async function fetchData() {
     const r = await fetch(SHEET_URL + "&t=" + new Date().getTime());
     const t = await r.text();
     const j = JSON.parse(t.substring(t.indexOf("{"), t.lastIndexOf("}") + 1));
-    const rows = j.table.rows.map(row => {
+    return j.table.rows.map(row => {
         const o = {}; 
         j.table.cols.forEach((col, i) => { if(col.label) o[col.label.trim()] = row.c[i] ? (row.c[i].v ?? row.c[i].f ?? "") : ""; });
         return o;
     });
-    return rows;
 }
 
-function groupProducts(rows) {
+function processData(rows) {
     const grouped = {};
     rows.forEach(p => {
         if (!p.Name || String(p.Availability).toLowerCase() !== "show") return;
@@ -127,24 +128,24 @@ function groupProducts(rows) {
     return Object.values(grouped);
 }
 
-// FLUXO DE PEDIDO COM DUPLA VERIFICAÇÃO
+// FLUXO DE VERIFICAÇÃO E ATUALIZAÇÃO DE CARDS
 async function processOrderFlow() {
-    const n = document.getElementById('custName').value.trim();
-    const p = document.getElementById('custPhone').value.trim();
+    const name = document.getElementById('custName').value.trim();
+    const phone = document.getElementById('custPhone').value.trim();
+    const email = document.getElementById('custEmail').value.trim();
     const btn = document.getElementById('btnFinalize');
     const alertBox = document.getElementById('stockAlertBox');
 
-    if(!n || p.length < 8) return alert("Preencha Nome e WhatsApp.");
-    if(cart.length === 0) return alert("Carrinho vazio.");
+    if(!name || phone.length < 8) return alert("Por favor, preencha Nome e WhatsApp.");
+    if(cart.length === 0) return alert("O carrinho está vazio.");
 
     btn.disabled = true;
-    btn.innerText = "VERIFICANDO ESTOQUE...";
-    alertBox.style.display = "none";
+    btn.innerText = "SINCRO. ESTOQUE...";
 
-    // 1. Sempre busca dados novos ao clicar
     const rawRows = await fetchData();
-    const newProducts = groupProducts(rawRows);
-    productsData = newProducts;
+    productsData = processData(rawRows);
+    
+    // ATUALIZA OS CARDS DA VITRINE AO FUNDO
     renderAll();
 
     let changes = [];
@@ -158,7 +159,7 @@ async function processOrderFlow() {
             cart.splice(i, 1);
             isConfirmed = false;
         } else if (currentStock < item.qty) {
-            changes.push(`⚠️ ${item.name} limitado para ${currentStock} unid.`);
+            changes.push(`⚠️ ${item.name} reduzido para ${currentStock} unid.`);
             item.qty = currentStock;
             isConfirmed = false;
         }
@@ -166,51 +167,47 @@ async function processOrderFlow() {
 
     if (changes.length > 0) {
         updateCartUI(false);
-        alertBox.innerHTML = `<b>O estoque mudou:</b><br>${changes.join('<br>')}`;
+        alertBox.innerHTML = `<b>Ajustes no carrinho:</b><br>${changes.join('<br>')}`;
         alertBox.style.display = "block";
         btn.disabled = false;
         btn.innerText = "VERIFICAR NOVAMENTE";
         btn.classList.remove('btn-confirm');
-        return; // Volta para o carrinho
+        return;
     }
 
-    // Se não houve mudanças ou se o cliente clicar de novo após o ajuste
     if (!isConfirmed) {
         isConfirmed = true;
         btn.disabled = false;
-        btn.innerText = "CONFIRMAR E ENVIAR WHATSAPP";
+        btn.innerText = "CONFIRMAR PEDIDO VIA WHATSAPP";
         btn.classList.add('btn-confirm');
-        updateCartUI(false);
+        alertBox.style.display = "none";
     } else {
-        // Envio definitivo
-        sendToWhatsApp(n, p);
+        sendFinalOrder(name, phone, email);
     }
 }
 
-async function sendToWhatsApp(n, p) {
+async function sendFinalOrder(n, p, e) {
     const btn = document.getElementById('btnFinalize');
     btn.innerText = "ENVIANDO...";
     const total = document.getElementById('totalFinal').innerText;
     const list = cart.map(i => `${i.qty}x ${i.name} (${i.color}/${i.size})`).join(" | ");
     
-    const url = `${APPS_SCRIPT_URL}?name=${encodeURIComponent(n)}&phone=${encodeURIComponent(p)}&products=${encodeURIComponent(list)}&total=${encodeURIComponent(total)}`;
+    const url = `${APPS_SCRIPT_URL}?name=${encodeURIComponent(n)}&email=${encodeURIComponent(e)}&phone=${encodeURIComponent(p)}&products=${encodeURIComponent(list)}&total=${encodeURIComponent(total)}`;
 
     try {
         await fetch(url, { method: 'GET', mode: 'no-cors' });
         const waMsg = `*NOVO PEDIDO ANJJ*\n*Cliente:* ${n}\n*WhatsApp:* ${p}\n\n*Itens:*\n${cart.map(i=>`- ${i.qty}x ${i.name} (${i.color}/${i.size})`).join('\n')}\n\n*Total:* ${total}`;
         window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(waMsg)}`);
-        cart = []; 
-        isConfirmed = false;
-        updateCartUI(false); 
-        toggleCart(false);
+        cart = []; isConfirmed = false;
+        updateCartUI(false); toggleCart(false);
         btn.innerText = "FINALIZAR PEDIDO";
         btn.classList.remove('btn-confirm');
-    } catch(e) { alert("Erro ao processar."); }
+    } catch(err) { alert("Erro ao enviar."); }
 }
 
 async function init() {
     const rows = await fetchData();
-    productsData = groupProducts(rows);
+    productsData = processData(rows);
     renderCategories();
     renderAll();
     updateCartUI(false);
@@ -242,6 +239,7 @@ function createCard(p, idx) {
     const isSoldOut = p.skus.every(s => s.stock <= 0);
     d.className = `card ${isSoldOut ? 'sold-out' : ''}`; d.id = id;
     d.innerHTML = `
+        ${isSoldOut ? '<div class="sold-out-badge">ESGOTADO</div>' : ''}
         <div class="carousel-wrap">${p.images.map((img, i) => `<img src="${img}" class="carousel-img ${i===0?'active':''}">`).join("")}</div>
         <div style="display:flex; justify-content:space-between; align-items:center;">
             <div class="current-price"></div>
@@ -286,7 +284,7 @@ function addToCart(id) {
     const ext = cart.find(i => i.name === p.name && i.color === col && i.size === siz);
     if(ext) { if(ext.qty + qty <= sku.stock) ext.qty += qty; else alert("Limite estoque."); }
     else { cart.push({ name: p.name, color: col, size: siz, qty, price: sku.price }); }
-    isConfirmed = false; // Resetar confirmação se adicionar algo novo
+    isConfirmed = false;
     updateCartUI(false); toggleCart(true);
 }
 
@@ -306,7 +304,7 @@ function updateCartUI(validate = true) {
         </div>`).join("");
     const t = cart.reduce((a, b) => a + (b.price * b.qty), 0);
     document.getElementById('totalFinal').innerText = `R$ ${t.toFixed(2)}`;
-    if(validate) processOrderFlow(); 
+    if(validate) processOrderFlow();
 }
 
 function updateCartQty(idx, d) {
@@ -314,9 +312,7 @@ function updateCartQty(idx, d) {
     const p = productsData.find(x => x.name === item.name);
     const sku = p?.skus.find(s => s.color === item.color && s.size === item.size);
     if(item.qty + d > 0 && item.qty + d <= (sku?.stock || 999)) {
-        item.qty += d; 
-        isConfirmed = false;
-        updateCartUI(false);
+        item.qty += d; isConfirmed = false; updateCartUI(false);
     }
 }
 
@@ -335,7 +331,12 @@ function removeItem(i) { cart.splice(i, 1); isConfirmed = false; updateCartUI(fa
 function toggleCart(o) { 
     const c = document.getElementById('cartOverlay');
     if(o === true) c.classList.add('open'); else if(o === false) c.classList.remove('open'); else c.classList.toggle('open');
-    if(!c.classList.contains('open')) { isConfirmed = false; document.getElementById('btnFinalize').innerText = "FINALIZAR PEDIDO"; document.getElementById('btnFinalize').classList.remove('btn-confirm'); }
+    if(!c.classList.contains('open')) { 
+        isConfirmed = false; 
+        document.getElementById('btnFinalize').innerText = "FINALIZAR PEDIDO"; 
+        document.getElementById('btnFinalize').classList.remove('btn-confirm');
+        document.getElementById('stockAlertBox').style.display = 'none';
+    }
 }
 function changeQty(btn, d) {
     const v = btn.parentElement.querySelector('.qty-val');
