@@ -127,6 +127,19 @@ const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyw7f7CwowhQKK8
 const SHEET_URL = "https://docs.google.com/spreadsheets/d/1uCx_JB4xZnU0vBIQjlrwBgsTRia_wSlUWPJlaN0EbhE/gviz/tq?tqx=out:json&sheet=Products";
 const WHATSAPP_NUMBER = '5581997512217';
 
+// MAPA DE TRADUÇÃO PARA CSS RECONHECER CORES EM PT-BR
+const colorMap = {
+    'azul': 'blue', 'vermelho': 'red', 'verde': 'green', 'amarelo': 'yellow', 'preto': 'black',
+    'branco': 'white', 'cinza': 'gray', 'rosa': 'pink', 'laranja': 'orange', 'roxo': 'purple',
+    'marrom': 'brown', 'bege': 'beige', 'vinho': 'maroon', 'marinho': 'navy', 'dourado': 'gold',
+    'prata': 'silver', 'lilas': 'lavender', 'off white': '#faf9f6', 'caqui': '#c3b091'
+};
+
+function getHex(colorName) {
+    const c = colorName.toLowerCase().trim();
+    return colorMap[c] || c; // Se não estiver no mapa, tenta usar o próprio nome (ex: "blue")
+}
+
 let productsData = [];
 let cart = JSON.parse(localStorage.getItem('anjj_cart')) || [];
 let isConfirmed = false;
@@ -285,7 +298,7 @@ function createCard(p, idx) {
         </div>
         <div style="display:flex; justify-content:space-between; align-items:flex-end;">
             <div><span class="old-price"></span><div class="current-price"></div></div>
-            <div style="display:flex; gap:3px; margin-bottom:5px;">${[...new Set(p.skus.map(s=>s.color))].map(c => `<div class="color-dot" data-color="${c}" onclick="syncVariant('${id}', 'color', '${c}')" style="background:${c}"></div>`).join("")}</div>
+            <div style="display:flex; gap:3px; margin-bottom:5px;">${[...new Set(p.skus.map(s=>s.color))].map(c => `<div class="color-dot" data-color="${c}" onclick="syncVariant('${id}', 'color', '${c}')" style="background:${getHex(c)}"></div>`).join("")}</div>
         </div>
         <div style="font-size:12px; font-weight:600; margin:4px 0;">${p.name}</div>
         <div style="display:flex; flex-wrap:wrap; gap:3px; margin-bottom:8px;">${[...new Set(p.skus.map(s=>s.size))].map(s => `<div class="variant-chip" data-size="${s}" onclick="syncVariant('${id}', 'size', '${s}')">${s}</div>`).join("")}</div>
@@ -302,34 +315,22 @@ function createCard(p, idx) {
     return d;
 }
 
-// FUNÇÃO CORRIGIDA
 function syncVariant(id, type, val) {
     const card = document.getElementById(id);
     const p = productsData[id.split('-')[1]];
     
     if(type === 'size') {
-        // Marca o chip de tamanho selecionado
         card.querySelectorAll('.variant-chip').forEach(c => c.classList.toggle('selected', c.dataset.size === val));
-        
         let firstAvailableColor = null;
-        
-        // Controla quais bolinhas de cores aparecem para este tamanho
         card.querySelectorAll('.color-dot').forEach(dot => {
             const colorName = dot.dataset.color;
             const skuFound = p.skus.find(s => s.size === val && s.color === colorName);
-            
-            // Só mostra a bolinha se essa combinação existir e tiver estoque
             const isVisible = skuFound && skuFound.stock > 0;
             dot.classList.toggle('visible', isVisible);
-            
             if(isVisible && !firstAvailableColor) firstAvailableColor = colorName;
         });
-
-        // Se encontrou uma cor válida, seleciona ela automaticamente
-        if(firstAvailableColor) {
-            syncVariant(id, 'color', firstAvailableColor);
-        } else {
-            // Se não houver estoque em nenhuma cor para esse tamanho, pega a primeira cadastrada
+        if(firstAvailableColor) syncVariant(id, 'color', firstAvailableColor);
+        else {
             const fallbackColor = p.skus.find(s => s.size === val)?.color;
             if(fallbackColor) syncVariant(id, 'color', fallbackColor);
         }
@@ -339,10 +340,8 @@ function syncVariant(id, type, val) {
         card.querySelectorAll('.color-dot').forEach(d => d.classList.toggle('selected', d.dataset.color === val));
     }
     
-    // Atualiza Preço e Estoque final baseado na combinação
     const selSize = card.querySelector('.variant-chip.selected')?.dataset.size;
     const selColor = card.querySelector('.color-dot.selected')?.dataset.color;
-    
     const sku = p.skus.find(s => s.color === selColor && s.size === selSize);
     if(sku) { 
         card.querySelector('.current-price').innerText = formatBR(sku.price); 
