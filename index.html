@@ -35,9 +35,17 @@
         .sold-out-badge { position: absolute; top: 5px; left: 5px; background: var(--red); color: white; padding: 3px 8px; border-radius: 4px; font-size: 9px; font-weight: 700; z-index: 10; display: none; }
         .card.sold-out .sold-out-badge { display: block; }
 
-        .carousel-wrap { width: 100%; height: 160px; border-radius: 8px; overflow: hidden; background: #f1f5f9; margin-bottom: 8px; position: relative; }
+        /* CARROSSEL */
+        .carousel-wrap { width: 100%; height: 160px; border-radius: 8px; overflow: hidden; background: #f1f5f9; margin-bottom: 8px; position: relative; cursor: zoom-in; }
         .carousel-img { width: 100%; height: 100%; object-fit: cover; position: absolute; opacity: 0; transition: 0.3s; }
         .carousel-img.active { opacity: 1; }
+        .nav-arrow { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.3); color: #fff; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; z-index: 5; font-size: 12px; display: flex; align-items: center; justify-content: center; }
+        .nav-prev { left: 5px; } .nav-next { right: 5px; }
+
+        /* MODAL IMAGEM AMPLIADA */
+        .img-modal { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index: 3000; display:none; align-items:center; justify-content:center; }
+        .img-modal img { max-width: 90%; max-height: 80%; border-radius: 8px; }
+        .close-modal { position: absolute; top: 20px; right: 20px; color: #fff; font-size: 40px; cursor: pointer; }
 
         /* CARRINHO */
         .cart-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100dvh; background: rgba(0,0,0,0.6); z-index: 2500; display: none; justify-content: flex-end; }
@@ -68,7 +76,7 @@
 <header>
     <div class="brand-area">
         <a href="#" class="logo">LOJA ANJJ</a>
-        <a href="https://instagram.com/anjj_noronha" target="_blank" class="insta-sub">Siga nosso Intagram 📸 @anjj_noronha</a>
+        <a href="https://instagram.com/anjj_noronha" target="_blank" class="insta-sub">📸 @anjj_noronha</a>
     </div>
     <button class="cart-icon-btn" onclick="toggleCart(true)">🛒 <span id="cartCount">0</span></button>
 </header>
@@ -82,6 +90,11 @@
 
 <div class="category-nav" id="categoryNav"></div>
 <div id="catalog"></div>
+
+<div id="imgModal" class="img-modal" onclick="this.style.display='none'">
+    <span class="close-modal">&times;</span>
+    <img id="modalImg" src="">
+</div>
 
 <div class="cart-overlay" id="cartOverlay" onclick="closeCart(event)">
     <div class="cart-content" onclick="event.stopPropagation()">
@@ -108,16 +121,13 @@
 <script>
 const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyw7f7CwowhQKK8-ap-1tcLFTwy926X_d9dOGXNla_iBYNrWm5ah1Mc3X5-b8RdbD0jwA/exec"; 
 const SHEET_URL = "https://docs.google.com/spreadsheets/d/1uCx_JB4xZnU0vBIQjlrwBgsTRia_wSlUWPJlaN0EbhE/gviz/tq?tqx=out:json&sheet=Products";
-const WHATSAPP_NUMBER = '+5581997512217';
+const WHATSAPP_NUMBER = '5581997512217';
 
 let productsData = [];
 let cart = JSON.parse(localStorage.getItem('anjj_cart')) || [];
 let isConfirmed = false;
 
-// Função para formatar preço com vírgula (R$ 0,00)
-function formatBR(val) {
-    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
-}
+function formatBR(val) { return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val); }
 
 async function fetchData() {
     const r = await fetch(SHEET_URL + "&t=" + new Date().getTime());
@@ -137,35 +147,42 @@ function processData(rows) {
         const key = `${p.Name}_${p.Category}`;
         if (!grouped[key]) grouped[key] = { name: p.Name, category: p.Category, images: [p.Thumbnail, p.Image1, p.Image2, p.Image3].filter(i => i), skus: [] };
         
-        // Lógica de Desconto
         let rawPrice = parseFloat(String(p.Price).replace(',','.'));
         let rawDisc = parseFloat(String(p["Discounted Price"]).replace(',','.'));
-        
         let finalPrice = rawPrice;
-        let oldPrice = null;
-
-        if (!isNaN(rawDisc) && rawDisc > 0 && rawDisc < rawPrice) {
-            finalPrice = rawDisc;
-            oldPrice = rawPrice;
-        }
+        let oldPrice = (rawDisc > 0 && rawDisc < rawPrice) ? rawPrice : null;
+        if (oldPrice) finalPrice = rawDisc;
 
         grouped[key].skus.push({ 
             color: String(p["Tag"] || "").trim(), 
             size: String(p["Variant Name"] || "").trim(), 
-            price: finalPrice, 
-            oldPrice: oldPrice,
+            price: finalPrice, oldPrice: oldPrice,
             stock: parseInt(p.Stock || 0) 
         });
     });
     return Object.values(grouped);
 }
 
-function closeCart(e) { if(e.target.id === 'cartOverlay') toggleCart(false); }
+// CARROSSEL E ZOOM
+function moveSlide(btn, d) {
+    event.stopPropagation();
+    const wrap = btn.parentElement;
+    const imgs = wrap.querySelectorAll('.carousel-img');
+    let activeIdx = Array.from(imgs).findIndex(img => img.classList.contains('active'));
+    imgs[activeIdx].classList.remove('active');
+    let nextIdx = (activeIdx + d + imgs.length) % imgs.length;
+    imgs[nextIdx].classList.add('active');
+}
+
+function openZoom(wrap) {
+    const activeImg = wrap.querySelector('.carousel-img.active').src;
+    document.getElementById('modalImg').src = activeImg;
+    document.getElementById('imgModal').style.display = 'flex';
+}
 
 async function processOrderFlow() {
     const name = document.getElementById('custName').value.trim();
     const phone = document.getElementById('custPhone').value.trim();
-    const email = document.getElementById('custEmail').value.trim();
     const btn = document.getElementById('btnFinalize');
     const alertBox = document.getElementById('stockAlertBox');
 
@@ -177,7 +194,6 @@ async function processOrderFlow() {
 
     const rawRows = await fetchData();
     productsData = processData(rawRows);
-    renderAll();
 
     let changes = [];
     for (let i = cart.length - 1; i >= 0; i--) {
@@ -186,34 +202,24 @@ async function processOrderFlow() {
         const currentStock = match ? parseInt(match.Stock || 0) : 0;
         
         if (currentStock <= 0) {
-            changes.push(`❌ ${item.name} (${item.size}) esgotou.`);
-            cart.splice(i, 1);
-            isConfirmed = false;
+            changes.push(`❌ ${item.name} esgotou.`); cart.splice(i, 1); isConfirmed = false;
         } else if (currentStock < item.qty) {
-            changes.push(`⚠️ ${item.name} reduzido para ${currentStock} unid.`);
-            item.qty = currentStock;
-            isConfirmed = false;
+            changes.push(`⚠️ ${item.name} reduzido para ${currentStock}.`); item.qty = currentStock; isConfirmed = false;
         }
     }
 
     if (changes.length > 0) {
         updateCartUI(false);
-        alertBox.innerHTML = `<b>Ajustes no carrinho:</b><br>${changes.join('<br>')}`;
+        alertBox.innerHTML = changes.join('<br>');
         alertBox.style.display = "block";
-        btn.disabled = false;
-        btn.innerText = "VERIFICAR NOVAMENTE";
-        btn.classList.remove('btn-confirm');
+        btn.disabled = false; btn.innerText = "VERIFICAR NOVAMENTE";
         return;
     }
 
     if (!isConfirmed) {
-        isConfirmed = true;
-        btn.disabled = false;
-        btn.innerText = "CONFIRMAR E ENVIAR WHATSAPP";
-        btn.classList.add('btn-confirm');
-        alertBox.style.display = "none";
+        isConfirmed = true; btn.disabled = false; btn.innerText = "CONFIRMAR E ENVIAR"; btn.classList.add('btn-confirm');
     } else {
-        sendFinalOrder(name, phone, email);
+        sendFinalOrder(name, phone, document.getElementById('custEmail').value);
     }
 }
 
@@ -222,26 +228,24 @@ async function sendFinalOrder(n, p, e) {
     btn.innerText = "ENVIANDO...";
     const total = document.getElementById('totalFinal').innerText;
     const list = cart.map(i => `${i.qty}x ${i.name} (${i.color}/${i.size})`).join(" | ");
-    
     const url = `${APPS_SCRIPT_URL}?name=${encodeURIComponent(n)}&email=${encodeURIComponent(e)}&phone=${encodeURIComponent(p)}&products=${encodeURIComponent(list)}&total=${encodeURIComponent(total)}`;
 
     try {
         await fetch(url, { method: 'GET', mode: 'no-cors' });
-        const waMsg = `*NOVO PEDIDO ANJJ*\n*Cliente:* ${n}\n*WhatsApp:* ${p}\n\n*Itens:*\n${cart.map(i=>`- ${i.qty}x ${i.name} (${i.color}/${i.size})`).join('\n')}\n\n*Total:* ${total}`;
+        const waMsg = `*NOVO PEDIDO ANJJ*\n*Cliente:* ${n}\n\n*Itens:*\n${cart.map(i=>`- ${i.qty}x ${i.name} (${i.color}/${i.size})`).join('\n')}\n\n*Total:* ${total}`;
         window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(waMsg)}`);
-        cart = []; isConfirmed = false;
-        updateCartUI(false); toggleCart(false);
-        btn.innerText = "FINALIZAR PEDIDO";
-        btn.classList.remove('btn-confirm');
-    } catch(err) { alert("Erro ao enviar."); }
+        
+        // LIMPEZA APÓS SUCESSO
+        localStorage.removeItem('anjj_cart');
+        alert("Pedido enviado! A página será reiniciada.");
+        location.reload(); 
+    } catch(err) { alert("Erro ao enviar."); btn.disabled = false; }
 }
 
 async function init() {
     const rows = await fetchData();
     productsData = processData(rows);
-    renderCategories();
-    renderAll();
-    updateCartUI(false);
+    renderCategories(); renderAll(); updateCartUI(false);
 }
 
 function renderCategories() {
@@ -267,17 +271,17 @@ function renderAll() {
 
 function createCard(p, idx) {
     const d = document.createElement("div"); const id = "p-"+idx;
-    const dStock = p.skus.reduce((a, b) => a + b.stock, 0);
-    const isSoldOut = dStock <= 0;
+    const isSoldOut = p.skus.reduce((a, b) => a + b.stock, 0) <= 0;
     d.className = `card ${isSoldOut ? 'sold-out' : ''}`; d.id = id;
     d.innerHTML = `
         <div class="sold-out-badge">ESGOTADO</div>
-        <div class="carousel-wrap">${p.images.map((img, i) => `<img src="${img}" class="carousel-img ${i===0?'active':''}">`).join("")}</div>
+        <div class="carousel-wrap" onclick="openZoom(this)">
+            <button class="nav-arrow nav-prev" onclick="moveSlide(this, -1)">&#10094;</button>
+            <button class="nav-arrow nav-next" onclick="moveSlide(this, 1)">&#10095;</button>
+            ${p.images.map((img, i) => `<img src="${img}" class="carousel-img ${i===0?'active':''}">`).join("")}
+        </div>
         <div style="display:flex; justify-content:space-between; align-items:flex-end;">
-            <div>
-               <span class="old-price"></span>
-               <div class="current-price"></div>
-            </div>
+            <div><span class="old-price"></span><div class="current-price"></div></div>
             <div style="display:flex; gap:3px; margin-bottom:5px;">${[...new Set(p.skus.map(s=>s.color))].map(c => `<div class="color-dot" data-color="${c}" onclick="syncVariant('${id}', 'color', '${c}')" style="background:${c}"></div>`).join("")}</div>
         </div>
         <div style="font-size:12px; font-weight:600; margin:4px 0;">${p.name}</div>
@@ -294,10 +298,7 @@ function createCard(p, idx) {
 
 function syncVariant(id, type, val) {
     const card = document.getElementById(id);
-    const pIdx = id.split('-')[1];
-    const p = productsData[pIdx];
-    const btn = card.querySelector('.btn-add');
-
+    const p = productsData[id.split('-')[1]];
     if(type === 'size') {
         card.querySelectorAll('.variant-chip').forEach(c => c.classList.toggle('selected', c.dataset.size === val));
         let first = null;
@@ -306,36 +307,17 @@ function syncVariant(id, type, val) {
             dot.classList.toggle('visible', !!has); if(has && !first) first = dot.dataset.color;
         });
         if(first) syncVariant(id, 'color', first);
-        else {
-            const anyColor = p.skus.find(s => s.size === val);
-            if(anyColor) syncVariant(id, 'color', anyColor.color);
-        }
     }
     if(type === 'color') card.querySelectorAll('.color-dot').forEach(d => d.classList.toggle('selected', d.dataset.color === val));
     
     const sku = p.skus.find(s => s.color === card.querySelector('.color-dot.selected')?.dataset.color && s.size === card.querySelector('.variant-chip.selected')?.dataset.size);
-    
     if(sku) { 
         card.querySelector('.current-price').innerText = formatBR(sku.price); 
-        const oldPriceEl = card.querySelector('.old-price');
-        if(sku.oldPrice) {
-            oldPriceEl.innerText = formatBR(sku.oldPrice);
-            oldPriceEl.style.display = 'block';
-        } else {
-            oldPriceEl.style.display = 'none';
-        }
-
+        card.querySelector('.old-price').innerText = sku.oldPrice ? formatBR(sku.oldPrice) : "";
         card.querySelector('.stk-n').innerText = sku.stock;
-        
-        if(sku.stock <= 0) {
-            btn.disabled = true;
-            btn.innerText = "ESGOTADO";
-            card.classList.add('sold-out');
-        } else {
-            btn.disabled = false;
-            btn.innerText = "ADICIONAR";
-            card.classList.remove('sold-out');
-        }
+        const btn = card.querySelector('.btn-add');
+        btn.disabled = sku.stock <= 0;
+        btn.innerText = sku.stock <= 0 ? "ESGOTADO" : "ADICIONAR";
     }
 }
 
@@ -350,8 +332,7 @@ function addToCart(id) {
     const ext = cart.find(i => i.name === p.name && i.color === col && i.size === siz);
     if(ext) { if(ext.qty + qty <= sku.stock) ext.qty += qty; else alert("Limite estoque."); }
     else { cart.push({ name: p.name, color: col, size: siz, qty, price: sku.price }); }
-    isConfirmed = false;
-    updateCartUI(false); toggleCart(true);
+    isConfirmed = false; updateCartUI(false); toggleCart(true);
 }
 
 function updateCartUI(validate = true) {
@@ -363,7 +344,7 @@ function updateCartUI(validate = true) {
             <div style="font-size:11px;"><b>${item.name}</b><br>${item.color} | ${item.size} <br> ${formatBR(item.price)}</div>
             <div style="display:flex; align-items:center; gap:5px;">
                 <button class="qty-btn" onclick="updateCartQty(${i},-1)">-</button>
-                <span style="min-width:15px; text-align:center;">${item.qty}</span>
+                <span>${item.qty}</span>
                 <button class="qty-btn" onclick="updateCartQty(${i},1)">+</button>
                 <button onclick="removeItem(${i})" style="border:none; background:none; cursor:pointer;">🗑️</button>
             </div>
@@ -374,12 +355,7 @@ function updateCartUI(validate = true) {
 }
 
 function updateCartQty(idx, d) {
-    const item = cart[idx];
-    const p = productsData.find(x => x.name === item.name);
-    const sku = p?.skus.find(s => s.color === item.color && s.size === item.size);
-    if(item.qty + d > 0 && item.qty + d <= (sku?.stock || 999)) {
-        item.qty += d; isConfirmed = false; updateCartUI(false);
-    }
+    if(cart[idx].qty + d > 0) { cart[idx].qty += d; isConfirmed = false; updateCartUI(false); }
 }
 
 function handleSearch(v) {
@@ -396,20 +372,16 @@ function filterCat(c, el) {
 function removeItem(i) { cart.splice(i, 1); isConfirmed = false; updateCartUI(false); }
 function toggleCart(o) { 
     const c = document.getElementById('cartOverlay');
-    if(o === true) c.classList.add('open'); else if(o === false) c.classList.remove('open'); else c.classList.toggle('open');
-    if(!c.classList.contains('open')) { 
-        isConfirmed = false; 
-        document.getElementById('btnFinalize').innerText = "FINALIZAR PEDIDO"; 
-        document.getElementById('btnFinalize').classList.remove('btn-confirm');
-        document.getElementById('stockAlertBox').style.display = 'none';
-    }
+    if(o === true) c.classList.add('open'); else c.classList.remove('open');
 }
+function closeCart(e) { if(e.target.id === 'cartOverlay') toggleCart(false); }
 function changeQty(btn, d) {
     const v = btn.parentElement.querySelector('.qty-val');
     const stk = parseInt(btn.closest('.card').querySelector('.stk-n').innerText) || 0;
     let n = parseInt(v.innerText) + d;
     if(n > 0 && n <= stk) v.innerText = n;
 }
+
 init();
 </script>
 </body>
