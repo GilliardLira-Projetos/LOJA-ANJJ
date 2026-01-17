@@ -34,6 +34,10 @@
         .card.sold-out { opacity: 0.6; filter: grayscale(1); }
         .sold-out-badge { position: absolute; top: 5px; left: 5px; background: var(--red); color: white; padding: 3px 8px; border-radius: 4px; font-size: 9px; font-weight: 700; z-index: 10; display: none; }
         .card.sold-out .sold-out-badge { display: block; }
+        
+        /* DESTAQUE DE DESCONTO */
+        .discount-badge { position: absolute; top: 5px; right: 5px; background: #ffbd00; color: #000; padding: 3px 8px; border-radius: 4px; font-size: 10px; font-weight: 800; z-index: 11; display: none; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .card.has-discount .discount-badge { display: block; }
 
         /* CARROSSEL */
         .carousel-wrap { width: 100%; height: 160px; border-radius: 8px; overflow: hidden; background: #f1f5f9; margin-bottom: 8px; position: relative; cursor: zoom-in; }
@@ -76,7 +80,7 @@
 <header>
     <div class="brand-area">
         <a href="#" class="logo">LOJA ANJJ</a>
-        <a href="https://instagram.com/anjj_noronha" target="_blank" class="insta-sub">📸 @anjj_noronha</a>
+        <a href="https://instagram.com/anjj_noronha" target="_blank" class="insta-sub">📸 Siga nosso Intagram  @anjj_noronha</a>
     </div>
     <button class="cart-icon-btn" onclick="toggleCart(true)">🛒 <span id="cartCount">0</span></button>
 </header>
@@ -121,7 +125,7 @@
 <script>
 const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyw7f7CwowhQKK8-ap-1tcLFTwy926X_d9dOGXNla_iBYNrWm5ah1Mc3X5-b8RdbD0jwA/exec"; 
 const SHEET_URL = "https://docs.google.com/spreadsheets/d/1uCx_JB4xZnU0vBIQjlrwBgsTRia_wSlUWPJlaN0EbhE/gviz/tq?tqx=out:json&sheet=Products";
-const WHATSAPP_NUMBER = '5581997512217';
+const WHATSAPP_NUMBER = '+5581997512217';
 
 let productsData = [];
 let cart = JSON.parse(localStorage.getItem('anjj_cart')) || [];
@@ -272,9 +276,12 @@ function renderAll() {
 function createCard(p, idx) {
     const d = document.createElement("div"); const id = "p-"+idx;
     const isSoldOut = p.skus.reduce((a, b) => a + b.stock, 0) <= 0;
-    d.className = `card ${isSoldOut ? 'sold-out' : ''}`; d.id = id;
+    const hasDiscount = p.skus.some(s => s.oldPrice > 0);
+    
+    d.className = `card ${isSoldOut ? 'sold-out' : ''} ${hasDiscount ? 'has-discount' : ''}`; d.id = id;
     d.innerHTML = `
         <div class="sold-out-badge">ESGOTADO</div>
+        <div class="discount-badge">OFERTA</div>
         <div class="carousel-wrap" onclick="openZoom(this)">
             <button class="nav-arrow nav-prev" onclick="moveSlide(this, -1)">&#10094;</button>
             <button class="nav-arrow nav-next" onclick="moveSlide(this, 1)">&#10095;</button>
@@ -318,6 +325,8 @@ function syncVariant(id, type, val) {
         const btn = card.querySelector('.btn-add');
         btn.disabled = sku.stock <= 0;
         btn.innerText = sku.stock <= 0 ? "ESGOTADO" : "ADICIONAR";
+        // Ajuste minucioso: Se a variante específica não tiver desconto, remove o destaque do card momentaneamente (opcional)
+        card.classList.toggle('has-discount', !!sku.oldPrice);
     }
 }
 
