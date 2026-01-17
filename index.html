@@ -258,7 +258,7 @@ async function sendFinalOrder(n, p, e) {
                       `${cart.map(i => `✅ ${i.qty}x ${i.name} - ${i.color}/${i.size}`).join('\n')}\n` +
                       `--------------------------\n` +
                       `*VALOR TOTAL:* ${total}\n\n` +
-                      `_Por favor, clique em enviar para processarmos seu pedido._`;
+                      `_Processarmos seu pedido. já te envio a Chave Pix para efetuar o pagamento_`;
 
         // Limpa o carrinho
         localStorage.removeItem('anjj_cart');
@@ -433,3 +433,4 @@ init();
 </script>
 </body>
 </html>
+
