@@ -125,7 +125,7 @@
 <script>
 const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyw7f7CwowhQKK8-ap-1tcLFTwy926X_d9dOGXNla_iBYNrWm5ah1Mc3X5-b8RdbD0jwA/exec"; 
 const SHEET_URL = "https://docs.google.com/spreadsheets/d/1uCx_JB4xZnU0vBIQjlrwBgsTRia_wSlUWPJlaN0EbhE/gviz/tq?tqx=out:json&sheet=Products";
-const WHATSAPP_NUMBER = '+5581997512217';
+const WHATSAPP_NUMBER = '5581997512217';
 
 let productsData = [];
 let cart = JSON.parse(localStorage.getItem('anjj_cart')) || [];
@@ -237,12 +237,14 @@ async function sendFinalOrder(n, p, e) {
     try {
         await fetch(url, { method: 'GET', mode: 'no-cors' });
         const waMsg = `*NOVO PEDIDO ANJJ*\n*Cliente:* ${n}\n\n*Itens:*\n${cart.map(i=>`- ${i.qty}x ${i.name} (${i.color}/${i.size})`).join('\n')}\n\n*Total:* ${total}`;
-        window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(waMsg)}`);
         
         // LIMPEZA APÓS SUCESSO
         localStorage.removeItem('anjj_cart');
-        alert("Pedido enviado! A página será reiniciada.");
-        location.reload(); 
+        
+        // REDIRECIONAMENTO COMPATÍVEL COM IPHONE E ANDROID
+        const waLink = `https://api.whatsapp.com/send?phone=${WHATSAPP_NUMBER.replace('+', '')}&text=${encodeURIComponent(waMsg)}`;
+        window.location.href = waLink;
+
     } catch(err) { alert("Erro ao enviar."); btn.disabled = false; }
 }
 
@@ -325,7 +327,6 @@ function syncVariant(id, type, val) {
         const btn = card.querySelector('.btn-add');
         btn.disabled = sku.stock <= 0;
         btn.innerText = sku.stock <= 0 ? "ESGOTADO" : "ADICIONAR";
-        // Ajuste minucioso: Se a variante específica não tiver desconto, remove o destaque do card momentaneamente (opcional)
         card.classList.toggle('has-discount', !!sku.oldPrice);
     }
 }
