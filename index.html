@@ -80,7 +80,7 @@
 <header>
     <div class="brand-area">
         <a href="#" class="logo">LOJA ANJJ</a>
-        <a href="https://instagram.com/anjj_noronha" target="_blank" class="insta-sub">📸 Siga nosso Intagram  @anjj_noronha</a>
+        <a href="https://instagram.com/anjj_noronha" target="_blank" class="insta-sub">📸 Siga nosso Instagram  @anjj_noronha</a>
     </div>
     <button class="cart-icon-btn" onclick="toggleCart(true)">🛒 <span id="cartCount">0</span></button>
 </header>
@@ -167,7 +167,6 @@ function processData(rows) {
     return Object.values(grouped);
 }
 
-// CARROSSEL E ZOOM
 function moveSlide(btn, d) {
     event.stopPropagation();
     const wrap = btn.parentElement;
@@ -237,14 +236,9 @@ async function sendFinalOrder(n, p, e) {
     try {
         await fetch(url, { method: 'GET', mode: 'no-cors' });
         const waMsg = `*NOVO PEDIDO ANJJ*\n*Cliente:* ${n}\n\n*Itens:*\n${cart.map(i=>`- ${i.qty}x ${i.name} (${i.color}/${i.size})`).join('\n')}\n\n*Total:* ${total}`;
-        
-        // LIMPEZA APÓS SUCESSO
         localStorage.removeItem('anjj_cart');
-        
-        // REDIRECIONAMENTO COMPATÍVEL COM IPHONE E ANDROID
         const waLink = `https://api.whatsapp.com/send?phone=${WHATSAPP_NUMBER.replace('+', '')}&text=${encodeURIComponent(waMsg)}`;
         window.location.href = waLink;
-
     } catch(err) { alert("Erro ao enviar."); btn.disabled = false; }
 }
 
@@ -301,25 +295,55 @@ function createCard(p, idx) {
         </div>
         <button class="btn-add" onclick="addToCart('${id}')">ADICIONAR</button>`;
     
-    setTimeout(() => syncVariant(id, 'size', (p.skus.find(s=>s.stock>0)||p.skus[0]).size), 50);
+    setTimeout(() => {
+        const firstSize = (p.skus.find(s=>s.stock>0)||p.skus[0]).size;
+        syncVariant(id, 'size', firstSize);
+    }, 50);
     return d;
 }
 
+// FUNÇÃO CORRIGIDA
 function syncVariant(id, type, val) {
     const card = document.getElementById(id);
     const p = productsData[id.split('-')[1]];
-    if(type === 'size') {
-        card.querySelectorAll('.variant-chip').forEach(c => c.classList.toggle('selected', c.dataset.size === val));
-        let first = null;
-        card.querySelectorAll('.color-dot').forEach(dot => {
-            const has = p.skus.find(s => s.size === val && s.color === dot.dataset.color && s.stock > 0);
-            dot.classList.toggle('visible', !!has); if(has && !first) first = dot.dataset.color;
-        });
-        if(first) syncVariant(id, 'color', first);
-    }
-    if(type === 'color') card.querySelectorAll('.color-dot').forEach(d => d.classList.toggle('selected', d.dataset.color === val));
     
-    const sku = p.skus.find(s => s.color === card.querySelector('.color-dot.selected')?.dataset.color && s.size === card.querySelector('.variant-chip.selected')?.dataset.size);
+    if(type === 'size') {
+        // Marca o chip de tamanho selecionado
+        card.querySelectorAll('.variant-chip').forEach(c => c.classList.toggle('selected', c.dataset.size === val));
+        
+        let firstAvailableColor = null;
+        
+        // Controla quais bolinhas de cores aparecem para este tamanho
+        card.querySelectorAll('.color-dot').forEach(dot => {
+            const colorName = dot.dataset.color;
+            const skuFound = p.skus.find(s => s.size === val && s.color === colorName);
+            
+            // Só mostra a bolinha se essa combinação existir e tiver estoque
+            const isVisible = skuFound && skuFound.stock > 0;
+            dot.classList.toggle('visible', isVisible);
+            
+            if(isVisible && !firstAvailableColor) firstAvailableColor = colorName;
+        });
+
+        // Se encontrou uma cor válida, seleciona ela automaticamente
+        if(firstAvailableColor) {
+            syncVariant(id, 'color', firstAvailableColor);
+        } else {
+            // Se não houver estoque em nenhuma cor para esse tamanho, pega a primeira cadastrada
+            const fallbackColor = p.skus.find(s => s.size === val)?.color;
+            if(fallbackColor) syncVariant(id, 'color', fallbackColor);
+        }
+    }
+
+    if(type === 'color') {
+        card.querySelectorAll('.color-dot').forEach(d => d.classList.toggle('selected', d.dataset.color === val));
+    }
+    
+    // Atualiza Preço e Estoque final baseado na combinação
+    const selSize = card.querySelector('.variant-chip.selected')?.dataset.size;
+    const selColor = card.querySelector('.color-dot.selected')?.dataset.color;
+    
+    const sku = p.skus.find(s => s.color === selColor && s.size === selSize);
     if(sku) { 
         card.querySelector('.current-price').innerText = formatBR(sku.price); 
         card.querySelector('.old-price').innerText = sku.oldPrice ? formatBR(sku.oldPrice) : "";
