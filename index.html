@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0" />
-    <title>LOJA ANJJ - Premium</title>
+    <title>LOJA ANJJ - Catálogo</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet" />
     <style>
         :root { --green: #16a34a; --bg: #ffffff; --red: #dc2626; --gray: #94a3b8; --wpp: #25d366; --insta: #e1306c; }
@@ -17,10 +17,28 @@
         .cart-icon-btn { cursor: pointer; background: var(--green); color: white; padding: 8px 18px; border-radius: 30px; font-weight: 700; border: none; display: flex; align-items: center; gap: 8px; }
 
         /* BUSCA 50% CENTRALIZADA */
-        .search-wrapper { padding: 12px 5%; background: #f8fafc; display: flex; justify-content: center; }
-        .search-container { position: relative; width: 50%; min-width: 180px; }
-        .search-box { width: 100%; padding: 8px 35px 8px 15px; border-radius: 20px; border: 1px solid #e2e8f0; outline: none; box-sizing: border-box; font-family: 'Poppins'; font-size: 12px; }
-        .clear-search { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: #cbd5e1; border: none; border-radius: 50%; width: 16px; height: 16px; cursor: pointer; display: none; align-items: center; justify-content: center; font-size: 11px; color: #fff; }
+.search-wrapper { padding: 12px 5%; background: #f8fafc; display: flex; justify-content: center; }
+.search-container { position: relative; width: 50%; min-width: 180px; }
+.search-box { width: 100%; padding: 8px 35px 8px 15px; border-radius: 20px; border: 1px solid #e2e8f0; outline: none; box-sizing: border-box; font-family: 'Poppins'; font-size: 12px; }
+
+.clear-search { 
+    position: absolute; 
+    right: 10px; 
+    top: 50%; 
+    transform: translateY(-50%); 
+    background: #dc2626; /* <--- ALTERADO PARA VERMELHO */
+    border: none; 
+    border-radius: 50%; 
+    width: 18px; /* Aumentei um pouquinho para destacar */
+    height: 18px; 
+    cursor: pointer; 
+    display: none; 
+    align-items: center; 
+    justify-content: center; 
+    font-size: 12px; 
+    color: #fff; 
+    font-weight: bold;
+}
 
         /* GRID E CARDS */
         .category-nav { display: flex; gap: 8px; padding: 8px 5%; overflow-x: auto; background: #fff; position: sticky; top: 62px; z-index: 999; border-bottom: 1px solid #eee; scrollbar-width: none; }
@@ -68,7 +86,7 @@
 <header>
     <div class="brand-area">
         <a href="#" class="logo">LOJA ANJJ</a>
-        <a href="https://instagram.com/anjj_premium" target="_blank" class="insta-sub">📸 @anjj_premium</a>
+        <a href="https://instagram.com/anjj_noronha" target="_blank" class="insta-sub">📸 @anjj_noronha</a>
     </div>
     <button class="cart-icon-btn" onclick="toggleCart(true)">🛒 <span id="cartCount">0</span></button>
 </header>
@@ -383,3 +401,4 @@ init();
 </script>
 </body>
 </html>
+
