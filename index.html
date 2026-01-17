@@ -250,7 +250,7 @@ async function sendFinalOrder(n, p, e) {
         await fetch(url, { method: 'GET', mode: 'no-cors' });
         
         // Montagem da mensagem formatada
-        const waMsg = `*NOVO PEDIDO ANJJ*\n\n` +
+        const waMsg = `*CATÁLOGO WEB - NOVO PEDIDO ANJJ *\n\n` +
                       `*Cliente:* ${n}\n` +
                       `*WhatsApp:* ${p}\n` +
                       `--------------------------\n` +
@@ -258,7 +258,7 @@ async function sendFinalOrder(n, p, e) {
                       `${cart.map(i => `✅ ${i.qty}x ${i.name} - ${i.color}/${i.size}`).join('\n')}\n` +
                       `--------------------------\n` +
                       `*VALOR TOTAL:* ${total}\n\n` +
-                      `_Processarmos seu pedido. já te envio a Chave Pix para efetuar o pagamento_`;
+                      `_Aguardo o envio da Chave Pix para efetuar o pagamento_`;
 
         // Limpa o carrinho
         localStorage.removeItem('anjj_cart');
@@ -433,4 +433,5 @@ init();
 </script>
 </body>
 </html>
+
 
