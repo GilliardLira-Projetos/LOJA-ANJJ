@@ -127,7 +127,6 @@ const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyw7f7CwowhQKK8
 const SHEET_URL = "https://docs.google.com/spreadsheets/d/1uCx_JB4xZnU0vBIQjlrwBgsTRia_wSlUWPJlaN0EbhE/gviz/tq?tqx=out:json&sheet=Products";
 const WHATSAPP_NUMBER = '5581997512217';
 
-// MAPA DE TRADUÇÃO PARA CSS RECONHECER CORES EM PT-BR
 const colorMap = {
     'azul': 'blue', 'vermelho': 'red', 'verde': 'green', 'amarelo': 'yellow', 'preto': 'black',
     'branco': 'white', 'cinza': 'gray', 'rosa': 'pink', 'laranja': 'orange', 'roxo': 'purple',
@@ -137,7 +136,7 @@ const colorMap = {
 
 function getHex(colorName) {
     const c = colorName.toLowerCase().trim();
-    return colorMap[c] || c; // Se não estiver no mapa, tenta usar o próprio nome (ex: "blue")
+    return colorMap[c] || c;
 }
 
 let productsData = [];
@@ -163,13 +162,11 @@ function processData(rows) {
         if (!p.Name || String(p.Availability).toLowerCase() !== "show") return;
         const key = `${p.Name}_${p.Category}`;
         if (!grouped[key]) grouped[key] = { name: p.Name, category: p.Category, images: [p.Thumbnail, p.Image1, p.Image2, p.Image3].filter(i => i), skus: [] };
-        
         let rawPrice = parseFloat(String(p.Price).replace(',','.'));
         let rawDisc = parseFloat(String(p["Discounted Price"]).replace(',','.'));
         let finalPrice = rawPrice;
         let oldPrice = (rawDisc > 0 && rawDisc < rawPrice) ? rawPrice : null;
         if (oldPrice) finalPrice = rawDisc;
-
         grouped[key].skus.push({ 
             color: String(p["Tag"] || "").trim(), 
             size: String(p["Variant Name"] || "").trim(), 
@@ -216,7 +213,6 @@ async function processOrderFlow() {
         const item = cart[i];
         const match = rawRows.find(r => r.Name === item.name && String(r["Tag"]).trim() === item.color && String(r["Variant Name"]).trim() === item.size);
         const currentStock = match ? parseInt(match.Stock || 0) : 0;
-        
         if (currentStock <= 0) {
             changes.push(`❌ ${item.name} esgotou.`); cart.splice(i, 1); isConfirmed = false;
         } else if (currentStock < item.qty) {
@@ -239,20 +235,43 @@ async function processOrderFlow() {
     }
 }
 
+// FUNÇÃO ATUALIZADA PARA FORÇAR O WHATSAPP
 async function sendFinalOrder(n, p, e) {
     const btn = document.getElementById('btnFinalize');
-    btn.innerText = "ENVIANDO...";
+    btn.disabled = true;
+    btn.innerText = "REDIRECIONANDO...";
+    
     const total = document.getElementById('totalFinal').innerText;
     const list = cart.map(i => `${i.qty}x ${i.name} (${i.color}/${i.size})`).join(" | ");
     const url = `${APPS_SCRIPT_URL}?name=${encodeURIComponent(n)}&email=${encodeURIComponent(e)}&phone=${encodeURIComponent(p)}&products=${encodeURIComponent(list)}&total=${encodeURIComponent(total)}`;
 
     try {
+        // Envio silencioso para a planilha
         await fetch(url, { method: 'GET', mode: 'no-cors' });
-        const waMsg = `*NOVO PEDIDO ANJJ*\n*Cliente:* ${n}\n\n*Itens:*\n${cart.map(i=>`- ${i.qty}x ${i.name} (${i.color}/${i.size})`).join('\n')}\n\n*Total:* ${total}`;
+        
+        // Montagem da mensagem formatada
+        const waMsg = `*NOVO PEDIDO ANJJ*\n\n` +
+                      `*Cliente:* ${n}\n` +
+                      `*WhatsApp:* ${p}\n` +
+                      `--------------------------\n` +
+                      `*ITENS DO PEDIDO:*\n` +
+                      `${cart.map(i => `✅ ${i.qty}x ${i.name} - ${i.color}/${i.size}`).join('\n')}\n` +
+                      `--------------------------\n` +
+                      `*VALOR TOTAL:* ${total}\n\n` +
+                      `_Por favor, clique em enviar para processarmos seu pedido._`;
+
+        // Limpa o carrinho
         localStorage.removeItem('anjj_cart');
-        const waLink = `https://api.whatsapp.com/send?phone=${WHATSAPP_NUMBER.replace('+', '')}&text=${encodeURIComponent(waMsg)}`;
+
+        // Redirecionamento forçado
+        const waLink = `https://api.whatsapp.com/send?phone=${WHATSAPP_NUMBER.replace(/\D/g, '')}&text=${encodeURIComponent(waMsg)}`;
         window.location.href = waLink;
-    } catch(err) { alert("Erro ao enviar."); btn.disabled = false; }
+
+    } catch(err) { 
+        alert("Erro ao enviar. Tente novamente."); 
+        btn.disabled = false; 
+        btn.innerText = "CONFIRMAR E ENVIAR";
+    }
 }
 
 async function init() {
@@ -286,7 +305,6 @@ function createCard(p, idx) {
     const d = document.createElement("div"); const id = "p-"+idx;
     const isSoldOut = p.skus.reduce((a, b) => a + b.stock, 0) <= 0;
     const hasDiscount = p.skus.some(s => s.oldPrice > 0);
-    
     d.className = `card ${isSoldOut ? 'sold-out' : ''} ${hasDiscount ? 'has-discount' : ''}`; d.id = id;
     d.innerHTML = `
         <div class="sold-out-badge">ESGOTADO</div>
@@ -307,7 +325,6 @@ function createCard(p, idx) {
             <span>Estoque: <b class="stk-n">0</b></span>
         </div>
         <button class="btn-add" onclick="addToCart('${id}')">ADICIONAR</button>`;
-    
     setTimeout(() => {
         const firstSize = (p.skus.find(s=>s.stock>0)||p.skus[0]).size;
         syncVariant(id, 'size', firstSize);
@@ -318,7 +335,6 @@ function createCard(p, idx) {
 function syncVariant(id, type, val) {
     const card = document.getElementById(id);
     const p = productsData[id.split('-')[1]];
-    
     if(type === 'size') {
         card.querySelectorAll('.variant-chip').forEach(c => c.classList.toggle('selected', c.dataset.size === val));
         let firstAvailableColor = null;
@@ -335,11 +351,9 @@ function syncVariant(id, type, val) {
             if(fallbackColor) syncVariant(id, 'color', fallbackColor);
         }
     }
-
     if(type === 'color') {
         card.querySelectorAll('.color-dot').forEach(d => d.classList.toggle('selected', d.dataset.color === val));
     }
-    
     const selSize = card.querySelector('.variant-chip.selected')?.dataset.size;
     const selColor = card.querySelector('.color-dot.selected')?.dataset.color;
     const sku = p.skus.find(s => s.color === selColor && s.size === selSize);
